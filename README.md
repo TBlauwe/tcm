@@ -1,5 +1,6 @@
 # TCM - CMake Modules
 
+
 ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
 Some standalone cmake modules used across my projects.
@@ -7,14 +8,15 @@ Some standalone cmake modules used across my projects.
 > [!NOTE]
 >
 > As most of my other repositories, they are mostly intended for personal usage and learning.
-> You are probably better off to look elsewhere, like [awesome cmake](https://github.com/onqtam/awesome-cmake).
+> You are probably better off looking elsewhere, like [awesome cmake](https://github.com/onqtam/awesome-cmake).
+
 
 ## Getting Started
 
 
-__Automatic Installation__ :
+__Automatic Installation__ _(with CPM)_ :
 
-[CPM](https://github.com/cpm-cmake/CPM.cmake) is a nice cmake script to add dependency management to cmake.
+[CPM](https://github.com/cpm-cmake/CPM.cmake) is a CMake script to add dependency management to CMake.
 To install it, see [CPM's documentation](https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#adding-cpm).
 You can also use the provided script : `get_cpm.cmake`
 
@@ -34,7 +36,6 @@ include(tcm/<module_name>)
 # Or if you want to include all modules
 include(tcm/include_all)
 ```
-
 __Manual Installation__ :
 
 1. Download modules you are interested and add them to your project's files, e.g. inside a `cmake/` folder.
@@ -45,6 +46,7 @@ include(cmake/<module>)
 
 
 ## Modules
+
 
 Each module contains a quick documentation about its usage.
 
@@ -61,6 +63,7 @@ Each module contains a quick documentation about its usage.
 
 
 ## Minimal CMake Example
+
 
 ```cmake
 cmake_minimum_required(VERSION 3.21)
