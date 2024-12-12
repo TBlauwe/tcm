@@ -1,0 +1,1 @@
+generate_code_blocks(code_block.md)
