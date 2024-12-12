@@ -56,7 +56,7 @@ Each module contains a quick documentation about its usage.
 | get_cpm                 | Install [CPM](https://github.com/cpm-cmake/CPM.cmake).                                |
 | prevent_in_source_build | As name says, this module prevents in source build.                                   |
 | setup_cache             | Setup cache like ccache if available.                                                 |
-| setup_version           | Deduce version either from git or from `VERSION.txt` in consumer mode.                |
+| setup_version           | Deduce version either from git or from `VERSION.txt` when consumed.                   |
 | support_computed_gotos  | Defines `${PROJECT_NAME}_SUPPORT_COMPUTED_GOTOS` if compiler supports them.           |
 | utility.cmake           | Defines some utility functions : `target_assets`, some logging function, etc.         |
 | warning_guard           | Defines `${PROJECT_NAME}_WARNING_GUARD` to prevent warnings when library is consumed. |

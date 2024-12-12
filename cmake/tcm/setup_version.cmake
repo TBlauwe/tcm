@@ -2,6 +2,7 @@
 #           File : semantic_versioning.cmake
 #           From : https://github.com/nunofachada/cmake-git-semver/blob/master/GetVersionFromGitTag.cmake
 #    Description : Set project's version using semantic versioning, either from git in dev mode or from version file.
+#                  Expected to be called from root CMakeLists.txt and from a valid directory.
 # ------------------------------------------------------------------------------
 include_guard()
 find_package(Git QUIET)
@@ -12,7 +13,6 @@ if (GIT_FOUND AND ${PROJECT_IS_TOP_LEVEL})
 			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 			OUTPUT_VARIABLE ${PROJECT_NAME}_VERSION_STRING
 			OUTPUT_STRIP_TRAILING_WHITESPACE
-			ERROR_QUIET
 	)
 
 	if(${PROJECT_NAME}_VERSION_STRING)
