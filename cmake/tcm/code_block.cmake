@@ -50,11 +50,14 @@ function(generate_code_blocks FILENAME)
 		# First, check if file needs updating.
 		set(ABSOLUTE_INC_FILE_PATH "${PROJECT_SOURCE_DIR}/${FILE_PATH}")
 		set(ABSOLUTE_STAMP_FILE_PATH "${STAMP_OUTPUT_DIRECTORY}/${FILE_PATH}.stamp")
+		file(TIMESTAMP ${ABSOLUTE_INC_FILE_PATH} src_timestamp)
+		file(TIMESTAMP ${ABSOLUTE_STAMP_FILE_PATH} dest_timestamp)
 
 		if(${ABSOLUTE_INC_FILE_PATH} IS_NEWER_THAN ${ABSOLUTE_STAMP_FILE_PATH})
 			set(NEED_UPDATE TRUE)
 			get_filename_component(_DIR ${FILE_PATH} DIRECTORY)
-			file(TOUCH ${STAMP_OUTPUT_DIR}/${_DIR})
+			file(MAKE_DIRECTORY ${STAMP_OUTPUT_DIRECTORY}/${_DIR})
+			file(TOUCH ${ABSOLUTE_STAMP_FILE_PATH})
 
 			# Build new code block
 			file(READ ${ABSOLUTE_INC_FILE_PATH} NEW_BODY)
