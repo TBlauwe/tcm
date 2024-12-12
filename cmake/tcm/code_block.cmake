@@ -20,7 +20,7 @@ include_guard()
 
 # Expects a file path, relative to project source directory.
 function(generate_code_blocks FILENAME)
-	message(CHECK_START "Looking for code-blocks to update in ${FILENAME} ...")
+	message(CHECK_START "Looking for code-blocks to update in ${FILENAME}")
 
 	if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME})
 		message(CHECK_FAIL "Skipping : file does not exist.")
