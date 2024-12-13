@@ -33,59 +33,9 @@ function(target_assets _target _src_dir _dst_dir)
 endfunction()
 
 
-# Indent cmake message
-macro(indent)
-	list(APPEND CMAKE_MESSAGE_INDENT "    ${ARGN}")
-endmacro()
+
 
 
 # ------------------------------------------------------------------------------
 # --- DEV-MODE ONLY (noop otherwise)
 # ------------------------------------------------------------------------------
-
-
-# Outdent cmake messages
-macro(outdent)
-	list(POP_BACK CMAKE_MESSAGE_INDENT)
-endmacro()
-
-
-# Print a space
-function(space)
-	if(${PROJECT_IS_TOP_LEVEL})
-		message("")
-	endif()
-endfunction()
-
-
-# Print an opening header in cmake output. Don't forget to call end_section() afterwards !
-# Needs to be a macro so indent works.
-macro(section)
-	if(${PROJECT_IS_TOP_LEVEL})
-		message(CHECK_START "[${PROJECT_NAME}] " ${ARGN})
-		indent()
-	endif()
-endmacro()
-
-
-# Print a closing header. Take a condition to see if section failed or not.
-# Needs to be a macro so indent works.
-macro(end_section)
-	set(opts)
-	set(one_value_args)
-	set(multi_value_args PASS FAIL CONDITION)
-	cmake_parse_arguments(END_SECTION "${opts}" "${one_value_args}" "${multi_value_args}" ${ARGN})
-
-	if(${PROJECT_IS_TOP_LEVEL})
-		outdent()
-		if(ARGN)
-			if(${END_SECTION_CONDITION})
-				message(CHECK_PASS ${END_SECTION_PASS})
-			else(})
-				message(CHECK_FAIL ${END_SECTION_FAIL})
-			endif()
-		else ()
-			message(CHECK_PASS "done")
-		endif()
-	endif()
-endmacro()

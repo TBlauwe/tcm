@@ -80,3 +80,15 @@ CPMAddPackage(
 list(APPEND CMAKE_MODULE_PATH "${tcm_SOURCE_DIR}/cmake")
 include(tcm/include_all)
 ```
+
+## Options
+
+```cmake
+# CPM
+set(CPM_SOURCE_CACHE "~/.cpm/")  # You can also set it as an environment variable, so it works across projects.
+set(CPM_DOWNLOAD_VERSION 0.40.2) # Default Value
+set(CPM_HASH_SUM "c8cdc32c03816538ce22781ed72964dc864b2a34a310d3b7104812a5ca2d835d") #Default value
+
+# TCM
+set(TCM_VERBOSE TRUE) #False when project is consumed.
+```
