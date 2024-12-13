@@ -305,6 +305,126 @@ function(tcm_code_block _file)
 endfunction()
 
 # ------------------------------------------------------------------------------
+# --- SETUP-VERSION
+#    Description :
+#                  Expected to be called from root CMakeLists.txt and from a valid directory.
+# ------------------------------------------------------------------------------
+# Description:
+#   Set project's version using semantic versioning, either from git in dev mode or from version file.
+#   Expected to be called from root CMakeLists.txt and from a valid git directory.
+
+# Credits:
+#   Adapted from https://github.com/nunofachada/cmake-git-semver/blob/master/GetVersionFromGitTag.cmake
+#
+# Usage :
+#   tcm_setup_version()
+function(tcm_setup_version)
+
+    if (GIT_FOUND AND ${PROJECT_IS_TOP_LEVEL})
+        # Get last tag from git
+        execute_process(COMMAND ${GIT_EXECUTABLE} describe --abbrev=0 --tags
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                OUTPUT_VARIABLE VERSION_STRING
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+        )
+
+        string(REGEX MATCH "v?([0-9]+)(\.[0-9]+)?(\.[0-9]+)?" VERSION_STRING ${VERSION_STRING})
+        if(NOT VERSION_STRING)
+            set(${PROJECT_NAME}_VERSION_MAJOR "0")
+            set(${PROJECT_NAME}_VERSION_MINOR "0")
+            set(${PROJECT_NAME}_VERSION_PATCH "0")
+        else()
+            string(REPLACE "." ";" PARTIAL_VERSION_LIST ${VERSION_STRING})
+            list(LENGTH PARTIAL_VERSION_LIST LIST_LENGTH)
+
+            # Set Major
+            list(GET PARTIAL_VERSION_LIST 0 VALUE)
+            set(${PROJECT_NAME}_VERSION_MAJOR ${VALUE} PARENT_SCOPE)
+            set(VERSION ${VALUE})
+
+            #Set Minor
+            if(LIST_LENGTH GREATER_EQUAL 2)
+                list(GET PARTIAL_VERSION_LIST 1 VALUE)
+                set(${PROJECT_NAME}_VERSION_MINOR ${VALUE} PARENT_SCOPE)
+                string(APPEND VERSION ".${VALUE}")
+            else ()
+                set(${PROJECT_NAME}_VERSION_MINOR 0 PARENT_SCOPE)
+                string(APPEND VERSION ".0")
+            endif ()
+
+            #Set Patch
+            if(LIST_LENGTH GREATER_EQUAL 3)
+                list(GET PARTIAL_VERSION_LIST 2 VALUE)
+                set(${PROJECT_NAME}_VERSION_PATCH ${VALUE} PARENT_SCOPE)
+                string(APPEND VERSION ".${VALUE}")
+            else ()
+                set(${PROJECT_NAME}_VERSION_PATCH 0 PARENT_SCOPE)
+                string(APPEND VERSION ".0")
+            endif ()
+        endif()
+
+        set(${PROJECT_NAME}_VERSION ${VERSION} PARENT_SCOPE)
+
+        # Save version to file
+        file(WRITE ${CMAKE_SOURCE_DIR}/VERSION ${VERSION})
+
+    else()
+        # Git not available, get version from file
+        file(STRINGS "VERSION" VERSION)
+        set(${PROJECT_NAME}_VERSION ${VERSION} PARENT_SCOPE)
+
+        string(REPLACE "." ";" VERSION_LIST ${VERSION})
+        list(GET VERSION_LIST 0 VALUE)
+        set(${PROJECT_NAME}_VERSION_MAJOR ${VALUE} PARENT_SCOPE)
+        list(GET VERSION_LIST 1 VALUE)
+        set(${PROJECT_NAME}_VERSION_MINOR ${VALUE} PARENT_SCOPE)
+        list(GET VERSION_LIST 2 VALUE)
+        set(${PROJECT_NAME}_VERSION_PATCH ${VALUE} PARENT_SCOPE)
+    endif()
+
+    tcm_log("Version : ${VERSION}")
+endfunction()
+
+# ------------------------------------------------------------------------------
+# --- SETUP-CACHE
+# ------------------------------------------------------------------------------
+# Description:
+#   Setup cache (only if top level project), like ccache (https://ccache.dev/) if available on system.
+
+# Usage :
+#   tcm_setup_cache()
+
+macro(tcm_setup_cache)
+    if(EMSCRIPTEN) # Doesn't seems to work with emscripten (https://github.com/emscripten-core/emscripten/issues/11974)
+        return()
+    endif()
+
+    set(CACHE_OPTION "ccache" CACHE STRING "Compiler cache to be used")
+    set(CACHE_OPTION_VALUES "ccache" "sccache")
+    set_property(CACHE CACHE_OPTION PROPERTY STRINGS ${CACHE_OPTION_VALUES})
+    list(
+            FIND
+            CACHE_OPTION_VALUES
+            ${CACHE_OPTION}
+            CACHE_OPTION_INDEX
+    )
+
+    if(${CACHE_OPTION_INDEX} EQUAL -1)
+        tcm_log("Using custom compiler cache system: '${CACHE_OPTION}'. Supported entries are ${CACHE_OPTION_VALUES}")
+    endif()
+
+    find_program(CACHE_BINARY NAMES ${CACHE_OPTION_VALUES})
+    if(CACHE_BINARY)
+        tcm_log("Using Cache System : ${CACHE_BINARY}.")
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CACHE_BINARY} CACHE FILEPATH "CXX compiler cache used")
+        set(CMAKE_C_COMPILER_LAUNCHER ${CACHE_BINARY} CACHE FILEPATH "C compiler cache used")
+    else()
+        tcm_warn("${CACHE_OPTION} is enabled but was not found. Not using it")
+    endif()
+endmacro()
+
+# ------------------------------------------------------------------------------
 # --- VARIABLES
 # ------------------------------------------------------------------------------
 
