@@ -15,7 +15,7 @@ endif()
 # --- TESTS
 # ------------------------------------------------------------------------------
 include(cmake/tcm.cmake) # Automatically calls tcm_setup
-#tcm_setup()
+tcm_setup_cpm()
 tcm_setup_version()
 tcm_setup_cache()
 

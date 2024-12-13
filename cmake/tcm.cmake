@@ -187,48 +187,43 @@ function(tcm__refresh_message_context)
     set(CMAKE_MESSAGE_CONTEXT ${_TCM_SECTIONS_STRING} PARENT_SCOPE)
 endfunction()
 
-
 # ------------------------------------------------------------------------------
-# --- CPM
+# --- Miscellaneous functions
 # ------------------------------------------------------------------------------
-# See: https://github.com/cpm-cmake/CPM.cmake
-# Download and install CPM if not already present.
-
-if(NOT DEFINED CPM_DOWNLOAD_VERSION)
-    set(CPM_DOWNLOAD_VERSION 0.40.2)
-    set(CPM_HASH_SUM "c8cdc32c03816538ce22781ed72964dc864b2a34a310d3b7104812a5ca2d835d")
-endif()
-
-if(CPM_SOURCE_CACHE)
-    set(CPM_DOWNLOAD_LOCATION "${CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
-elseif(DEFINED ENV{CPM_SOURCE_CACHE})
-    set(CPM_DOWNLOAD_LOCATION "$ENV{CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
-else()
-    set(CPM_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
-endif()
-
-# Expand relative path. This is important if the provided path contains a tilde (~)
-get_filename_component(CPM_DOWNLOAD_LOCATION ${CPM_DOWNLOAD_LOCATION} ABSOLUTE)
-
-function(download_cpm)
-    tcm_info("Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
-    file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake
-            ${CPM_DOWNLOAD_LOCATION}
-            EXPECTED_HASH SHA256=${CPM_HASH_SUM}
-    )
+# Prevent warnings from displaying when building target
+# Useful when you do not want libraries warnings polluting your build output
+# TODO Seems to work in some cases but not all.
+function(tcm_suppress_warnings _target)
+    set_target_properties(${_target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${_target},INTERFACE_INCLUDE_DIRECTORIES>)
 endfunction()
 
-if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
-    download_cpm()
-else()
-    # resume download if it previously failed
-    file(READ ${CPM_DOWNLOAD_LOCATION} check)
-    if("${check}" STREQUAL "")
-        download_cpm()
-    endif()
-endif()
+# Define "-D${_option}" for _target when _option is ON.
+function(tcm_option_define _target _option)
+    if (${_option})
+        target_compile_definitions(${_target} PUBLIC "${_option}")
+    endif ()
+endfunction()
 
-include(${CPM_DOWNLOAD_LOCATION})
+# TODO Also look at embedding ?
+# Copy folder _src_dir to _dst_dir before target is built.
+function(tcm_target_assets _target _src_dir _dst_dir)
+    add_custom_target(${_target}_copy_assets
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${_src_dir} ${_dst_dir}
+            COMMENT "(${_target}) - Copying assets from directory ${_src_dir} to ${_dst_dir}"
+    )
+    add_dependencies(${_target} ${_target}_copy_assets)
+endfunction()
+
+# Disallow in-source builds
+# Not recommended, you should still do it, as it should be called as early as possible, before installing tcm.
+# From : https://github.com/friendlyanon/cmake-init/
+function(tcm_prevent_in_source_build)
+    if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+        tcm_error("In-source builds are not allowed. Please create a separate build directory and run cmake from there" FATAL)
+    endif()
+endfunction()
+
 
 # ------------------------------------------------------------------------------
 # --- CODE-BLOCKS
@@ -305,9 +300,52 @@ function(tcm_code_block _file)
 endfunction()
 
 # ------------------------------------------------------------------------------
+# --- CPM
+# ------------------------------------------------------------------------------
+# See: https://github.com/cpm-cmake/CPM.cmake
+# Download and install CPM if not already present.
+
+macro(tcm_setup_cpm)
+    if(NOT DEFINED CPM_DOWNLOAD_VERSION)
+        set(CPM_DOWNLOAD_VERSION 0.40.2)
+        set(CPM_HASH_SUM "c8cdc32c03816538ce22781ed72964dc864b2a34a310d3b7104812a5ca2d835d")
+    endif()
+
+    if(CPM_SOURCE_CACHE)
+        set(CPM_DOWNLOAD_LOCATION "${CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+    elseif(DEFINED ENV{CPM_SOURCE_CACHE})
+        set(CPM_DOWNLOAD_LOCATION "$ENV{CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+    else()
+        set(CPM_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+    endif()
+
+    # Expand relative path. This is important if the provided path contains a tilde (~)
+    get_filename_component(CPM_DOWNLOAD_LOCATION ${CPM_DOWNLOAD_LOCATION} ABSOLUTE)
+
+    function(download_cpm)
+        tcm_info("Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
+        file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake
+                ${CPM_DOWNLOAD_LOCATION}
+                EXPECTED_HASH SHA256=${CPM_HASH_SUM}
+        )
+    endfunction()
+
+    if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
+        download_cpm()
+    else()
+        # resume download if it previously failed
+        file(READ ${CPM_DOWNLOAD_LOCATION} check)
+        if("${check}" STREQUAL "")
+            download_cpm()
+        endif()
+    endif()
+
+    include(${CPM_DOWNLOAD_LOCATION})
+    tcm_log("Using CPM : ${CPM_DOWNLOAD_LOCATION}")
+endmacro()
+
+# ------------------------------------------------------------------------------
 # --- SETUP-VERSION
-#    Description :
-#                  Expected to be called from root CMakeLists.txt and from a valid directory.
 # ------------------------------------------------------------------------------
 # Description:
 #   Set project's version using semantic versioning, either from git in dev mode or from version file.
@@ -428,6 +466,42 @@ endmacro()
 # --- VARIABLES
 # ------------------------------------------------------------------------------
 
+macro(tcm__setup_variables)
+
+    #-------------------------------------------------------------------------------
+    #   Computed GoTo
+    #
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")                      # using Clang
+        #if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")    # using clang with clang-cl front end
+        #elseif (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU") # using clang with regular front end
+        #endif()
+        set(TCM_SUPPORT_COMPUTED_GOTOS TRUE)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")                    # using GCC
+        set(TCM_SUPPORT_COMPUTED_GOTOS TRUE)
+        #elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")                 # using Intel C++
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")                   # using Visual Studio C++
+        set(TCM_SUPPORT_COMPUTED_GOTOS FALSE)
+    endif()
+
+    #-------------------------------------------------------------------------------
+    #   Warning Guard
+    #
+    # target_include_directories with the SYSTEM modifier will request the compiler
+    # to omit warnings from the provided paths, if the compiler supports that.
+    # This is to provide a user experience similar to find_package when
+    # add_subdirectory or FetchContent is used to consume this project
+    if(PROJECT_IS_TOP_LEVEL)
+        set(TCM_WARNING_GUARD "")
+    else()
+        option(TCM_INCLUDES_WITH_SYSTEM "Use SYSTEM modifier for shared's includes, disabling warnings" ON)
+        mark_as_advanced(TCM_INCLUDES_WITH_SYSTEM)
+        if(TCM_INCLUDES_WITH_SYSTEM)
+            set(TCM_WARNING_GUARD SYSTEM)
+        endif()
+    endif ()
+
+endmacro()
+
 # ------------------------------------------------------------------------------
 # --- SETUP
 # ------------------------------------------------------------------------------
@@ -435,6 +509,7 @@ macro(tcm_setup)
     set(CMAKE_MESSAGE_CONTEXT_SHOW  TRUE)
     set(TCM_SECTION_LIST "${PROJECT_NAME}")
     tcm__refresh_message_context()
+    tcm__setup_variables()
 endmacro()
 
 # Automatically setup tcm on include
