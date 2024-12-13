@@ -144,11 +144,19 @@ mkdir -p cmake
 * Download either :
   * `get_tcm.cmake` - for a more efficient way to download new version.
   ```bash
-  wget -O cmake/tcm.cmake https://github.com/tblauwe/tcm.cmake/releases/latest/download/get_tcm.cmake
+  wget -O cmake/tcm.cmake https://raw.githubusercontent.com/TBlauwe/tcm/refs/heads/master/cmake/get_tcm.cmake
   ```
+  * Include it in your CMakeLists.txt, e.g. 
+  ```cmake
+  set(TCM_DOWNLOAD_VERSION 0.1)
+  include(cmake/get_tcm.cmake)
+  ```
+  
+--or-- 
+
   * `tcm.cmake` - to get file directly
   ```bash
-  wget -O cmake/tcm.cmake https://github.com/tblauwe/tcm.cmake/releases/latest/download/tcm.cmake
+  wget -O cmake/tcm.cmake https://raw.githubusercontent.com/TBlauwe/tcm/refs/heads/master/cmake/tcm.cmake
   ```
 
 * Include it, e.g. `include(cmake/tcm.cmake)`
@@ -158,9 +166,9 @@ mkdir -p cmake
 
 ```cmake
 file(
-    DOWNLOAD
-    https://github.com/tblauwe/TCM/releases/download/v0.1.0/tcm.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/cmake/tcm.cmake
+    DOWNLOAD 
+        https://raw.githubusercontent.com/TBlauwe/tcm/refs/heads/master/cmake/tcm.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/cmake/tcm.cmake
 )
 include(${CMAKE_CURRENT_BINARY_DIR}/cmake/tcm.cmake)
 ```

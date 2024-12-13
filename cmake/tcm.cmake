@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # File:
-#   CMakeLists.txt
+#   tcm.cmake
 #
 # Author:
 #   TBlauwe
@@ -9,9 +9,6 @@
 #   Opinionated CMake module to share and manage common functionality and settings for C++ / C project.
 #   Functions and macros are all prefixed with tcm_.
 #   Private functions and macros are all prefixed with tcm__ (double underscore).
-#
-# Usage:
-#   include(cmake/tcm.cmake) # tcm_setup() is called automatically.
 # ------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.21) # TODO Check for minimum required version.
 
