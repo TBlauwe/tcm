@@ -240,6 +240,45 @@ function(tcm_target_enable_optimisation _target)
     endif ()
 endfunction()
 
+function(tcm_target_enable_warnings _target)
+    if (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC OR TCM_EMSCRIPTEN)
+        target_compile_options(${_target} PRIVATE
+                #$<$<CONFIG:RELEASE>:-Werror> # Treat warnings as error
+                $<$<CONFIG:Debug>:-Wshadow>
+                $<$<CONFIG:Debug>:-Wunused>
+                -Wall -Wextra
+                -Wnon-virtual-dtor
+                -Wold-style-cast
+                -Wcast-align
+                -Woverloaded-virtual
+                -Wpedantic
+                -Wconversion
+                -Wsign-conversion
+                -Wdouble-promotion
+                -Wformat=2
+                -Wno-c++98-compat
+                -Wno-c++98-compat-pedantic
+                -Wno-c++98-c++11-compat-pedantic
+        )
+
+    elseif (TCM_MSVC)
+        target_compile_options(${_target} PRIVATE
+                #$<$<CONFIG:RELEASE>:/WX> # Treat warnings as error
+                /W4
+                /w14242 /w14254 /w14263
+                /w14265 /w14287 /we4289
+                /w14296 /w14311 /w14545
+                /w14546 /w14547 /w14549
+                /w14555 /w14619 /w14640
+                /w14826 /w14905 /w14906
+                /w14928)
+
+    else ()
+        tcm_warn("tcm_target_enable_warnings(${_target}) does not support : ${CMAKE_CXX_COMPILER_ID}."
+                "Following compiler are supported: Clang, GNU, MSVC, AppleClang and emscripten.")
+    endif ()
+endfunction()
+
 # ------------------------------------------------------------------------------
 # --- CODE-BLOCKS
 # ------------------------------------------------------------------------------
