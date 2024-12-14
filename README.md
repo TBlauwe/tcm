@@ -56,7 +56,7 @@ Include sources files inside a code block in markdown files.
 * Files are overwritten only when a code-block has changed.
 
 ```cmake 
-tcm_code_block(README.md)
+tcm_code_blocks(README.md)
 # In README.md
 #   <!--BEGIN_INCLUDE="relative_path/to/file.cpp"-->
 #   Everything between this two tags will be replaced by the content of the file inside a code block.

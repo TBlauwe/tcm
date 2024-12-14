@@ -1,5 +1,4 @@
-This should contain a code block with `main.cpp` contents.
-<!--BEGIN_INCLUDE="code-block/main.cpp"-->
+<!--BEGIN_INCLUDE="main.cpp"-->
 ```cpp
 #include <iostream>
 

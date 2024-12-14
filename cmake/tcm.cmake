@@ -295,9 +295,9 @@ endfunction()
 #   <!--END_INCLUDE-->
 #
 #   // In some cmake file, like root CMakeLists.txt
-#   tcm_code_block(README.md)
+#   tcm_code_blocks(README.md)
 
-function(tcm_code_block _file)
+function(tcm_code_blocks _file)
     message(CHECK_START "Looking for code-blocks to update in ${_file}")
 
     if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_file})
@@ -308,7 +308,7 @@ function(tcm_code_block _file)
     set(NEED_UPDATE FALSE)	# Update file when at least one code block was updated.
     set(STAMP_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/code-blocks")
     set(PATTERN "(<!--BEGIN_INCLUDE=\"(.*)\"-->)(.*)(<!--END_INCLUDE-->)")
-    file(READ ${FILENAME} INPUT_CONTENT)
+    file(READ ${_file} INPUT_CONTENT)
     string(REGEX MATCHALL ${PATTERN} matches ${INPUT_CONTENT})
 
     if(NOT matches)
