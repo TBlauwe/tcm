@@ -10,14 +10,14 @@
 #   Functions and macros are all prefixed with tcm_.
 #   Private functions and macros are all prefixed with tcm__ (double underscore).
 # ------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.21) # TODO Check for minimum required version.
+cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : https://cmake.org/cmake/help/latest/command/try_compile.html
 
 
 # ------------------------------------------------------------------------------
 # --- System Modules
 # ------------------------------------------------------------------------------
-include(CMakePrintHelpers)
-include(CMakeDependentOption)
+#include(CMakePrintHelpers)
+#include(CMakeDependentOption)
 #include(CMakeParseArguments) # Since 3.5, it is implemented natively. https://cmake.org/cmake/help/latest/command/cmake_parse_arguments.html
 
 
@@ -25,11 +25,7 @@ include(CMakeDependentOption)
 # --- OPTIONS
 # ------------------------------------------------------------------------------
 option(TCM_VERBOSE "Verbose messages during CMake runs" ${PROJECT_IS_TOP_LEVEL})
-
-
-# ------------------------------------------------------------------------------
-# --- VARIABLES
-# ------------------------------------------------------------------------------
+option(TCM_EXE_DIR "A convenient folder to store executables" "${CMAKE_CURRENT_BINARY_DIR}/bin")
 
 
 # ------------------------------------------------------------------------------
@@ -221,6 +217,28 @@ function(tcm_prevent_in_source_build)
     endif()
 endfunction()
 
+function(tcm_target_enable_optimisation _target)
+    if(TCM_EMSCRIPTEN)
+        target_compile_options(${_target} PUBLIC "-Os")
+        target_link_options(${_target} PUBLIC "-Os")
+
+    elseif (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC)
+        target_compile_options(${_target} PRIVATE
+                $<$<CONFIG:RELEASE>:-O3>
+                $<$<CONFIG:RELEASE>:-flto>
+                $<$<CONFIG:RELEASE>:-march=native>
+        )
+        target_link_options(${_target} PRIVATE $<$<CONFIG:RELEASE>:-O3>)
+
+    elseif (TCM_MSVC)
+        target_compile_options(${_target} PRIVATE $<$<CONFIG:RELEASE>:/O3>)
+        target_link_options(${_target} PRIVATE $<$<CONFIG:RELEASE>:/O3>)
+
+    else ()
+        tcm_warn("tcm_target_enable_optimisation(${_target}) does not support : ${CMAKE_CXX_COMPILER_ID}."
+                "Following compiler are supported: Clang, GNU, MSVC, AppleClang and emscripten.")
+    endif ()
+endfunction()
 
 # ------------------------------------------------------------------------------
 # --- CODE-BLOCKS
@@ -303,6 +321,7 @@ endfunction()
 # Download and install CPM if not already present.
 
 macro(tcm_setup_cpm)
+    set(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
     if(NOT DEFINED CPM_DOWNLOAD_VERSION)
         set(CPM_DOWNLOAD_VERSION 0.40.2)
         set(CPM_HASH_SUM "c8cdc32c03816538ce22781ed72964dc864b2a34a310d3b7104812a5ca2d835d")
@@ -430,7 +449,7 @@ endfunction()
 # Usage :
 #   tcm_setup_cache()
 
-macro(tcm_setup_cache)
+function(tcm_setup_cache)
     if(EMSCRIPTEN) # Doesn't seems to work with emscripten (https://github.com/emscripten-core/emscripten/issues/11974)
         return()
     endif()
@@ -452,33 +471,66 @@ macro(tcm_setup_cache)
     find_program(CACHE_BINARY NAMES ${CACHE_OPTION_VALUES})
     if(CACHE_BINARY)
         tcm_log("Using Cache System : ${CACHE_BINARY}.")
-        set(CMAKE_CXX_COMPILER_LAUNCHER ${CACHE_BINARY} CACHE FILEPATH "CXX compiler cache used")
-        set(CMAKE_C_COMPILER_LAUNCHER ${CACHE_BINARY} CACHE FILEPATH "C compiler cache used")
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
+        set(CMAKE_C_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
     else()
         tcm_warn("${CACHE_OPTION} is enabled but was not found. Not using it")
     endif()
-endmacro()
+endfunction()
 
 # ------------------------------------------------------------------------------
 # --- VARIABLES
 # ------------------------------------------------------------------------------
-
 macro(tcm__setup_variables)
+    #-------------------------------------------------------------------------------
+    # Set host machine
+    set (TCM_HOST_WINDOWS 0)
+    set (TCM_HOST_OSX 0)
+    set (TCM_HOST_LINUX 0)
+    if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
+        set(TCM_HOST_WINDOWS 1)
+        tcm_debug("Host system : Windows")
+    elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Darwin")
+        set(TCM_HOST_OSX 1)
+        tcm_debug("Host system : OSX")
+    elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+        set(TCM_HOST_LINUX 1)
+        tcm_debug("Host system : Linux")
+    else()
+        set(TCM_HOST_LINUX 1)
+        tcm_debug("Host system not recognized, setting to 'Linux'")
+    endif()
 
     #-------------------------------------------------------------------------------
-    #   Computed GoTo
-    #
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")                      # using Clang
-        #if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")    # using clang with clang-cl front end
-        #elseif (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU") # using clang with regular front end
-        #endif()
-        set(TCM_SUPPORT_COMPUTED_GOTOS TRUE)
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")                    # using GCC
-        set(TCM_SUPPORT_COMPUTED_GOTOS TRUE)
-        #elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")                 # using Intel C++
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")                   # using Visual Studio C++
-        set(TCM_SUPPORT_COMPUTED_GOTOS FALSE)
+    # Set Compiler
+    tcm_debug("Compiler : ${CMAKE_CXX_COMPILER_ID}")
+    if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+        set(TCM_CLANG 1)
+        if (${CMAKE_CXX_COMPILER_ID} MATCHES "AppleClang")
+            set(TCM_APPLE_CLANG 1)
+        endif()
+        if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC") # using clang with clang-cl front end
+            set(TCM_CLANG_CL 1)
+        endif()
+    elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
+        set(TCM_GCC 1)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+        set(TCM_INTEL 1)
+    elseif (MSVC)
+        set(TCM_MSVC 1)
+    else()
+        if (EMSCRIPTEN)
+            set(TCM_EMSCRIPTEN 1)
+            set(TCM_CLANG 1)
+        #elseif (TCM_ANDROID)
+        #    set(TCM_CLANG 1)
+        endif()
     endif()
+
+    #-------------------------------------------------------------------------------
+    #   Computed Gotos
+    try_compile(TCM_SUPPORT_COMPUTED_GOTOS SOURCE_FROM_CONTENT computed_goto_test.c "int main() { static void* labels[] = {&&label1, &&label2}; int i = 0; goto *labels[i]; label1: return 0; label2: return 1; } ")
+    tcm_debug("Feature support - computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
 
     #-------------------------------------------------------------------------------
     #   Warning Guard
@@ -498,6 +550,7 @@ macro(tcm__setup_variables)
     endif ()
 
 endmacro()
+
 
 # ------------------------------------------------------------------------------
 # --- SETUP
