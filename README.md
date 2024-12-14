@@ -2,12 +2,22 @@
 
 ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
-An opinionated CMake script to provide several functionalities shared across C / C++ projects.
+An opinionated single CMake script to provide several functionalities shared across C / C++ projects.
 
 > [!NOTE]
 >
 > As most of my other repositories, they are mostly intended for personal usage and learning.
 > You are probably better off looking elsewhere, like [awesome cmake](https://github.com/onqtam/awesome-cmake).
+
+__Rationale__ 
+
+C / C++ projects have a lot of boilerplate (for building, packaging, testing, benchmarking, profiling, documentation, etc.)
+One solution is to start from a template. Overtime, template will update, fix bugs, bring new functionalities and so on. 
+There are ways to sync changes, but there are still some friction, notably template with generated code.
+In some way, we could see this as the inheritance vs composition problem.
+This CMake module favors composition over inheritance. 
+Choose functionalities you need, without the burden of those you don't need.
+
 
 ## Overview
 
