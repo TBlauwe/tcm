@@ -1,4 +1,5 @@
 function(tcm_setup_project_version)
+    find_package(Git QUIET)
     if (GIT_FOUND AND ${PROJECT_IS_TOP_LEVEL})
         # Get last tag from git
         execute_process(COMMAND ${GIT_EXECUTABLE} describe --abbrev=0 --tags

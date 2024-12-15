@@ -19,8 +19,7 @@ add_subdirectory(src) # Generate tcm.cmake
 # ------------------------------------------------------------------------------
 # --- TESTS
 # ------------------------------------------------------------------------------
-include(cmake/temp_tcm.cmake) # Automatically calls tcm_setup
-#include(cmake/tcm.cmake) # Automatically calls tcm_setup
+include(cmake/tcm.cmake) # Automatically calls tcm_setup
 tcm_setup_cache()
 tcm_setup_cpm()
 tcm_setup_project_version()

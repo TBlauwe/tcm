@@ -12,31 +12,11 @@
 # ------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : https://cmake.org/cmake/help/latest/command/try_compile.html
 
-
-# ------------------------------------------------------------------------------
-# --- System Modules
-# ------------------------------------------------------------------------------
-#include(CMakePrintHelpers)
-#include(CMakeDependentOption)
-#include(CMakeParseArguments) # Since 3.5, it is implemented natively. https://cmake.org/cmake/help/latest/command/cmake_parse_arguments.html
-
-
-
 # ------------------------------------------------------------------------------
 # --- OPTIONS
 # ------------------------------------------------------------------------------
-option(TCM_VERBOSE "Verbose messages during CMake runs" ${PROJECT_IS_TOP_LEVEL})
-option(TCM_EXE_DIR "A convenient folder to store executables" "${CMAKE_CURRENT_BINARY_DIR}/bin")
-
-
-# ------------------------------------------------------------------------------
-# --- OPTIONS
-# ------------------------------------------------------------------------------
-macro(tcm__default_value _arg _value)
-    if(NOT DEFINED ${_arg})
-        set(${_arg} ${_value})
-    endif ()
-endmacro()
+option(TCM_VERBOSE "Verbose messages during CMake runs"         ${PROJECT_IS_TOP_LEVEL})
+option(TCM_EXE_DIR "A convenient folder to store executables"   "${CMAKE_CURRENT_BINARY_DIR}/bin")
 
 
 # ------------------------------------------------------------------------------
@@ -44,7 +24,6 @@ endmacro()
 # ------------------------------------------------------------------------------
 # This section contains some utility functions for logging purposes
 # They are simple wrappers over `message()`, whom are mostly noop when current project is not top level.
-
 #-------------------------------------------------------------------------------
 #   Indent cmake message.
 #
@@ -184,6 +163,16 @@ endmacro()
 
 #-------------------------------------------------------------------------------
 #   For internal usage.
+#   Setup logging by setting some variables.
+#
+macro(tcm__setup_logging)
+    set(CMAKE_MESSAGE_CONTEXT_SHOW  TRUE)
+    set(TCM__SECTION_LIST "${PROJECT_NAME}")
+    tcm__refresh_message_context()
+endmacro()
+
+#-------------------------------------------------------------------------------
+#   For internal usage.
 #   Refresh CMAKE_MESSAGE_CONTEXT a section.
 #
 function(tcm__refresh_message_context)
@@ -191,25 +180,33 @@ function(tcm__refresh_message_context)
     set(CMAKE_MESSAGE_CONTEXT ${_TCM_SECTIONS_STRING} PARENT_SCOPE)
 endfunction()
 
+
 # ------------------------------------------------------------------------------
-# --- Miscellaneous functions
+# --- UTILITY
 # ------------------------------------------------------------------------------
-# Prevent warnings from displaying when building target
-# Useful when you do not want libraries warnings polluting your build output
-# TODO Seems to work in some cases but not all.
+#-------------------------------------------------------------------------------
+#   Prevent warnings from displaying when building target
+#   Useful when you do not want libraries warnings polluting your build output
+#   TODO Seems to work in some cases but not all.
+#
 function(tcm_suppress_warnings _target)
     set_target_properties(${_target} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${_target},INTERFACE_INCLUDE_DIRECTORIES>)
 endfunction()
 
-# Define "-D${_option}" for _target when _option is ON.
+
+#-------------------------------------------------------------------------------
+#   Define "-D${_option}" for _target when _option is ON.
+#
 function(tcm_option_define _target _option)
     if (${_option})
         target_compile_definitions(${_target} PUBLIC "${_option}")
     endif ()
 endfunction()
 
-# TODO Also look at embedding ?
-# Copy folder _src_dir to _dst_dir before target is built.
+#-------------------------------------------------------------------------------
+#   TODO Also look at embedding ?
+#   Copy folder _src_dir to _dst_dir before target is built.
+#
 function(tcm_target_assets _target _src_dir _dst_dir)
     add_custom_target(${_target}_copy_assets
             COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -219,15 +216,20 @@ function(tcm_target_assets _target _src_dir _dst_dir)
     add_dependencies(${_target} ${_target}_copy_assets)
 endfunction()
 
-# Disallow in-source builds
-# Not recommended, you should still do it, as it should be called as early as possible, before installing tcm.
-# From : https://github.com/friendlyanon/cmake-init/
+#-------------------------------------------------------------------------------
+#   Disallow in-source builds
+#   Not recommended, you should still do it, as it should be called as early as possible, before installing tcm.
+#   From : https://github.com/friendlyanon/cmake-init/
+#
 function(tcm_prevent_in_source_build)
     if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
         tcm_error("In-source builds are not allowed. Please create a separate build directory and run cmake from there" FATAL)
     endif()
 endfunction()
 
+#-------------------------------------------------------------------------------
+#   Enable optimisation flags on release builds
+#
 function(tcm_target_enable_optimisation _target)
     if(TCM_EMSCRIPTEN)
         target_compile_options(${_target} PUBLIC "-Os")
@@ -251,6 +253,10 @@ function(tcm_target_enable_optimisation _target)
     endif ()
 endfunction()
 
+
+#-------------------------------------------------------------------------------
+#   Enable warnings flags
+#
 function(tcm_target_enable_warnings _target)
     if (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC OR TCM_EMSCRIPTEN)
         target_compile_options(${_target} PRIVATE
@@ -290,6 +296,90 @@ function(tcm_target_enable_warnings _target)
     endif ()
 endfunction()
 
+#-------------------------------------------------------------------------------
+#   Set a default value to a var if not defined.
+#
+macro(tcm__default_value _arg _value)
+    if(NOT DEFINED ${_arg})
+        set(${_arg} ${_value})
+    endif ()
+endmacro()
+
+
+# ------------------------------------------------------------------------------
+# --- VARIABLES
+# ------------------------------------------------------------------------------
+macro(tcm__setup_variables)
+    #-------------------------------------------------------------------------------
+    # Set host machine
+    set (TCM_HOST_WINDOWS 0)
+    set (TCM_HOST_OSX 0)
+    set (TCM_HOST_LINUX 0)
+    if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
+        set(TCM_HOST_WINDOWS 1)
+        tcm_debug("Host system : Windows")
+    elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Darwin")
+        set(TCM_HOST_OSX 1)
+        tcm_debug("Host system : OSX")
+    elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+        set(TCM_HOST_LINUX 1)
+        tcm_debug("Host system : Linux")
+    else()
+        set(TCM_HOST_LINUX 1)
+        tcm_debug("Host system not recognized, setting to 'Linux'")
+    endif()
+
+    #-------------------------------------------------------------------------------
+    # Set Compiler
+    tcm_debug("Compiler : ${CMAKE_CXX_COMPILER_ID}")
+    if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+        set(TCM_CLANG 1)
+        if (${CMAKE_CXX_COMPILER_ID} MATCHES "AppleClang")
+            set(TCM_APPLE_CLANG 1)
+        endif()
+        if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC") # using clang with clang-cl front end
+            set(TCM_CLANG_CL 1)
+        endif()
+    elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
+        set(TCM_GCC 1)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+        set(TCM_INTEL 1)
+    elseif (MSVC)
+        set(TCM_MSVC 1)
+    else()
+        if (EMSCRIPTEN)
+            set(TCM_EMSCRIPTEN 1)
+            set(TCM_CLANG 1)
+            #elseif (TCM_ANDROID)
+            #    set(TCM_CLANG 1)
+        endif()
+    endif()
+
+    #-------------------------------------------------------------------------------
+    #   Computed Gotos
+    try_compile(TCM_SUPPORT_COMPUTED_GOTOS SOURCE_FROM_CONTENT computed_goto_test.c "int main() { static void* labels[] = {&&label1, &&label2}; int i = 0; goto *labels[i]; label1: return 0; label2: return 1; } ")
+    tcm_debug("Feature support - computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
+
+    #-------------------------------------------------------------------------------
+    #   Warning Guard
+    #
+    # target_include_directories with the SYSTEM modifier will request the compiler
+    # to omit warnings from the provided paths, if the compiler supports that.
+    # This is to provide a user experience similar to find_package when
+    # add_subdirectory or FetchContent is used to consume this project
+    if(PROJECT_IS_TOP_LEVEL)
+        set(TCM_WARNING_GUARD "")
+    else()
+        option(TCM_INCLUDES_WITH_SYSTEM "Use SYSTEM modifier for shared's includes, disabling warnings" ON)
+        mark_as_advanced(TCM_INCLUDES_WITH_SYSTEM)
+        if(TCM_INCLUDES_WITH_SYSTEM)
+            set(TCM_WARNING_GUARD SYSTEM)
+        endif()
+    endif ()
+
+endmacro()
+
+
 # ------------------------------------------------------------------------------
 # --- CODE-BLOCKS
 # ------------------------------------------------------------------------------
@@ -307,7 +397,6 @@ endfunction()
 #
 #   // In some cmake file, like root CMakeLists.txt
 #   tcm_code_blocks(README.md)
-
 function(tcm_code_blocks _file)
     message(CHECK_START "Looking for code-blocks to update in ${_file}")
 
@@ -364,12 +453,12 @@ function(tcm_code_blocks _file)
     endif()
 endfunction()
 
+
 # ------------------------------------------------------------------------------
-# --- CPM
+# --- SETUP CPM
 # ------------------------------------------------------------------------------
 # See: https://github.com/cpm-cmake/CPM.cmake
 # Download and install CPM if not already present.
-
 macro(tcm_setup_cpm)
     set(CPM_INDENT "   ")
     set(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
@@ -411,6 +500,7 @@ macro(tcm_setup_cpm)
     tcm_log("Using CPM : ${CPM_DOWNLOAD_LOCATION}")
 endmacro()
 
+
 # ------------------------------------------------------------------------------
 # --- SETUP PROJECT VERSION
 # ------------------------------------------------------------------------------
@@ -424,7 +514,7 @@ endmacro()
 # Usage :
 #   tcm_setup_project_version()
 function(tcm_setup_project_version)
-
+    find_package(Git QUIET)
     if (GIT_FOUND AND ${PROJECT_IS_TOP_LEVEL})
         # Get last tag from git
         execute_process(COMMAND ${GIT_EXECUTABLE} describe --abbrev=0 --tags
@@ -436,9 +526,12 @@ function(tcm_setup_project_version)
 
         string(REGEX MATCH "v?([0-9]+)(\.[0-9]+)?(\.[0-9]+)?" VERSION_STRING ${VERSION_STRING})
         if(NOT VERSION_STRING)
-            set(${PROJECT_NAME}_VERSION_MAJOR "0")
-            set(${PROJECT_NAME}_VERSION_MINOR "0")
-            set(${PROJECT_NAME}_VERSION_PATCH "0")
+            set(${PROJECT_NAME}_VERSION_MAJOR "0" PARENT_SCOPE)
+            set(PROJECT_VERSION_MAJOR "0" PARENT_SCOPE)
+            set(${PROJECT_NAME}_VERSION_MINOR "0" PARENT_SCOPE)
+            set(PROJECT_VERSION_MINOR "0" PARENT_SCOPE)
+            set(${PROJECT_NAME}_VERSION_PATCH "0" PARENT_SCOPE)
+            set(PROJECT_VERSION_PATCH "0" PARENT_SCOPE)
         else()
             string(REPLACE "." ";" PARTIAL_VERSION_LIST ${VERSION_STRING})
             list(LENGTH PARTIAL_VERSION_LIST LIST_LENGTH)
@@ -446,15 +539,18 @@ function(tcm_setup_project_version)
             # Set Major
             list(GET PARTIAL_VERSION_LIST 0 VALUE)
             set(${PROJECT_NAME}_VERSION_MAJOR ${VALUE} PARENT_SCOPE)
+            set(PROJECT_VERSION_MAJOR ${VALUE} PARENT_SCOPE)
             set(VERSION ${VALUE})
 
             #Set Minor
             if(LIST_LENGTH GREATER_EQUAL 2)
                 list(GET PARTIAL_VERSION_LIST 1 VALUE)
                 set(${PROJECT_NAME}_VERSION_MINOR ${VALUE} PARENT_SCOPE)
+                set(PROJECT_VERSION_MINOR ${VALUE} PARENT_SCOPE)
                 string(APPEND VERSION ".${VALUE}")
             else ()
                 set(${PROJECT_NAME}_VERSION_MINOR 0 PARENT_SCOPE)
+                set(PROJECT_VERSION_MINOR 0 PARENT_SCOPE)
                 string(APPEND VERSION ".0")
             endif ()
 
@@ -462,14 +558,17 @@ function(tcm_setup_project_version)
             if(LIST_LENGTH GREATER_EQUAL 3)
                 list(GET PARTIAL_VERSION_LIST 2 VALUE)
                 set(${PROJECT_NAME}_VERSION_PATCH ${VALUE} PARENT_SCOPE)
+                set(PROJECT_VERSION_PATCH ${VALUE} PARENT_SCOPE)
                 string(APPEND VERSION ".${VALUE}")
             else ()
                 set(${PROJECT_NAME}_VERSION_PATCH 0 PARENT_SCOPE)
+                set(PROJECT_VERSION_PATCH 0 PARENT_SCOPE)
                 string(APPEND VERSION ".0")
             endif ()
         endif()
 
         set(${PROJECT_NAME}_VERSION ${VERSION} PARENT_SCOPE)
+        set(PROJECT_VERSION ${VERSION} PARENT_SCOPE)
 
         # Save version to file
         file(WRITE ${CMAKE_SOURCE_DIR}/VERSION ${VERSION})
@@ -478,18 +577,24 @@ function(tcm_setup_project_version)
         # Git not available, get version from file
         file(STRINGS "VERSION" VERSION)
         set(${PROJECT_NAME}_VERSION ${VERSION} PARENT_SCOPE)
+        set(PROJECT_VERSION ${VERSION} PARENT_SCOPE)
 
         string(REPLACE "." ";" VERSION_LIST ${VERSION})
         list(GET VERSION_LIST 0 VALUE)
         set(${PROJECT_NAME}_VERSION_MAJOR ${VALUE} PARENT_SCOPE)
+        set(PROJECT_VERSION_MAJOR ${VALUE} PARENT_SCOPE)
         list(GET VERSION_LIST 1 VALUE)
         set(${PROJECT_NAME}_VERSION_MINOR ${VALUE} PARENT_SCOPE)
+        set(PROJECT_VERSION_MINOR ${VALUE} PARENT_SCOPE)
         list(GET VERSION_LIST 2 VALUE)
         set(${PROJECT_NAME}_VERSION_PATCH ${VALUE} PARENT_SCOPE)
+        set(PROJECT_VERSION_PATCH ${VALUE} PARENT_SCOPE)
     endif()
 
     tcm_log("Project Version : ${VERSION}")
 endfunction()
+
+
 
 # ------------------------------------------------------------------------------
 # --- SETUP-CACHE
@@ -499,7 +604,6 @@ endfunction()
 
 # Usage :
 #   tcm_setup_cache()
-
 function(tcm_setup_cache)
     if(EMSCRIPTEN) # Doesn't seems to work with emscripten (https://github.com/emscripten-core/emscripten/issues/11974)
         return()
@@ -547,15 +651,13 @@ endfunction()
 # * DOXYGEN_HTML_COLORSTYLE	LIGHT # required with Doxygen >= 1.9.5
 # * DOXYGEN_DOT_IMAGE_FORMAT svg
 #
-#   By default, DOXYGEN_USE_MDFILE_AS_MAINPAGE is set to "${PROJECT_SOURCE_DIR}/README.md".
+#   By default, DOXYGEN_USE_MDFILE_AS_MAINPAGE is set to "D:/workspace/TBlauwe/tcm/README.md".
 #
 #   Also, TCM provides a default header, footer, stylesheet, extra files (js script).
 #   You can override them, but as they are tightly linked together, you are better off not calling tcm_setup_docs().
 #
 # Usage :
 #   tcm_setup_docs()
-
-#TODO Find a suitable way to download default files
 function(tcm_setup_docs)
     set(options)
     set(oneValueArgs
@@ -564,170 +666,609 @@ function(tcm_setup_docs)
     set(multiValueArgs)
     cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
-    tcm__default_value(TCM_DOXYGEN_AWESOME_VERSION "v2.3.4")
-
-    tcm__default_value(DOXYGEN_HTML_HEADER              "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/header.html")
-    tcm__default_value(DOXYGEN_HTML_FOOTER              "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/footer.html")
-    tcm__default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
-
-    tcm__default_value(TCM_CSS          "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/custom.css")
-    tcm__default_value(TCM_LAYOUT       "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/DoxygenLayout.xml")
-    tcm__default_value(TCM_OUTPUT_DIR   "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
-    tcm__default_value(TCM_HTML_DIR     "${TCM_OUTPUT_DIR}/html")
-
     tcm_begin_section("DOCS")
 
-        # ------------------------------------------------------------------------------
-        # --- Dependencies
-        # ------------------------------------------------------------------------------
-        # Doxygen is a documentation generator and static analysis tool for software source trees.
-        find_package(Doxygen REQUIRED dot QUIET)
-        if(NOT Doxygen_FOUND)
-            tcm_warn("Doxygen not found -> Skipping docs.")
-            tcm_end_section()
-            return()
-        endif()
+    # ------------------------------------------------------------------------------
+    # --- Default values
+    # ------------------------------------------------------------------------------
+    tcm__default_value(TCM_DOXYGEN_AWESOME_VERSION      "v2.3.4")
+    tcm__default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
+    tcm__default_value(DOXYGEN_OUTPUT_DIRECTORY         "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 
-        # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
-        CPMAddPackage(
-                NAME DOXYGEN_AWESOME_CSS
-                GIT_TAG ${TCM_DOXYGEN_AWESOME_VERSION}
-                GITHUB_REPOSITORY jothepro/doxygen-awesome-css
-        )
-        if(NOT DOXYGEN_AWESOME_CSS_ADDED)
-            tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
-            tcm_end_section()
-            return()
-        endif()
+    if(NOT DEFINED DOXYGEN_HTML_HEADER)
+        set(TMP_DOXYGEN_HTML_HEADER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html.temp")
+        file(WRITE ${TMP_DOXYGEN_HTML_HEADER} [=[<!-- HTML header for doxygen 1.9.7-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="$langISO">
+<head>
+    <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=11" />
+    <meta name="generator" content="Doxygen $doxygenversion" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--BEGIN PROJECT_NAME-->
+    <title>$projectname: $title</title><!--END PROJECT_NAME-->
+    <!--BEGIN !PROJECT_NAME-->
+    <title>$title</title><!--END !PROJECT_NAME-->
+    <link href="$relpath^tabs.css" rel="stylesheet" type="text/css" />
+    <!--BEGIN DISABLE_INDEX-->
+    <!--BEGIN FULL_SIDEBAR-->
+    <script type="text/javascript">var page_layout = 1;</script>
+    <!--END FULL_SIDEBAR-->
+    <!--END DISABLE_INDEX-->
+    <script type="text/javascript" src="$relpath^jquery.js"></script>
+    <script type="text/javascript" src="$relpath^dynsections.js"></script>
+    $treeview
+    $search
+    $mathjax
+    $darkmode
+    <link href="$relpath^$stylesheet" rel="stylesheet" type="text/css" />
+    $extrastylesheet
+    <!--Reference: https://jothepro.github.io/doxygen-awesome-css/md_docs_2extensions.html -->
+    <script type="text/javascript" src="$relpath^doxygen-awesome-darkmode-toggle.js"></script>
+    <script type="text/javascript" src="$relpath^doxygen-awesome-fragment-copy-button.js"></script>
+    <script type="text/javascript" src="$relpath^doxygen-awesome-paragraph-link.js"></script>
+    <script type="text/javascript" src="$relpath^doxygen-awesome-interactive-toc.js"></script>
+    <script type="text/javascript" src="$relpath^doxygen-awesome-tabs.js"></script>
+    <script type="text/javascript">
+        DoxygenAwesomeDarkModeToggle.init()
+        DoxygenAwesomeFragmentCopyButton.init()
+        DoxygenAwesomeParagraphLink.init()
+        DoxygenAwesomeInteractiveToc.init()
+        DoxygenAwesomeTabs.init()
+    </script>
+    <!--Fonts-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- https://tholman.com/github-corners/ -->
+    <a href="@PROJECT_HOMEPAGE_URL@" class="github-corner" title="View source on GitHub" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 250 250" width="40" height="40" style="position: absolute; top: 0; border: 0; right: 0; z-index: 99;" aria-hidden="true">
+    <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <!--BEGIN DISABLE_INDEX-->
 
 
-        # ------------------------------------------------------------------------------
-        # --- Mandatory Doxyfile.in settings
-        # ------------------------------------------------------------------------------
-        # --- Required by doxygen-awesome-css
-        set(DOXYGEN_GENERATE_TREEVIEW YES)
-        set(DOXYGEN_DISABLE_INDEX NO)
-        set(DOXYGEN_FULL_SIDEBAR NO)
-        set(DOXYGEN_HTML_COLORSTYLE	LIGHT) # required with Doxygen >= 1.9.5
-        set(DOXYGEN_HTML_HEADER ${TCM_OUTPUT_DIR}/header.html)
-        set(DOXYGEN_HTML_FOOTER	${TCM_OUTPUT_DIR}/footer.html)
+    <!--BEGIN FULL_SIDEBAR-->
+    <div id="side-nav" class="ui-resizable side-nav-resizable">
+        <!-- do not remove this div, it is closed by doxygen! -->
+        <!--END FULL_SIDEBAR-->
+        <!--END DISABLE_INDEX-->
 
-        # --- DOT Graphs
-        # Reference : https://jothepro.github.io/doxygen-awesome-css/md_docs_2tricks.html
-        #(set DOXYGEN_HAVE_DOT YES) # Set to YES if the dot component was requested and found during FindPackage call.
-        set(DOXYGEN_DOT_IMAGE_FORMAT svg)
-        #DOT_TRANSPARENT		= YES # Doxygen 1.9.8 report this line as obsolete
+        <div id="top">
+            <!-- do not remove this div, it is closed by doxygen! -->
+            <!--BEGIN TITLEAREA-->
+            <div id="titlearea">
+                <table cellspacing="0" cellpadding="0">
+                    <tbody>
+                        <tr id="projectrow">
+                            <!--BEGIN PROJECT_LOGO-->
+                            <td id="projectlogo"><img alt="Logo" src="$relpath^$projectlogo" /></td>
+                            <!--END PROJECT_LOGO-->
+                            <!--BEGIN PROJECT_NAME-->
+                            <td id="projectalign">
+                                <div id="projectname">
+                                    $projectname<!--BEGIN PROJECT_NUMBER--><span id="projectnumber">&#160;$projectnumber</span><!--END PROJECT_NUMBER-->
+                                </div>
+                                <!--BEGIN PROJECT_BRIEF--><div id="projectbrief">$projectbrief</div><!--END PROJECT_BRIEF-->
+                            </td>
+                            <!--END PROJECT_NAME-->
+                            <!--BEGIN !PROJECT_NAME-->
+                            <!--BEGIN PROJECT_BRIEF-->
+                            <td>
+                                <div id="projectbrief">$projectbrief</div>
+                            </td>
+                            <!--END PROJECT_BRIEF-->
+                            <!--END !PROJECT_NAME-->
+                            <!--BEGIN DISABLE_INDEX-->
+                            <!--BEGIN SEARCHENGINE-->
+                            <!--BEGIN !FULL_SIDEBAR-->
+                            <td>$searchbox</td>
+                            <!--END !FULL_SIDEBAR-->
+                            <!--END SEARCHENGINE-->
+                            <!--END DISABLE_INDEX-->
+                        </tr>
+                        <!--BEGIN SEARCHENGINE-->
+                        <!--BEGIN FULL_SIDEBAR-->
+                        <tr><td colspan="2">$searchbox</td></tr>
+                        <!--END FULL_SIDEBAR-->
+                        <!--END SEARCHENGINE-->
+                    </tbody>
+                </table>
+            </div>
+            <!--END TITLEAREA-->
+            <!-- end header part -->
+]=])
+        set(DOXYGEN_HTML_HEADER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html")
+        configure_file(${TMP_DOXYGEN_HTML_HEADER} ${DOXYGEN_HTML_HEADER})
+    endif ()
 
-        # NOTE : As specified by docs, list will be properly handled by doxygen_add_docs : https://cmake.org/cmake/help/latest/module/FindDoxygen.html
-        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js")
-        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js")
-        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-paragraph-link.js")
-        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-interactive-toc.js")
-        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-tabs.js")
+    if(NOT DEFINED DOXYGEN_HTML_FOOTER)
+        set(TMP_DOXYGEN_HTML_FOOTER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html.temp")
+        file(WRITE ${TMP_DOXYGEN_HTML_FOOTER} [=[<!-- HTML footer for doxygen 1.9.8-->
+<!-- start footer part -->
+<!--BEGIN GENERATE_TREEVIEW-->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    $navpath
+    <li class="footer">$generatedby <a href="https://www.doxygen.org/index.html"><img class="footer" src="$relpath^doxygen.svg" width="104" height="31" alt="doxygen"/></a> $doxygenversion
+    and with <a href="https://github.com/jothepro/doxygen-awesome-css/">Doxygen Awesome CSS</a>.
+      </li>
+  </ul>
+</div>
+<!--END GENERATE_TREEVIEW-->
+<!--BEGIN !GENERATE_TREEVIEW-->
+<hr class="footer"/><address class="footer"><small>
+$generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="$relpath^doxygen.svg" width="104" height="31" alt="doxygen"/></a> $doxygenversion
+    with <a href="https://github.com/jothepro/doxygen-awesome-css/">Doxygen Awesome CSS</a>.
+</small></address>
+<!--END !GENERATE_TREEVIEW-->
+</body>
+</html>
+]=])
+        set(DOXYGEN_HTML_FOOTER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html")
+        configure_file(${TMP_DOXYGEN_HTML_FOOTER} ${DOXYGEN_HTML_FOOTER})
+    endif ()
 
-        list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome.css)
-        list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only.css)
-        list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only-darkmode-toggle.css)
-        list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${TCM_CSS})
+    if(NOT DEFINED DOXYGEN_LAYOUT_FILE)
+        set(DOXYGEN_LAYOUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
+        file(WRITE ${DOXYGEN_LAYOUT_FILE} [=[<?xml version="1.0" encoding="UTF-8"?>
+<doxygenlayout version="1.0">
+  <!-- Generated by doxygen 1.9.8 -->
+  <!-- Navigation index tabs for HTML output -->
+  <navindex>
+    <tab type="mainpage" visible="yes" title=""/>
 
-        # ------------------------------------------------------------------------------
-        # --- CONFIGURATION
-        # ------------------------------------------------------------------------------
-        configure_file(${DOXYGEN_HTML_HEADER} ${TCM_OUTPUT_DIR}/header.html)
-        configure_file(${DOXYGEN_HTML_FOOTER} ${TCM_OUTPUT_DIR}/footer.html)
+    <tab type="topics" visible="yes" title="Features" intro=""/>
 
-        doxygen_add_docs(docs)
+    <tab type="usergroup" visible="yes" title="Handbook" intro="">
+      <tab type="pages" visible="yes" title="" intro=""/>
+    </tab>
 
-        # Utility target to open docs
-        add_custom_target(open_docs COMMAND "${CMAKE_CURRENT_BINARY_DIR}/html/index.html")
-        add_dependencies(open_docs docs)
+    <tab type="examples" visible="yes" title="Examples" intro=""/>
+
+    <tab type="usergroup" visible="yes" title="Reference" intro="">
+      <tab type="modules" visible="yes" title="" intro="">
+        <tab type="modulelist" visible="yes" title="" intro=""/>
+        <tab type="modulemembers" visible="yes" title="" intro=""/>
+      </tab>
+      <tab type="namespaces" visible="yes" title="">
+        <tab type="namespacelist" visible="yes" title="" intro=""/>
+        <tab type="namespacemembers" visible="yes" title="" intro=""/>
+      </tab>
+      <tab type="concepts" visible="yes" title="">
+      </tab>
+      <tab type="interfaces" visible="yes" title="">
+        <tab type="interfacelist" visible="yes" title="" intro=""/>
+        <tab type="interfaceindex" visible="$ALPHABETICAL_INDEX" title=""/>
+        <tab type="interfacehierarchy" visible="yes" title="" intro=""/>
+      </tab>
+      <tab type="classes" visible="yes" title="">
+        <tab type="classlist" visible="yes" title="" intro=""/>
+        <tab type="classindex" visible="$ALPHABETICAL_INDEX" title=""/>
+        <tab type="hierarchy" visible="yes" title="" intro=""/>
+        <tab type="classmembers" visible="yes" title="" intro=""/>
+      </tab>
+      <tab type="structs" visible="yes" title="">
+        <tab type="structlist" visible="yes" title="" intro=""/>
+        <tab type="structindex" visible="$ALPHABETICAL_INDEX" title=""/>
+      </tab>
+      <tab type="exceptions" visible="yes" title="">
+        <tab type="exceptionlist" visible="yes" title="" intro=""/>
+        <tab type="exceptionindex" visible="$ALPHABETICAL_INDEX" title=""/>
+        <tab type="exceptionhierarchy" visible="yes" title="" intro=""/>
+      </tab>
+      <tab type="files" visible="yes" title="">
+        <tab type="filelist" visible="yes" title="" intro=""/>
+        <tab type="globals" visible="yes" title="" intro=""/>
+      </tab>
+    </tab>
+  </navindex>
+
+  <!-- Layout definition for a class page -->
+  <class>
+    <briefdescription visible="yes"/>
+    <includes visible="$SHOW_HEADERFILE"/>
+    <inheritancegraph visible="$CLASS_GRAPH"/>
+    <collaborationgraph visible="yes"/>
+    <memberdecl>
+      <nestedclasses visible="yes" title=""/>
+      <publictypes title=""/>
+      <services title=""/>
+      <interfaces title=""/>
+      <publicslots title=""/>
+      <signals title=""/>
+      <publicmethods title=""/>
+      <publicstaticmethods title=""/>
+      <publicattributes title=""/>
+      <publicstaticattributes title=""/>
+      <protectedtypes title=""/>
+      <protectedslots title=""/>
+      <protectedmethods title=""/>
+      <protectedstaticmethods title=""/>
+      <protectedattributes title=""/>
+      <protectedstaticattributes title=""/>
+      <packagetypes title=""/>
+      <packagemethods title=""/>
+      <packagestaticmethods title=""/>
+      <packageattributes title=""/>
+      <packagestaticattributes title=""/>
+      <properties title=""/>
+      <events title=""/>
+      <privatetypes title=""/>
+      <privateslots title=""/>
+      <privatemethods title=""/>
+      <privatestaticmethods title=""/>
+      <privateattributes title=""/>
+      <privatestaticattributes title=""/>
+      <friends title=""/>
+      <related title="" subtitle=""/>
+      <membergroups visible="yes"/>
+    </memberdecl>
+    <detaileddescription title=""/>
+    <memberdef>
+      <inlineclasses title=""/>
+      <typedefs title=""/>
+      <enums title=""/>
+      <services title=""/>
+      <interfaces title=""/>
+      <constructors title=""/>
+      <functions title=""/>
+      <related title=""/>
+      <variables title=""/>
+      <properties title=""/>
+      <events title=""/>
+    </memberdef>
+    <allmemberslink visible="yes"/>
+    <usedfiles visible="$SHOW_USED_FILES"/>
+    <authorsection visible="yes"/>
+  </class>
+
+  <!-- Layout definition for a namespace page -->
+  <namespace>
+    <briefdescription visible="yes"/>
+    <memberdecl>
+      <nestednamespaces visible="yes" title=""/>
+      <constantgroups visible="yes" title=""/>
+      <interfaces visible="yes" title=""/>
+      <classes visible="yes" title=""/>
+      <concepts visible="yes" title=""/>
+      <structs visible="yes" title=""/>
+      <exceptions visible="yes" title=""/>
+      <typedefs title=""/>
+      <sequences title=""/>
+      <dictionaries title=""/>
+      <enums title=""/>
+      <functions title=""/>
+      <variables title=""/>
+      <membergroups visible="yes"/>
+    </memberdecl>
+    <detaileddescription title=""/>
+    <memberdef>
+      <inlineclasses title=""/>
+      <typedefs title=""/>
+      <sequences title=""/>
+      <dictionaries title=""/>
+      <enums title=""/>
+      <functions title=""/>
+      <variables title=""/>
+    </memberdef>
+    <authorsection visible="yes"/>
+  </namespace>
+
+  <!-- Layout definition for a concept page -->
+  <concept>
+    <briefdescription visible="yes"/>
+    <includes visible="$SHOW_HEADERFILE"/>
+    <definition visible="yes" title=""/>
+    <detaileddescription title=""/>
+    <authorsection visible="yes"/>
+  </concept>
+
+  <!-- Layout definition for a file page -->
+  <file>
+    <briefdescription visible="yes"/>
+    <includes visible="$SHOW_INCLUDE_FILES"/>
+    <includegraph visible="yes"/>
+    <includedbygraph visible="yes"/>
+    <sourcelink visible="yes"/>
+    <memberdecl>
+      <interfaces visible="yes" title=""/>
+      <classes visible="yes" title=""/>
+      <structs visible="yes" title=""/>
+      <exceptions visible="yes" title=""/>
+      <namespaces visible="yes" title=""/>
+      <concepts visible="yes" title=""/>
+      <constantgroups visible="yes" title=""/>
+      <defines title=""/>
+      <typedefs title=""/>
+      <sequences title=""/>
+      <dictionaries title=""/>
+      <enums title=""/>
+      <functions title=""/>
+      <variables title=""/>
+      <membergroups visible="yes"/>
+    </memberdecl>
+    <detaileddescription title=""/>
+    <memberdef>
+      <inlineclasses title=""/>
+      <defines title=""/>
+      <typedefs title=""/>
+      <sequences title=""/>
+      <dictionaries title=""/>
+      <enums title=""/>
+      <functions title=""/>
+      <variables title=""/>
+    </memberdef>
+    <authorsection/>
+  </file>
+
+  <!-- Layout definition for a group page -->
+  <group>
+    <briefdescription visible="yes"/>
+    <groupgraph visible="yes"/>
+    <memberdecl>
+      <nestedgroups visible="yes" title=""/>
+      <modules visible="yes" title=""/>
+      <dirs visible="yes" title=""/>
+      <files visible="yes" title=""/>
+      <namespaces visible="yes" title=""/>
+      <concepts visible="yes" title=""/>
+      <classes visible="yes" title=""/>
+      <defines title=""/>
+      <typedefs title=""/>
+      <sequences title=""/>
+      <dictionaries title=""/>
+      <enums title=""/>
+      <enumvalues title=""/>
+      <functions title=""/>
+      <variables title=""/>
+      <signals title=""/>
+      <publicslots title=""/>
+      <protectedslots title=""/>
+      <privateslots title=""/>
+      <events title=""/>
+      <properties title=""/>
+      <friends title=""/>
+      <membergroups visible="yes"/>
+    </memberdecl>
+    <detaileddescription title=""/>
+    <memberdef>
+      <pagedocs/>
+      <inlineclasses title=""/>
+      <defines title=""/>
+      <typedefs title=""/>
+      <sequences title=""/>
+      <dictionaries title=""/>
+      <enums title=""/>
+      <enumvalues title=""/>
+      <functions title=""/>
+      <variables title=""/>
+      <signals title=""/>
+      <publicslots title=""/>
+      <protectedslots title=""/>
+      <privateslots title=""/>
+      <events title=""/>
+      <properties title=""/>
+      <friends title=""/>
+    </memberdef>
+    <authorsection visible="yes"/>
+  </group>
+
+  <!-- Layout definition for a C++20 module page -->
+  <module>
+    <briefdescription visible="yes"/>
+    <exportedmodules visible="yes"/>
+    <memberdecl>
+      <concepts visible="yes" title=""/>
+      <classes visible="yes" title=""/>
+      <enums title=""/>
+      <typedefs title=""/>
+      <functions title=""/>
+      <variables title=""/>
+      <membergroups title=""/>
+    </memberdecl>
+    <detaileddescription title=""/>
+    <memberdecl>
+      <files visible="yes"/>
+    </memberdecl>
+  </module>
+
+  <!-- Layout definition for a directory page -->
+  <directory>
+    <briefdescription visible="yes"/>
+    <directorygraph visible="yes"/>
+    <memberdecl>
+      <dirs visible="yes"/>
+      <files visible="yes"/>
+    </memberdecl>
+    <detaileddescription title=""/>
+  </directory>
+</doxygenlayout>
+]=])
+    endif ()
+
+    # ------------------------------------------------------------------------------
+    # --- Dependencies
+    # ------------------------------------------------------------------------------
+    # Doxygen is a documentation generator and static analysis tool for software source trees.
+    find_package(Doxygen REQUIRED dot QUIET)
+    if(NOT Doxygen_FOUND)
+        tcm_warn("Doxygen not found -> Skipping docs.")
+        tcm_end_section()
+        return()
+    endif()
+
+    # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
+    CPMAddPackage(
+            NAME DOXYGEN_AWESOME_CSS
+            GIT_TAG ${TCM_DOXYGEN_AWESOME_VERSION}
+            GITHUB_REPOSITORY jothepro/doxygen-awesome-css
+    )
+    if(NOT DOXYGEN_AWESOME_CSS_ADDED)
+        tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
+        tcm_end_section()
+        return()
+    endif()
+
+
+    # ------------------------------------------------------------------------------
+    # --- Mandatory Doxyfile.in settings
+    # ------------------------------------------------------------------------------
+    # --- Required by doxygen-awesome-css
+    set(DOXYGEN_GENERATE_TREEVIEW YES)
+    set(DOXYGEN_DISABLE_INDEX NO)
+    set(DOXYGEN_FULL_SIDEBAR NO)
+    set(DOXYGEN_HTML_COLORSTYLE	LIGHT) # required with Doxygen >= 1.9.5
+
+    # --- DOT Graphs
+    # Reference : https://jothepro.github.io/doxygen-awesome-css/md_docs_2tricks.html
+    #(set DOXYGEN_HAVE_DOT YES) # Set to YES if the dot component was requested and found during FindPackage call.
+    set(DOXYGEN_DOT_IMAGE_FORMAT svg)
+    #set(DOT_TRANSPARENT YES) # Doxygen 1.9.8 report this line as obsolete
+
+    # NOTE : As specified by docs, list will be properly handled by doxygen_add_docs : https://cmake.org/cmake/help/latest/module/FindDoxygen.html
+    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js")
+    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js")
+    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-paragraph-link.js")
+    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-interactive-toc.js")
+    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-tabs.js")
+
+    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome.css)
+    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only.css)
+    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only-darkmode-toggle.css)
+    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css")
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css" [=[/* See references :
+    * https://jothepro.github.io/doxygen-awesome-css/md_docs_2customization.html 
+    * https://github.com/jothepro/doxygen-awesome-css/blob/main/doxygen-custom/custom.css
+*/
+
+html {
+    /* override light-mode variables here */
+    --top-nav-height: 150px;
+    --font-family: 'Roboto',-apple-system,BlinkMacSystemFont,Segoe UI,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
+}
+
+html.dark-mode {
+    /* override dark-mode variables here */
+}
+
+iframe {
+    border-width: 0;
+}
+
+.github-corner svg {
+    fill: var(--primary-light-color);
+    color: var(--page-background-color);
+    width: 72px;
+    height: 72px;
+}
+
+@media screen and (max-width: 767px) {
+    /* Possible fix for long description overlapping with side nav */
+    /* https://github.com/jothepro/doxygen-awesome-css/issues/129 */
+    /* BEGIN */
+    #top {
+        height: var(--top-nav-height);
+    }
+
+    #nav-tree, #side-nav {
+        height: calc(100vh - var(--top-nav-height)) !important;
+    }
+
+    #side-nav {
+        top: var(--top-nav-height);
+    }
+    /* END */
+
+    .github-corner svg {
+        width: 50px;
+        height: 50px;
+    }
+    #projectnumber {
+        margin-right: 22px;
+    }
+}
+
+.alter-theme-button {
+    display: inline-block;
+    cursor: pointer;
+    background: var(--primary-color);
+    color: var(--page-background-color) !important;
+    border-radius: var(--border-radius-medium);
+    padding: var(--spacing-small) var(--spacing-medium);
+    text-decoration: none;
+}
+
+.alter-theme-button:hover {
+    background: var(--primary-dark-color);
+}
+
+html.dark-mode .darkmode_inverted_image img, /* < doxygen 1.9.3 */
+html.dark-mode .darkmode_inverted_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ {
+    filter: brightness(89%) hue-rotate(180deg) invert();
+}
+
+.bordered_image {
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--separator-color);
+    display: inline-block;
+    overflow: hidden;
+}
+
+html.dark-mode .bordered_image img, /* < doxygen 1.9.3 */
+html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ {
+    border-radius: var(--border-radius-small);
+}
+
+.title_screenshot {
+    filter: drop-shadow(0px 3px 10px rgba(0,0,0,0.22));
+    max-width: 500px;
+    margin: var(--spacing-large) 0;
+}
+
+.title_screenshot .caption {
+    display: none;
+}
+
+/* From : https://github.com/SanderMertens/flecs/blob/master/docs/cfg/custom.css */
+#projectlogo img {
+    max-height: calc(var(--title-font-size) * 1.5) !important;
+}
+
+html.light-mode #projectlogo img {
+    content: url(logo_small.png);
+}
+]=])
+
+    list(APPEND DOXYGEN_ALIASES [[html_frame{1}="@htmlonly<iframe src=\"\1\"></iframe>@endhtmlonly"]])
+    list(APPEND DOXYGEN_ALIASES [[html_frame{3}="@htmlonly<iframe src=\"\1\" width=\"\2\" height=\"\3\"></iframe>@endhtmlonly"]])
+    list(APPEND DOXYGEN_ALIASES [[widget{2}="@htmlonly<div class=\"\1\" id=\"\2\"></div>@endhtmlonly"]])
+    list(APPEND DOXYGEN_ALIASES [[Doxygen="[Doxygen](https://www.doxygen.nl/index.html)"]])
+    list(APPEND DOXYGEN_ALIASES [[Doxygen-awesome="[Doxygen Awesome CSS](https://jothepro.github.io/doxygen-awesome-css/)"]])
+
+    # ------------------------------------------------------------------------------
+    # --- CONFIGURATION
+    # ------------------------------------------------------------------------------
+    doxygen_add_docs(docs)
+
+    # Utility target to open docs
+    add_custom_target(open_docs COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
+    add_dependencies(open_docs docs)
     tcm_end_section()
 
 endfunction()
 
 
 # ------------------------------------------------------------------------------
-# --- VARIABLES
-# ------------------------------------------------------------------------------
-macro(tcm__setup_variables)
-    #-------------------------------------------------------------------------------
-    # Set host machine
-    set (TCM_HOST_WINDOWS 0)
-    set (TCM_HOST_OSX 0)
-    set (TCM_HOST_LINUX 0)
-    if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
-        set(TCM_HOST_WINDOWS 1)
-        tcm_debug("Host system : Windows")
-    elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Darwin")
-        set(TCM_HOST_OSX 1)
-        tcm_debug("Host system : OSX")
-    elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
-        set(TCM_HOST_LINUX 1)
-        tcm_debug("Host system : Linux")
-    else()
-        set(TCM_HOST_LINUX 1)
-        tcm_debug("Host system not recognized, setting to 'Linux'")
-    endif()
-
-    #-------------------------------------------------------------------------------
-    # Set Compiler
-    tcm_debug("Compiler : ${CMAKE_CXX_COMPILER_ID}")
-    if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-        set(TCM_CLANG 1)
-        if (${CMAKE_CXX_COMPILER_ID} MATCHES "AppleClang")
-            set(TCM_APPLE_CLANG 1)
-        endif()
-        if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC") # using clang with clang-cl front end
-            set(TCM_CLANG_CL 1)
-        endif()
-    elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-        set(TCM_GCC 1)
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-        set(TCM_INTEL 1)
-    elseif (MSVC)
-        set(TCM_MSVC 1)
-    else()
-        if (EMSCRIPTEN)
-            set(TCM_EMSCRIPTEN 1)
-            set(TCM_CLANG 1)
-        #elseif (TCM_ANDROID)
-        #    set(TCM_CLANG 1)
-        endif()
-    endif()
-
-    #-------------------------------------------------------------------------------
-    #   Computed Gotos
-    try_compile(TCM_SUPPORT_COMPUTED_GOTOS SOURCE_FROM_CONTENT computed_goto_test.c "int main() { static void* labels[] = {&&label1, &&label2}; int i = 0; goto *labels[i]; label1: return 0; label2: return 1; } ")
-    tcm_debug("Feature support - computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
-
-    #-------------------------------------------------------------------------------
-    #   Warning Guard
-    #
-    # target_include_directories with the SYSTEM modifier will request the compiler
-    # to omit warnings from the provided paths, if the compiler supports that.
-    # This is to provide a user experience similar to find_package when
-    # add_subdirectory or FetchContent is used to consume this project
-    if(PROJECT_IS_TOP_LEVEL)
-        set(TCM_WARNING_GUARD "")
-    else()
-        option(TCM_INCLUDES_WITH_SYSTEM "Use SYSTEM modifier for shared's includes, disabling warnings" ON)
-        mark_as_advanced(TCM_INCLUDES_WITH_SYSTEM)
-        if(TCM_INCLUDES_WITH_SYSTEM)
-            set(TCM_WARNING_GUARD SYSTEM)
-        endif()
-    endif ()
-
-endmacro()
-
-# ------------------------------------------------------------------------------
-# --- SETUP
+# --- CLOSURE
 # ------------------------------------------------------------------------------
 macro(tcm_setup)
-    set(CMAKE_MESSAGE_CONTEXT_SHOW  TRUE)
-    set(TCM__SECTION_LIST "${PROJECT_NAME}")
-    tcm__refresh_message_context()
+    tcm__setup_logging()
     tcm__setup_variables()
 endmacro()
 
 # Automatically setup tcm on include
 tcm_setup()
+
