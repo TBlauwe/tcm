@@ -536,47 +536,52 @@ endfunction()
 # ------------------------------------------------------------------------------
 # Description:
 #   Setup documentation using doxygen and doxygen-awesome.
-#   See tcm_setup_docs() for overridable options.
-#   TCM_DOXYGEN_INCLUDE_DIR
-#   TCM_DOXYGEN_EXAMPLE_DIR
+#   Use doxygen_add_docs() under the hood.
+#   Any Doxygen config option can be override by setting relevant variables before calling `tcm_setup_docs()`.
+#   For more information : https://cmake.org/cmake/help/latest/module/FindDoxygen.html
+#
+#   However, following parameters cannot not be overridden, since tcm_setup_docs() is setting them:
+# * DOXYGEN_GENERATE_TREEVIEW YES
+# * DOXYGEN_DISABLE_INDEX NO
+# * DOXYGEN_FULL_SIDEBAR NO
+# * DOXYGEN_HTML_COLORSTYLE	LIGHT # required with Doxygen >= 1.9.5
+# * DOXYGEN_DOT_IMAGE_FORMAT svg
+#
+#   By default, DOXYGEN_USE_MDFILE_AS_MAINPAGE is set to "${PROJECT_SOURCE_DIR}/README.md".
+#
+#   Also, TCM provides a default header, footer, stylesheet, extra files (js script).
+#   You can override them, but as they are tightly linked together, you are better off not calling tcm_setup_docs().
 #
 # Usage :
 #   tcm_setup_docs()
 
+#TODO Find a suitable way to download default files
 function(tcm_setup_docs)
     set(options)
     set(oneValueArgs
             DOXYGEN_AWESOME_VERSION
-            DOXYFILE
-            HEADER
-            FOOTER
-            CSS
-            LAYOUT
-            OUTPUT_DIR
-            HTML_DIR
-            PAGES_DIR
-            ASSETS_DIR
-            INCLUDE_DIR
-            EXAMPLES_DIR
-            LOGO
     )
+    set(multiValueArgs)
     cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
     tcm__default_value(TCM_DOXYGEN_AWESOME_VERSION "v2.3.4")
-    tcm__default_value(TCM_DOXYFILE     "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/Doxyfile.in")
-    tcm__default_value(TCM_HEADER       "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/header.html")
-    tcm__default_value(TCM_FOOTER       "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/footer.html")
+
+    tcm__default_value(DOXYGEN_HTML_HEADER              "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/header.html")
+    tcm__default_value(DOXYGEN_HTML_FOOTER              "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/footer.html")
+    tcm__default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
+
     tcm__default_value(TCM_CSS          "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/custom.css")
     tcm__default_value(TCM_LAYOUT       "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/DoxygenLayout.xml")
     tcm__default_value(TCM_OUTPUT_DIR   "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
     tcm__default_value(TCM_HTML_DIR     "${TCM_OUTPUT_DIR}/html")
-    tcm__default_value(TCM_PAGES_DIR    "${PROJECT_SOURCE_DIR}/docs/pages")
-    tcm__default_value(TCM_ASSETS_DIR   "${PROJECT_SOURCE_DIR}/assets")
-    tcm__default_value(TCM_LOGO         "${PROJECT_SOURCE_DIR}/assets/logo_small_dark.png")
 
     tcm_begin_section("DOCS")
+
+        # ------------------------------------------------------------------------------
+        # --- Dependencies
+        # ------------------------------------------------------------------------------
         # Doxygen is a documentation generator and static analysis tool for software source trees.
-        find_package(Doxygen QUIET)
+        find_package(Doxygen REQUIRED dot QUIET)
         if(NOT Doxygen_FOUND)
             tcm_warn("Doxygen not found -> Skipping docs.")
             tcm_end_section()
@@ -595,42 +600,46 @@ function(tcm_setup_docs)
             return()
         endif()
 
-        configure_file(${TCM_DOXYFILE} ${TCM_OUTPUT_DIR}/Doxyfile)
-        configure_file(${TCM_HEADER} ${TCM_OUTPUT_DIR}/header.html)
-        configure_file(${TCM_FOOTER} ${TCM_OUTPUT_DIR}/footer.html)
 
-        file(GLOB_RECURSE DOCS_PAGES "${TCM_PAGES_DIR}/*.md")
-        file(GLOB_RECURSE DOCS_ASSETS "${TCM_ASSETS_DIR}/*")
+        # ------------------------------------------------------------------------------
+        # --- Mandatory Doxyfile.in settings
+        # ------------------------------------------------------------------------------
+        # --- Required by doxygen-awesome-css
+        set(DOXYGEN_GENERATE_TREEVIEW YES)
+        set(DOXYGEN_DISABLE_INDEX NO)
+        set(DOXYGEN_FULL_SIDEBAR NO)
+        set(DOXYGEN_HTML_COLORSTYLE	LIGHT) # required with Doxygen >= 1.9.5
+        set(DOXYGEN_HTML_HEADER ${TCM_OUTPUT_DIR}/header.html)
+        set(DOXYGEN_HTML_FOOTER	${TCM_OUTPUT_DIR}/footer.html)
 
-        if(IS_DIRECTORY ${TCM_ASSETS_DIR})
-            set(COPY_ASSETS_DIR 1)
-        else()
-            set(COPY_ASSETS_DIR 0)
-        endif()
+        # --- DOT Graphs
+        # Reference : https://jothepro.github.io/doxygen-awesome-css/md_docs_2tricks.html
+        #(set DOXYGEN_HAVE_DOT YES) # Set to YES if the dot component was requested and found during FindPackage call.
+        set(DOXYGEN_DOT_IMAGE_FORMAT svg)
+        #DOT_TRANSPARENT		= YES # Doxygen 1.9.8 report this line as obsolete
 
-        add_custom_target(
-                docs
-                COMMAND ${CMAKE_COMMAND} -E make_directory "${TCM_OUTPUT_DIR}"
-                COMMAND ${CMAKE_COMMAND} -E make_directory "${TCM_HTML_DIR}"
-                COMMAND ${CMAKE_COMMAND} -E $<IF:${COPY_ASSETS_DIR},"copy directory ${TCM_ASSETS_DIR} ${TCM_HTML_DIR}","true">
-                COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-                COMMAND echo "   Docs written to: ${TCM_HTML_DIR}"
-                WORKING_DIRECTORY "${TCM_OUTPUT_DIR}"
-                SOURCES
-                ${TCM_DOXYFILE}
-                ${TCM_HEADER}
-                ${TCM_FOOTER}
-                ${TCM_CSS}
-                ${TCM_LAYOUT}
-                ${DOCS_PAGES}
-                ${DOCS_ASSETS}
-        )
+        # NOTE : As specified by docs, list will be properly handled by doxygen_add_docs : https://cmake.org/cmake/help/latest/module/FindDoxygen.html
+        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js")
+        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js")
+        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-paragraph-link.js")
+        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-interactive-toc.js")
+        list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-tabs.js")
+
+        list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome.css)
+        list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only.css)
+        list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only-darkmode-toggle.css)
+        list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${TCM_CSS})
+
+        # ------------------------------------------------------------------------------
+        # --- CONFIGURATION
+        # ------------------------------------------------------------------------------
+        configure_file(${DOXYGEN_HTML_HEADER} ${TCM_OUTPUT_DIR}/header.html)
+        configure_file(${DOXYGEN_HTML_FOOTER} ${TCM_OUTPUT_DIR}/footer.html)
+
+        doxygen_add_docs(docs)
 
         # Utility target to open docs
-        add_custom_target(
-                open_docs
-                COMMAND "${TCM_HTML_DIR}/index.html"
-        )
+        add_custom_target(open_docs COMMAND "${CMAKE_CURRENT_BINARY_DIR}/html/index.html")
         add_dependencies(open_docs docs)
     tcm_end_section()
 
