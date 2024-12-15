@@ -2,7 +2,20 @@
 
 ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
-An opinionated single CMake script to provide several functionalities shared across C / C++ projects.
+A pluggable opinionated CMake script to provide some functionalities shared across C / C++ projects.
+Only use what suits you !
+
+* Setup __[CPM](https://github.com/cpm-cmake/CPM.cmake)__ for dependency management.
+* Setup project's version from git in dev mode or from generated `VERSION` file in consumed mode.
+* Setup cache using tools like __[ccache](https://ccache.dev/)__.
+* Setup documentation with __[Doxygen](https://www.doxygen.nl/)__ (if installed) and __[Doxygen Awesome](https://github.com/jothepro/doxygen-awesome-css)__.
+
+And some other handy functions :
+* Include source files in code-blocks of your markdown files.
+* Logging facilities for your cmake files
+* and some other functions.
+
+See [Overview](#overview) below for a closer look.
 
 > [!NOTE]
 >
@@ -13,7 +26,7 @@ __Rationale__
 
 C / C++ projects have a lot of boilerplate (for building, packaging, testing, benchmarking, profiling, documentation, etc.)
 One solution is to start from a template. Overtime, template will update, fix bugs, bring new functionalities and so on. 
-There are ways to sync changes, but there are still some friction, notably template with generated code.
+There are ways to sync changes, but there are still some friction, notably with template with generated code.
 In some way, we could see this as the inheritance vs composition problem.
 This CMake module favors composition over inheritance. 
 Choose functionalities you need, without the burden of those you don't need.
@@ -23,7 +36,7 @@ Choose functionalities you need, without the burden of those you don't need.
 
 ### CPM
 
-Download and setup __[CPM](https://github.com/cpm-cmake/CPM.cmake)__.
+Download and setup .
 
 ```cmake 
 #set(CPM_SOURCE_CACHE "~/.cpm/")  # You can also set it as an environment variable, so it works across projects.
@@ -76,6 +89,35 @@ tcm_code_blocks(README.md)
 > [!NOTE]
 >
 > `<!-- -->` was chosen as it is recognized as a comment and won't be rendered in doxygen docs.
+
+___
+
+### Automated Doxygen Setup
+
+Setup documentation with [Doxygen](https://www.doxygen.nl/) (if installed) and [Doxygen Awesome](https://github.com/jothepro/doxygen-awesome-css)
+
+```cmake 
+tcm_setup_docs()
+```
+Here what it gives with this repository.
+
+![sample_documentation.png](assets/sample_documentation.png)
+
+Two targets are provided : 
+
+* `docs` - to build documentation
+* `open_docs` - to open documentation
+
+Default values should give you suitable results. You may override some doxygen config options by setting them before the call, e.g.:
+
+```cmake
+set(DOXYGEN_HTML_EXTRA_STYLESHEET "...")
+tcm_setup_docs()
+```
+
+> [!NOTE]
+> 
+> It uses `doxygen_add_docs` under the hood. See `SETUP-DOCUMENTATION` in tcm.cmake (prefer the one in src/ if you have access to the repository).
 
 ___
 
@@ -175,7 +217,7 @@ mkdir -p cmake
   ```
   * Include it in your CMakeLists.txt, e.g. 
   ```cmake
-  set(TCM_DOWNLOAD_VERSION 0.1)
+  set(TCM_DOWNLOAD_VERSION 0.2)
   include(cmake/get_tcm.cmake)
   ```
   
