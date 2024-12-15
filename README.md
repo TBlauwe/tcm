@@ -1,4 +1,4 @@
-# TCM - CMake Modules
+# TCM
 
 ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
@@ -49,7 +49,7 @@ ___
 Set version from __Git__ if used in top-level project or from generated `VERSION` file.
 
 ```cmake 
-tcm_setup_version()
+tcm_setup_project_version()
 ```
 
 > [!NOTE]

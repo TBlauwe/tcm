@@ -21,11 +21,22 @@ cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : http
 #include(CMakeParseArguments) # Since 3.5, it is implemented natively. https://cmake.org/cmake/help/latest/command/cmake_parse_arguments.html
 
 
+
 # ------------------------------------------------------------------------------
 # --- OPTIONS
 # ------------------------------------------------------------------------------
 option(TCM_VERBOSE "Verbose messages during CMake runs" ${PROJECT_IS_TOP_LEVEL})
 option(TCM_EXE_DIR "A convenient folder to store executables" "${CMAKE_CURRENT_BINARY_DIR}/bin")
+
+
+# ------------------------------------------------------------------------------
+# --- OPTIONS
+# ------------------------------------------------------------------------------
+macro(tcm__default_value _arg _value)
+    if(NOT DEFINED ${_arg})
+        set(${_arg} ${_value})
+    endif ()
+endmacro()
 
 
 # ------------------------------------------------------------------------------
@@ -151,7 +162,7 @@ endmacro()
 #   End a section.
 #
 macro(tcm_end_section)
-    list(POP_BACK TCM_SECTION_LIST)
+    list(POP_BACK TCM__SECTION_LIST)
     tcm__refresh_message_context()
 endmacro()
 
@@ -159,7 +170,7 @@ endmacro()
 #   Begin a section.
 #
 macro(tcm_begin_section _name)
-    list(APPEND TCM_SECTION_LIST ${_name})
+    list(APPEND TCM__SECTION_LIST ${_name})
     tcm__refresh_message_context()
 endmacro()
 
@@ -167,7 +178,7 @@ endmacro()
 #   End a section.
 #
 macro(tcm_end_section)
-    list(POP_BACK TCM_SECTION_LIST)
+    list(POP_BACK TCM__SECTION_LIST)
     tcm__refresh_message_context()
 endmacro()
 
@@ -176,7 +187,7 @@ endmacro()
 #   Refresh CMAKE_MESSAGE_CONTEXT a section.
 #
 function(tcm__refresh_message_context)
-    string(REPLACE ";" " | " _TCM_SECTIONS_STRING "${TCM_SECTION_LIST}")
+    string(REPLACE ";" " | " _TCM_SECTIONS_STRING "${TCM__SECTION_LIST}")
     set(CMAKE_MESSAGE_CONTEXT ${_TCM_SECTIONS_STRING} PARENT_SCOPE)
 endfunction()
 
@@ -360,6 +371,7 @@ endfunction()
 # Download and install CPM if not already present.
 
 macro(tcm_setup_cpm)
+    set(CPM_INDENT "   ")
     set(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
     if(NOT DEFINED CPM_DOWNLOAD_VERSION)
         set(CPM_DOWNLOAD_VERSION 0.40.2)
@@ -400,7 +412,7 @@ macro(tcm_setup_cpm)
 endmacro()
 
 # ------------------------------------------------------------------------------
-# --- SETUP-VERSION
+# --- SETUP PROJECT VERSION
 # ------------------------------------------------------------------------------
 # Description:
 #   Set project's version using semantic versioning, either from git in dev mode or from version file.
@@ -410,8 +422,8 @@ endmacro()
 #   Adapted from https://github.com/nunofachada/cmake-git-semver/blob/master/GetVersionFromGitTag.cmake
 #
 # Usage :
-#   tcm_setup_version()
-function(tcm_setup_version)
+#   tcm_setup_project_version()
+function(tcm_setup_project_version)
 
     if (GIT_FOUND AND ${PROJECT_IS_TOP_LEVEL})
         # Get last tag from git
@@ -476,7 +488,7 @@ function(tcm_setup_version)
         set(${PROJECT_NAME}_VERSION_PATCH ${VALUE} PARENT_SCOPE)
     endif()
 
-    tcm_log("Version : ${VERSION}")
+    tcm_log("Project Version : ${VERSION}")
 endfunction()
 
 # ------------------------------------------------------------------------------
@@ -517,6 +529,113 @@ function(tcm_setup_cache)
         tcm_warn("${CACHE_OPTION} is enabled but was not found. Not using it")
     endif()
 endfunction()
+
+
+# ------------------------------------------------------------------------------
+# --- SETUP-DOCUMENTATION
+# ------------------------------------------------------------------------------
+# Description:
+#   Setup documentation using doxygen and doxygen-awesome.
+#   See tcm_setup_docs() for overridable options.
+#   TCM_DOXYGEN_INCLUDE_DIR
+#   TCM_DOXYGEN_EXAMPLE_DIR
+#
+# Usage :
+#   tcm_setup_docs()
+
+function(tcm_setup_docs)
+    set(options)
+    set(oneValueArgs
+            DOXYGEN_AWESOME_VERSION
+            DOXYFILE
+            HEADER
+            FOOTER
+            CSS
+            LAYOUT
+            OUTPUT_DIR
+            HTML_DIR
+            PAGES_DIR
+            ASSETS_DIR
+            INCLUDE_DIR
+            EXAMPLES_DIR
+            LOGO
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
+
+    tcm__default_value(TCM_DOXYGEN_AWESOME_VERSION "v2.3.4")
+    tcm__default_value(TCM_DOXYFILE     "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/Doxyfile.in")
+    tcm__default_value(TCM_HEADER       "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/header.html")
+    tcm__default_value(TCM_FOOTER       "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/footer.html")
+    tcm__default_value(TCM_CSS          "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/custom.css")
+    tcm__default_value(TCM_LAYOUT       "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/DoxygenLayout.xml")
+    tcm__default_value(TCM_OUTPUT_DIR   "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
+    tcm__default_value(TCM_HTML_DIR     "${TCM_OUTPUT_DIR}/html")
+    tcm__default_value(TCM_PAGES_DIR    "${PROJECT_SOURCE_DIR}/docs/pages")
+    tcm__default_value(TCM_ASSETS_DIR   "${PROJECT_SOURCE_DIR}/assets")
+    tcm__default_value(TCM_LOGO         "${PROJECT_SOURCE_DIR}/assets/logo_small_dark.png")
+
+    tcm_begin_section("DOCS")
+        # Doxygen is a documentation generator and static analysis tool for software source trees.
+        find_package(Doxygen QUIET)
+        if(NOT Doxygen_FOUND)
+            tcm_warn("Doxygen not found -> Skipping docs.")
+            tcm_end_section()
+            return()
+        endif()
+
+        # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
+        CPMAddPackage(
+                NAME DOXYGEN_AWESOME_CSS
+                GIT_TAG ${TCM_DOXYGEN_AWESOME_VERSION}
+                GITHUB_REPOSITORY jothepro/doxygen-awesome-css
+        )
+        if(NOT DOXYGEN_AWESOME_CSS_ADDED)
+            tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
+            tcm_end_section()
+            return()
+        endif()
+
+        configure_file(${TCM_DOXYFILE} ${TCM_OUTPUT_DIR}/Doxyfile)
+        configure_file(${TCM_HEADER} ${TCM_OUTPUT_DIR}/header.html)
+        configure_file(${TCM_FOOTER} ${TCM_OUTPUT_DIR}/footer.html)
+
+        file(GLOB_RECURSE DOCS_PAGES "${TCM_PAGES_DIR}/*.md")
+        file(GLOB_RECURSE DOCS_ASSETS "${TCM_ASSETS_DIR}/*")
+
+        if(IS_DIRECTORY ${TCM_ASSETS_DIR})
+            set(COPY_ASSETS_DIR 1)
+        else()
+            set(COPY_ASSETS_DIR 0)
+        endif()
+
+        add_custom_target(
+                docs
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${TCM_OUTPUT_DIR}"
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${TCM_HTML_DIR}"
+                COMMAND ${CMAKE_COMMAND} -E $<IF:${COPY_ASSETS_DIR},"copy directory ${TCM_ASSETS_DIR} ${TCM_HTML_DIR}","true">
+                COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+                COMMAND echo "   Docs written to: ${TCM_HTML_DIR}"
+                WORKING_DIRECTORY "${TCM_OUTPUT_DIR}"
+                SOURCES
+                ${TCM_DOXYFILE}
+                ${TCM_HEADER}
+                ${TCM_FOOTER}
+                ${TCM_CSS}
+                ${TCM_LAYOUT}
+                ${DOCS_PAGES}
+                ${DOCS_ASSETS}
+        )
+
+        # Utility target to open docs
+        add_custom_target(
+                open_docs
+                COMMAND "${TCM_HTML_DIR}/index.html"
+        )
+        add_dependencies(open_docs docs)
+    tcm_end_section()
+
+endfunction()
+
 
 # ------------------------------------------------------------------------------
 # --- VARIABLES
@@ -596,7 +715,7 @@ endmacro()
 # ------------------------------------------------------------------------------
 macro(tcm_setup)
     set(CMAKE_MESSAGE_CONTEXT_SHOW  TRUE)
-    set(TCM_SECTION_LIST "${PROJECT_NAME}")
+    set(TCM__SECTION_LIST "${PROJECT_NAME}")
     tcm__refresh_message_context()
     tcm__setup_variables()
 endmacro()

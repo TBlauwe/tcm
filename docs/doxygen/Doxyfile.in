@@ -1,0 +1,100 @@
+# ------------------------------------------------------------------------------
+# --- Doxyfile.in
+# ------------------------------------------------------------------------------
+# Only options that deviate from the default are included
+# To create a new Doxyfile containing all available options, call `doxygen -g`
+DOXYFILE_ENCODING = UTF-8
+
+
+# --- Project information
+PROJECT_NAME            = @PROJECT_NAME@
+PROJECT_NUMBER          = @PROJECT_VERSION@
+PROJECT_LOGO			= @TCM_LOGO@
+PROJECT_BRIEF			= @PROJECT_DESCRIPTION@
+
+
+# --- Sources
+INPUT                   = @PROJECT_SOURCE_DIR@/README.md @TCM_INCLUDE_DIR@ @TCM_ASSETS_DIR@ @TCM_PAGES_DIR@
+IMAGE_PATH              = ./
+EXTRACT_ALL             = YES
+RECURSIVE               = YES
+EXAMPLE_PATH			= @TCM_EXAMPLES_DIR@
+
+
+# --- Preferences
+USE_MDFILE_AS_MAINPAGE	= @PROJECT_SOURCE_DIR@/README.md
+FULL_PATH_NAMES         = YES
+STRIP_FROM_PATH         = "@TCM_INCLUDE_DIR@"
+SHOW_FILES				= YES
+SHOW_INCLUDE_FILES		= YES
+
+
+# --- Required by doxygen-awesome-css
+GENERATE_TREEVIEW		= YES 
+DISABLE_INDEX			= NO
+FULL_SIDEBAR			= NO
+HTML_COLORSTYLE			= LIGHT # required with Doxygen >= 1.9.5
+HTML_HEADER				= header.html
+HTML_FOOTER				= footer.html
+HTML_EXTRA_FILES		=	@DOXYGEN_AWESOME_CSS_SOURCE_DIR@/doxygen-awesome-darkmode-toggle.js \
+							@DOXYGEN_AWESOME_CSS_SOURCE_DIR@/doxygen-awesome-fragment-copy-button.js \
+							@DOXYGEN_AWESOME_CSS_SOURCE_DIR@/doxygen-awesome-paragraph-link.js \
+							@DOXYGEN_AWESOME_CSS_SOURCE_DIR@/doxygen-awesome-interactive-toc.js \
+							@DOXYGEN_AWESOME_CSS_SOURCE_DIR@/doxygen-awesome-tabs.js \
+
+HTML_EXTRA_STYLESHEET	=	@DOXYGEN_AWESOME_CSS_SOURCE_DIR@/doxygen-awesome.css \
+							@DOXYGEN_AWESOME_CSS_SOURCE_DIR@/doxygen-awesome-sidebar-only.css \
+							@DOXYGEN_AWESOME_CSS_SOURCE_DIR@/doxygen-awesome-sidebar-only-darkmode-toggle.css \
+							@TCM_CSS@
+
+# --- DOT Graphs
+# Reference : https://jothepro.github.io/doxygen-awesome-css/md_docs_2tricks.html
+HAVE_DOT				= YES
+DOT_IMAGE_FORMAT		= svg
+#DOT_TRANSPARENT		= YES # Doxygen 1.9.8 report this line as obsolete
+
+
+# --- Build Generation
+OUTPUT_LANGUAGE         = English
+OUTPUT_DIRECTORY        = @TCM_OUTPUT_DIR@
+GENERATE_XML            = NO
+GENERATE_HTML           = YES
+GENERATE_LATEX          = NO
+XML_PROGRAMLISTING      = NO
+CREATE_SUBDIRS          = NO
+LAYOUT_FILE				= @TCM_LAYOUT@
+
+
+# --- Custom commands
+ALIASES					+= html_frame{1}="@htmlonly<iframe src=\"\1\"></iframe>@endhtmlonly"
+ALIASES					+= html_frame{3}="@htmlonly<iframe src=\"\1\" width=\"\2\" height=\"\3\"></iframe>@endhtmlonly"
+ALIASES					+= widget{2}="@htmlonly<div class=\"\1\" id=\"\2\"></div>@endhtmlonly"
+
+
+# --- Links
+ALIASES					+= Doxygen="[Doxygen](https://www.doxygen.nl/index.html)"
+ALIASES					+= Doxygen-awesome="[Doxygen Awesome CSS](https://jothepro.github.io/doxygen-awesome-css/)"
+
+
+# --- External references
+#TAGFILES				= "@TCM_DOXYGEN_INPUT_DIR@/cppreference-doxygen-web.tag=https://en.cppreference.com/w/"
+ALIASES					+=	"std_invoke=<a href=\"https://en.cppreference.com/w/cpp/utility/functional/invoke\">std::invoke</a>" \
+							"std_future=<a href=\"https://en.cppreference.com/w/cpp/thread/future\">std::future</a>" \
+							"std_shared_future=<a href=\"https://en.cppreference.com/w/cpp/thread/shared_future\">std::shared_future</a>" \
+							"std_function=<a href=\"https://en.cppreference.com/w/cpp/utility/functional/function\">std::function</a>" \
+							"std_lambda=<a href=\"https://en.cppreference.com/w/cpp/language/lambda\">lambda</a>" \
+							"std_pair=<a href=\"https://en.cppreference.com/w/cpp/utility/pair\">std::pair</a>" \
+							"std_tuple=<a href=\"https://en.cppreference.com/w/cpp/utility/tuple\">std::tuple</a>" \
+							"std_shared_ptr=<a href=\"https://en.cppreference.com/w/cpp/memory/shared_ptr\">std::shared_ptr</a>" \
+							"std_thread_hardware_concurrency=<a href=\"https://en.cppreference.com/w/cpp/thread/thread/hardware_concurrency\">std::thread::hardware_concurrency</a>" \
+							"std_thread_get_id=<a href=\"https://en.cppreference.com/w/cpp/thread/get_id\">std::thread::get_id</a>" \
+							"std_ostream=<a href=\"https://en.cppreference.com/w/cpp/io/basic_ostream\">std::ostream</a>" \
+							"std_string=<a href=\"https://en.cppreference.com/w/cpp/string/basic_string\">std::string</a>" \
+							"std_min=<a href=\"https://en.cppreference.com/w/cpp/algorithm/min\">std::min</a>" \
+							"std_max=<a href=\"https://en.cppreference.com/w/cpp/algorithm/max\">std::max</a>" \
+							"std_variant=<a href=\"https://en.cppreference.com/w/cpp/utility/variant\">std::variant</a>" \
+							"std_variant_get=<a href=\"https://en.cppreference.com/w/cpp/utility/variant/get\">std::get</a>" \
+							"std_optional=<a href=\"https://en.cppreference.com/w/cpp/utility/optional\">std::optional</a>" \
+							"std_nullopt=<a href=\"https://en.cppreference.com/w/cpp/utility/optional/nullopt\">std::nullopt</a>" \
+							"std_ref=<a href=\"https://en.cppreference.com/w/cpp/utility/functional/ref\">std::ref</a>" \
+
