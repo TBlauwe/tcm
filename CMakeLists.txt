@@ -14,10 +14,13 @@ if(NOT PROJECT_IS_TOP_LEVEL)
     return() # If consumed, we should do nothing as this file is only for testing purposes
 endif()
 
+add_subdirectory(src) # Generate tcm.cmake
+
 # ------------------------------------------------------------------------------
 # --- TESTS
 # ------------------------------------------------------------------------------
-include(cmake/tcm.cmake) # Automatically calls tcm_setup
+include(cmake/temp_tcm.cmake) # Automatically calls tcm_setup
+#include(cmake/tcm.cmake) # Automatically calls tcm_setup
 tcm_setup_cache()
 tcm_setup_cpm()
 tcm_setup_project_version()
