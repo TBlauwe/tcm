@@ -213,7 +213,7 @@ mkdir -p cmake
 * Download either :
   * `get_tcm.cmake` - for a more efficient way to download new version.
   ```bash
-  wget -O cmake/tcm.cmake https://raw.githubusercontent.com/TBlauwe/tcm/refs/heads/master/cmake/get_tcm.cmake
+  wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.2/tcm.cmake
   ```
   * Include it in your CMakeLists.txt, e.g. 
   ```cmake
@@ -225,7 +225,7 @@ mkdir -p cmake
 
   * `tcm.cmake` - to get file directly
   ```bash
-  wget -O cmake/tcm.cmake https://raw.githubusercontent.com/TBlauwe/tcm/refs/heads/master/cmake/tcm.cmake
+  wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.2/tcm.cmake
   ```
 
   * Include it, e.g. `include(cmake/tcm.cmake)`

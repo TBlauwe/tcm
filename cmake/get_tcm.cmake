@@ -15,11 +15,11 @@ cmake_minimum_required(VERSION 3.21) # TODO Check for minimum required version.
 
 function(download_tcm)
     message(STATUS "Downloading TCM.cmake to ${TCM_DOWNLOAD_LOCATION}")
-    file(DOWNLOAD https://raw.githubusercontent.com/TBlauwe/tcm/refs/heads/master/cmake/tcm.cmake ${TCM_DOWNLOAD_LOCATION})
+    file(DOWNLOAD https://github.com/TBlauwe/tcm/releases/download/${TCM_DOWNLOAD_VERSION}/tcm.cmake ${TCM_DOWNLOAD_LOCATION})
 endfunction()
 
 if(NOT DEFINED TCM_DOWNLOAD_VERSION)
-    set(TCM_DOWNLOAD_VERSION 0.1.0)
+    set(TCM_DOWNLOAD_VERSION 0.2.0)
 endif()
 
 if(TCM_SOURCE_CACHE)
