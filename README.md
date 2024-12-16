@@ -196,7 +196,7 @@ mkdir -p cmake
   ```
   * Include it in your CMakeLists.txt, e.g. 
   ```cmake
-  set(TCM_DOWNLOAD_VERSION 0.2)
+  set(TCM_DOWNLOAD_VERSION 0.3)
   include(cmake/get_tcm.cmake)
   ```
   
