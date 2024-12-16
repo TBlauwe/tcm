@@ -9,6 +9,8 @@ Only use what suits you !
 * Setup project's version from git in dev mode or from generated `VERSION` file in consumed mode.
 * Setup cache using tools like __[ccache](https://ccache.dev/)__.
 * Setup documentation with __[Doxygen](https://www.doxygen.nl/)__ (if installed) and __[Doxygen Awesome](https://github.com/jothepro/doxygen-awesome-css)__.
+* Add tests with __[Catch2](https://github.com/catchorg/Catch2)__.
+* Add benchmarks with __[Google Benchmarks](https://github.com/google/benchmark)__.
 
 And some other handy functions :
 * Logging facilities for your cmake files
@@ -97,6 +99,35 @@ tcm_setup_docs()
 > [!NOTE]
 > 
 > It uses `doxygen_add_docs` under the hood. See `SETUP-DOCUMENTATION` in tcm.cmake (prefer the one in src/ if you have access to the repository).
+
+___
+
+
+### Add tests
+
+You can easily add tests using __[Catch2](https://github.com/catchorg/Catch2)__.
+
+```cmake 
+tcm_add_tests(TARGET a_target_name FILES some_test_files.cpp ...)
+```
+
+>[!NOTE]
+> 
+> Target is linked with Catch2::Catch2WithMain and tests are added to CTest.
+
+---
+
+### Add benchmarks
+
+You can easily add tests add benchmarks with __[Google Benchmarks](https://github.com/google/benchmark)__.
+
+```cmake 
+tcm_add_benchmarks(TARGET a_target_name FILES some_benchmark_files.cpp ...)
+```
+
+>[!NOTE]
+>
+> Target is linked with benchmark::benchmark_main.
 
 ___
 
@@ -192,7 +223,7 @@ mkdir -p cmake
 * Download either :
   * `get_tcm.cmake` - for a more efficient way to download new version.
   ```bash
-  wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.2/tcm.cmake
+  wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.3/tcm.cmake
   ```
   * Include it in your CMakeLists.txt, e.g. 
   ```cmake
@@ -204,7 +235,7 @@ mkdir -p cmake
 
   * `tcm.cmake` - to get file directly
   ```bash
-  wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.2/tcm.cmake
+  wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.3/tcm.cmake
   ```
 
   * Include it, e.g. `include(cmake/tcm.cmake)`
