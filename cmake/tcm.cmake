@@ -16,7 +16,6 @@ cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : http
 # --- OPTIONS
 # ------------------------------------------------------------------------------
 option(TCM_VERBOSE "Verbose messages during CMake runs"         ${PROJECT_IS_TOP_LEVEL})
-option(TCM_EXE_DIR "A convenient folder to store executables"   "${CMAKE_CURRENT_BINARY_DIR}/bin")
 
 
 # ------------------------------------------------------------------------------
@@ -85,7 +84,7 @@ endfunction()
 #
 function(tcm_log _text)
     if(TCM_VERBOSE)
-        message(STATUS "    ${_text}")
+        message(STATUS "${_text}")
     endif()
 endfunction()
 
@@ -94,7 +93,7 @@ endfunction()
 #
 function(tcm_debug _text)
     if(TCM_VERBOSE)
-        message(DEBUG "    ${_text}")
+        message(DEBUG "${_text}")
     endif()
 endfunction()
 
@@ -103,7 +102,7 @@ endfunction()
 #
 function(tcm_trace _text)
     if(TCM_VERBOSE)
-        message(TRACE "    ${_text}")
+        message(TRACE "${_text}")
     endif()
 endfunction()
 
@@ -112,7 +111,7 @@ endfunction()
 #
 macro(tcm_check_start _text)
     if(TCM_VERBOSE)
-        message(CHECK_START "    ${_text}")
+        message(CHECK_START "${_text}")
     endif()
     tcm_indent()
 endmacro()
@@ -205,7 +204,7 @@ endfunction()
 
 #-------------------------------------------------------------------------------
 #   TODO Also look at embedding ?
-#   Copy folder _src_dir to _dst_dir before target is built.
+#   Copy folder _src_dir to _dst_dir before _target is built.
 #
 function(tcm_target_assets _target _src_dir _dst_dir)
     add_custom_target(${_target}_copy_assets
@@ -228,7 +227,7 @@ function(tcm_prevent_in_source_build)
 endfunction()
 
 #-------------------------------------------------------------------------------
-#   Enable optimisation flags on release builds
+#   Enable optimisation flags on release builds for _target
 #
 function(tcm_target_enable_optimisation _target)
     if(TCM_EMSCRIPTEN)
@@ -255,7 +254,7 @@ endfunction()
 
 
 #-------------------------------------------------------------------------------
-#   Enable warnings flags
+#   Enable warnings flags for _target
 #
 function(tcm_target_enable_warnings _target)
     if (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC OR TCM_EMSCRIPTEN)
@@ -297,11 +296,11 @@ function(tcm_target_enable_warnings _target)
 endfunction()
 
 #-------------------------------------------------------------------------------
-#   Set a default value to a var if not defined.
+#   Set a default _value to a _var if not defined.
 #
-macro(tcm__default_value _arg _value)
-    if(NOT DEFINED ${_arg})
-        set(${_arg} ${_value})
+macro(tcm__default_value _var _value)
+    if(NOT DEFINED ${_var})
+        set(${_var} ${_value})
     endif ()
 endmacro()
 
@@ -309,9 +308,16 @@ endmacro()
 # ------------------------------------------------------------------------------
 # --- VARIABLES
 # ------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+#   For internal usage.
+#   Set some useful CMake variables.
+#
 macro(tcm__setup_variables)
+    tcm__default_value(TCM_EXE_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
+
     #-------------------------------------------------------------------------------
     # Set host machine
+    #
     set (TCM_HOST_WINDOWS 0)
     set (TCM_HOST_OSX 0)
     set (TCM_HOST_LINUX 0)
@@ -331,6 +337,7 @@ macro(tcm__setup_variables)
 
     #-------------------------------------------------------------------------------
     # Set Compiler
+    #
     tcm_debug("Compiler : ${CMAKE_CXX_COMPILER_ID}")
     if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
         set(TCM_CLANG 1)
@@ -357,6 +364,7 @@ macro(tcm__setup_variables)
 
     #-------------------------------------------------------------------------------
     #   Computed Gotos
+    #
     try_compile(TCM_SUPPORT_COMPUTED_GOTOS SOURCE_FROM_CONTENT computed_goto_test.c "int main() { static void* labels[] = {&&label1, &&label2}; int i = 0; goto *labels[i]; label1: return 0; label2: return 1; } ")
     tcm_debug("Feature support - computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
 
@@ -367,6 +375,7 @@ macro(tcm__setup_variables)
     # to omit warnings from the provided paths, if the compiler supports that.
     # This is to provide a user experience similar to find_package when
     # add_subdirectory or FetchContent is used to consume this project
+    #
     if(PROJECT_IS_TOP_LEVEL)
         set(TCM_WARNING_GUARD "")
     else()
@@ -376,82 +385,7 @@ macro(tcm__setup_variables)
             set(TCM_WARNING_GUARD SYSTEM)
         endif()
     endif ()
-
 endmacro()
-
-
-# ------------------------------------------------------------------------------
-# --- CODE-BLOCKS
-# ------------------------------------------------------------------------------
-# Description:
-#   Generate markdown code blocks from a source.
-#   Included source file path must be relative to project source directory.
-#   File's extension is used to determine the code block language.
-#   If included files have not changed, then files will be left untouched.
-#
-# Usage :
-#   // In some file, like README.md
-#   <!--BEGIN_INCLUDE="relative_path/to/file.cpp"-->
-#   Everything between this two tags will be replaced by the content of the file inside a code block.
-#   <!--END_INCLUDE-->
-#
-#   // In some cmake file, like root CMakeLists.txt
-#   tcm_code_blocks(README.md)
-function(tcm_code_blocks _file)
-    message(CHECK_START "Looking for code-blocks to update in ${_file}")
-
-    if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_file})
-        message(CHECK_FAIL "Skipping : file does not exist.")
-        return()
-    endif ()
-
-    set(NEED_UPDATE FALSE)	# Update file when at least one code block was updated.
-    set(STAMP_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/code-blocks")
-    set(PATTERN "(<!--BEGIN_INCLUDE=\"(.*)\"-->)(.*)(<!--END_INCLUDE-->)")
-    file(READ ${_file} INPUT_CONTENT)
-    string(REGEX MATCHALL ${PATTERN} matches ${INPUT_CONTENT})
-
-    if(NOT matches)
-        message(CHECK_FAIL "Skipping : no code-block found.")
-        return()
-    endif ()
-
-    file(MAKE_DIRECTORY ${STAMP_OUTPUT_DIRECTORY})
-    foreach(match ${matches})
-
-        string(REGEX REPLACE ${PATTERN} "\\1;\\2;\\3;\\4" groups ${match})
-        list(GET groups 0 HEADER)
-        list(GET groups 1 FILE_PATH)
-        list(GET groups 2 BODY)
-        list(GET groups 3 FOOTER)
-
-        # First, check if file needs updating.
-        set(ABSOLUTE_INC_FILE_PATH "${PROJECT_SOURCE_DIR}/${FILE_PATH}")
-        set(ABSOLUTE_STAMP_FILE_PATH "${STAMP_OUTPUT_DIRECTORY}/${FILE_PATH}.stamp")
-        file(TIMESTAMP ${ABSOLUTE_INC_FILE_PATH} src_timestamp)
-        file(TIMESTAMP ${ABSOLUTE_STAMP_FILE_PATH} dest_timestamp)
-
-        if(${ABSOLUTE_INC_FILE_PATH} IS_NEWER_THAN ${ABSOLUTE_STAMP_FILE_PATH})
-            set(NEED_UPDATE TRUE)
-            get_filename_component(_DIR ${FILE_PATH} DIRECTORY)
-            file(MAKE_DIRECTORY ${STAMP_OUTPUT_DIRECTORY}/${_DIR})
-            file(TOUCH ${ABSOLUTE_STAMP_FILE_PATH})
-
-            # Build new code block
-            file(READ ${ABSOLUTE_INC_FILE_PATH} NEW_BODY)
-            get_filename_component(FILEPATH_EXT ${FILE_PATH} EXT)
-            string(REPLACE "." "" FILEPATH_EXT ${FILEPATH_EXT})
-            string(REPLACE "${HEADER}${BODY}${FOOTER}" "${HEADER}\n```${FILEPATH_EXT}\n${NEW_BODY}\n```\n${FOOTER}" INPUT_CONTENT ${INPUT_CONTENT})
-        endif ()
-    endforeach()
-
-    if(NEED_UPDATE) # At least one code block was updated.
-        file(WRITE ${_file} ${INPUT_CONTENT})
-        message(CHECK_PASS "done.")
-    else()
-        message(CHECK_PASS "done. No code-blocks needed to be updated.")
-    endif()
-endfunction()
 
 
 # ------------------------------------------------------------------------------
@@ -460,7 +394,7 @@ endfunction()
 # See: https://github.com/cpm-cmake/CPM.cmake
 # Download and install CPM if not already present.
 macro(tcm_setup_cpm)
-    set(CPM_INDENT "   ")
+    set(CPM_INDENT "(CPM) ")
     set(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
     if(NOT DEFINED CPM_DOWNLOAD_VERSION)
         set(CPM_DOWNLOAD_VERSION 0.40.2)
@@ -499,6 +433,45 @@ macro(tcm_setup_cpm)
     include(${CPM_DOWNLOAD_LOCATION})
     tcm_log("Using CPM : ${CPM_DOWNLOAD_LOCATION}")
 endmacro()
+
+
+# ------------------------------------------------------------------------------
+# --- SETUP-CACHE
+# ------------------------------------------------------------------------------
+# Description:
+#   Setup cache (only if top level project), like ccache (https://ccache.dev/) if available on system.
+
+# Usage :
+#   tcm_setup_cache()
+function(tcm_setup_cache)
+    if(EMSCRIPTEN) # Doesn't seems to work with emscripten (https://github.com/emscripten-core/emscripten/issues/11974)
+        return()
+    endif()
+
+    set(CACHE_OPTION "ccache" CACHE STRING "Compiler cache to be used")
+    set(CACHE_OPTION_VALUES "ccache" "sccache")
+    set_property(CACHE CACHE_OPTION PROPERTY STRINGS ${CACHE_OPTION_VALUES})
+    list(
+            FIND
+            CACHE_OPTION_VALUES
+            ${CACHE_OPTION}
+            CACHE_OPTION_INDEX
+    )
+
+    if(${CACHE_OPTION_INDEX} EQUAL -1)
+        tcm_log("Using custom compiler cache system: '${CACHE_OPTION}'. Supported entries are ${CACHE_OPTION_VALUES}")
+    endif()
+
+    find_program(CACHE_BINARY NAMES ${CACHE_OPTION_VALUES})
+    if(CACHE_BINARY)
+        tcm_log("Using Cache System : ${CACHE_BINARY}.")
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
+        set(CMAKE_C_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
+        set(CMAKE_CUDA_COMPILER_LAUNCHER "${CACHE_BINARY}" PARENT_SCOPE)
+    else()
+        tcm_warn("${CACHE_OPTION} is enabled but was not found. Not using it")
+    endif()
+endfunction()
 
 
 # ------------------------------------------------------------------------------
@@ -595,43 +568,129 @@ function(tcm_setup_project_version)
 endfunction()
 
 
-
 # ------------------------------------------------------------------------------
-# --- SETUP-CACHE
+# --- ADD BENCHMARKS
 # ------------------------------------------------------------------------------
 # Description:
-#   Setup cache (only if top level project), like ccache (https://ccache.dev/) if available on system.
+#   Add benchmarks using google benchmark (with provided main).
 
 # Usage :
-#   tcm_setup_cache()
-function(tcm_setup_cache)
-    if(EMSCRIPTEN) # Doesn't seems to work with emscripten (https://github.com/emscripten-core/emscripten/issues/11974)
-        return()
+#   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
+function(tcm_add_benchmarks)
+    set(options)
+    set(oneValueArgs
+            TARGET
+            GOOGLE_BENCHMARK_VERSION
+    )
+    set(multiValueArgs
+            FILES
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    tcm_begin_section("BENCH")
+
+    # ------------------------------------------------------------------------------
+    # --- Default values
+    # ------------------------------------------------------------------------------
+    tcm__default_value(TCM_GOOGLE_BENCHMARK_VERSION "v1.9.1")
+
+
+    # ------------------------------------------------------------------------------
+    # --- Dependencies
+    # ------------------------------------------------------------------------------
+    find_package(benchmark QUIET)
+    if(NOT benchmark_FOUND OR benchmark_ADDED)
+        CPMAddPackage(
+                NAME benchmark
+                GIT_TAG ${TCM_GOOGLE_BENCHMARK_VERSION}
+                GITHUB_REPOSITORY google/benchmark
+                OPTIONS
+                "BENCHMARK_ENABLE_INSTALL_DOCS OFF"
+                "BENCHMARK_ENABLE_TESTING OFF"
+                "BENCHMARK_INSTALL_DOCS OFF"
+        )
+        if(NOT benchmark_ADDED)
+            tcm_warn("Couldn't found and install google benchmark (using CPM) --> Skipping benchmark.")
+            return()
+        endif ()
     endif()
 
-    set(CACHE_OPTION "ccache" CACHE STRING "Compiler cache to be used")
-    set(CACHE_OPTION_VALUES "ccache" "sccache")
-    set_property(CACHE CACHE_OPTION PROPERTY STRINGS ${CACHE_OPTION_VALUES})
-    list(
-            FIND
-            CACHE_OPTION_VALUES
-            ${CACHE_OPTION}
-            CACHE_OPTION_INDEX
+
+    # ------------------------------------------------------------------------------
+    # --- Target
+    # ------------------------------------------------------------------------------
+    add_executable(${TCM_TARGET} ${TCM_FILES})
+    target_link_libraries(${TCM_TARGET} PRIVATE benchmark::benchmark_main)
+    set_target_properties(${TCM_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+
+    # Copy google benchmark tools : compare.py and its requirements for ease of use
+    add_custom_command(TARGET ${TCM_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory
+            "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
     )
 
-    if(${CACHE_OPTION_INDEX} EQUAL -1)
-        tcm_log("Using custom compiler cache system: '${CACHE_OPTION}'. Supported entries are ${CACHE_OPTION_VALUES}")
+    add_custom_command(TARGET ${TCM_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
+    )
+
+    tcm_end_section()
+endfunction()
+
+
+# ------------------------------------------------------------------------------
+# --- ADD TESTS
+# ------------------------------------------------------------------------------
+# Description:
+#   Add tests using Catch2 (with provided main).
+
+# Usage :
+#   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
+function(tcm_add_tests)
+    set(options)
+    set(oneValueArgs
+            TARGET
+            CATCH2_VERSION
+    )
+    set(multiValueArgs
+            FILES
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    tcm_begin_section("TESTS")
+
+    # ------------------------------------------------------------------------------
+    # --- Default values
+    # ------------------------------------------------------------------------------
+    tcm__default_value(TCM_CATCH2_VERSION "v3.7.1")
+
+
+    # ------------------------------------------------------------------------------
+    # --- Dependencies
+    # ------------------------------------------------------------------------------
+    find_package(Catch2 3 QUIET)
+
+    if(NOT Catch2_FOUND OR Catch2_ADDED)
+        CPMAddPackage(
+                NAME Catch2
+                GIT_TAG ${TCM_CATCH2_VERSION}
+                GITHUB_REPOSITORY catchorg/Catch2
+        )
+        if(NOT Catch2_ADDED)
+            tcm_warn("Couldn't found and install Catch2 (using CPM) --> Skipping tests.")
+            return()
+        endif ()
     endif()
 
-    find_program(CACHE_BINARY NAMES ${CACHE_OPTION_VALUES})
-    if(CACHE_BINARY)
-        tcm_log("Using Cache System : ${CACHE_BINARY}.")
-        set(CMAKE_CXX_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
-        set(CMAKE_C_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
-        set(CMAKE_CUDA_COMPILER_LAUNCHER "${CACHE_BINARY}" PARENT_SCOPE)
-    else()
-        tcm_warn("${CACHE_OPTION} is enabled but was not found. Not using it")
-    endif()
+
+    # ------------------------------------------------------------------------------
+    # --- Target
+    # ------------------------------------------------------------------------------
+    add_executable(${TCM_TARGET} ${TCM_FILES})
+    target_link_libraries(${TCM_TARGET} PRIVATE Catch2::Catch2WithMain)
+    set_target_properties(${TCM_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+
+    list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
+    include(Catch)
+    catch_discover_tests(${TCM_TARGET})
+
+    tcm_end_section()
 endfunction()
 
 

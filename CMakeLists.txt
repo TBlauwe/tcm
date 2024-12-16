@@ -27,15 +27,7 @@ tcm_setup_docs()
 
 include(CTest)
 enable_testing()
+add_subdirectory(tests/simple)
 #include(tests/log.cmake) # Didn't find a suitable way to test log functionalities without having to modify tcm.cmake.
-
-# FFS I CAN'T MAKE IT WORK.
-# CMake always fail to compile a simple C program.
-# It works when project is build manually, but not through CTest
-#add_test(NAME TEST_CodeBlocks
-#        COMMAND ${CMAKE_CTEST_COMMAND}
-#            --build-and-test ${CMAKE_SOURCE_DIR}/tests/code-block ${CMAKE_CURRENT_BINARY_DIR}/tests/code-block
-#            --build-generator ${CMAKE_GENERATOR}
-#            --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-#            --build-project TEST_CodeBlocks
-#)
+add_subdirectory(tests/benchmark)
+add_subdirectory(tests/test)

@@ -35,30 +35,21 @@ cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : http
 @TCM_VARIABLES_MIXIN@
 
 # ------------------------------------------------------------------------------
-# --- CODE-BLOCKS
-# ------------------------------------------------------------------------------
-# Description:
-#   Generate markdown code blocks from a source.
-#   Included source file path must be relative to project source directory.
-#   File's extension is used to determine the code block language.
-#   If included files have not changed, then files will be left untouched.
-#
-# Usage :
-#   // In some file, like README.md
-#   <!--BEGIN_INCLUDE="relative_path/to/file.cpp"-->
-#   Everything between this two tags will be replaced by the content of the file inside a code block.
-#   <!--END_INCLUDE-->
-#
-#   // In some cmake file, like root CMakeLists.txt
-#   tcm_code_blocks(README.md)
-@TCM_CODE_BLOCKS_MIXIN@
-
-# ------------------------------------------------------------------------------
 # --- SETUP CPM
 # ------------------------------------------------------------------------------
 # See: https://github.com/cpm-cmake/CPM.cmake
 # Download and install CPM if not already present.
 @TCM_CPM_MIXIN@
+
+# ------------------------------------------------------------------------------
+# --- SETUP-CACHE
+# ------------------------------------------------------------------------------
+# Description:
+#   Setup cache (only if top level project), like ccache (https://ccache.dev/) if available on system.
+
+# Usage :
+#   tcm_setup_cache()
+@TCM_SETUP_CACHE_MIXIN@
 
 # ------------------------------------------------------------------------------
 # --- SETUP PROJECT VERSION
@@ -74,16 +65,25 @@ cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : http
 #   tcm_setup_project_version()
 @TCM_SETUP_PROJECT_VERSION_MIXIN@
 
-
 # ------------------------------------------------------------------------------
-# --- SETUP-CACHE
+# --- ADD BENCHMARKS
 # ------------------------------------------------------------------------------
 # Description:
-#   Setup cache (only if top level project), like ccache (https://ccache.dev/) if available on system.
+#   Add benchmarks using google benchmark (with provided main).
 
 # Usage :
-#   tcm_setup_cache()
-@TCM_SETUP_CACHE_MIXIN@
+#   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
+@TCM_ADD_BENCHMARKS_MIXIN@
+
+# ------------------------------------------------------------------------------
+# --- ADD TESTS
+# ------------------------------------------------------------------------------
+# Description:
+#   Add tests using Catch2 (with provided main).
+
+# Usage :
+#   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
+@TCM_ADD_TESTS_MIXIN@
 
 # ------------------------------------------------------------------------------
 # --- SETUP-DOCUMENTATION

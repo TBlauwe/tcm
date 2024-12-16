@@ -2,7 +2,7 @@
 
 ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
-A pluggable opinionated CMake script to provide some functionalities shared across C / C++ projects.
+A pluggable opinionated CMake script to provide some functionalities shared across C++ projects.
 Only use what suits you !
 
 * Setup __[CPM](https://github.com/cpm-cmake/CPM.cmake)__ for dependency management.
@@ -11,7 +11,6 @@ Only use what suits you !
 * Setup documentation with __[Doxygen](https://www.doxygen.nl/)__ (if installed) and __[Doxygen Awesome](https://github.com/jothepro/doxygen-awesome-css)__.
 
 And some other handy functions :
-* Include source files in code-blocks of your markdown files.
 * Logging facilities for your cmake files
 * and some other functions.
 
@@ -71,26 +70,6 @@ tcm_setup_project_version()
 
 ___
 
-### Code-block generation
-
-Include sources files inside a code block in markdown files.
-* Happens during configure time.
-* Code-blocks are updated only when included file has been changed
-* Files are overwritten only when a code-block has changed.
-
-```cmake 
-tcm_code_blocks(README.md)
-# In README.md
-#   <!--BEGIN_INCLUDE="relative_path/to/file.cpp"-->
-#   Everything between this two tags will be replaced by the content of the file inside a code block.
-#   <!--END_INCLUDE-->
-```
- 
-> [!NOTE]
->
-> `<!-- -->` was chosen as it is recognized as a comment and won't be rendered in doxygen docs.
-
-___
 
 ### Automated Doxygen Setup
 

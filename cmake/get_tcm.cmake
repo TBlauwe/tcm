@@ -11,7 +11,7 @@
 # Usage:
 #   include(cmake/get_tcm.cmake)
 # ------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.21) # TODO Check for minimum required version.
+cmake_minimum_required(VERSION 3.25) # TCM minimum required version is 3.25.
 
 function(download_tcm)
     message(STATUS "Downloading TCM.cmake to ${TCM_DOWNLOAD_LOCATION}")

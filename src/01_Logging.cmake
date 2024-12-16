@@ -59,7 +59,7 @@ endfunction()
 #
 function(tcm_log _text)
     if(TCM_VERBOSE)
-        message(STATUS "    ${_text}")
+        message(STATUS "${_text}")
     endif()
 endfunction()
 
@@ -68,7 +68,7 @@ endfunction()
 #
 function(tcm_debug _text)
     if(TCM_VERBOSE)
-        message(DEBUG "    ${_text}")
+        message(DEBUG "${_text}")
     endif()
 endfunction()
 
@@ -77,7 +77,7 @@ endfunction()
 #
 function(tcm_trace _text)
     if(TCM_VERBOSE)
-        message(TRACE "    ${_text}")
+        message(TRACE "${_text}")
     endif()
 endfunction()
 
@@ -86,7 +86,7 @@ endfunction()
 #
 macro(tcm_check_start _text)
     if(TCM_VERBOSE)
-        message(CHECK_START "    ${_text}")
+        message(CHECK_START "${_text}")
     endif()
     tcm_indent()
 endmacro()

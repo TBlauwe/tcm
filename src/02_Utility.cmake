@@ -19,7 +19,7 @@ endfunction()
 
 #-------------------------------------------------------------------------------
 #   TODO Also look at embedding ?
-#   Copy folder _src_dir to _dst_dir before target is built.
+#   Copy folder _src_dir to _dst_dir before _target is built.
 #
 function(tcm_target_assets _target _src_dir _dst_dir)
     add_custom_target(${_target}_copy_assets
@@ -42,7 +42,7 @@ function(tcm_prevent_in_source_build)
 endfunction()
 
 #-------------------------------------------------------------------------------
-#   Enable optimisation flags on release builds
+#   Enable optimisation flags on release builds for _target
 #
 function(tcm_target_enable_optimisation _target)
     if(TCM_EMSCRIPTEN)
@@ -69,7 +69,7 @@ endfunction()
 
 
 #-------------------------------------------------------------------------------
-#   Enable warnings flags
+#   Enable warnings flags for _target
 #
 function(tcm_target_enable_warnings _target)
     if (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC OR TCM_EMSCRIPTEN)
@@ -111,10 +111,10 @@ function(tcm_target_enable_warnings _target)
 endfunction()
 
 #-------------------------------------------------------------------------------
-#   Set a default value to a var if not defined.
+#   Set a default _value to a _var if not defined.
 #
-macro(tcm__default_value _arg _value)
-    if(NOT DEFINED ${_arg})
-        set(${_arg} ${_value})
+macro(tcm__default_value _var _value)
+    if(NOT DEFINED ${_var})
+        set(${_var} ${_value})
     endif ()
 endmacro()
