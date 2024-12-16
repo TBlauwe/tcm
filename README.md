@@ -214,18 +214,17 @@ Following variables are available after including `tcm.cmake` or calling `tcm_se
 > 
 Same instructions as for any single file script (See [CPM's documentation](https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#adding-cpm)).
 
-### From console:
-
 * Create a directory to hold the script.
+ 
 ```bash
 mkdir -p cmake
 ```
+
 * Download either :
   * `get_tcm.cmake` - for a more efficient way to download new version.
   ```bash
-  wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.3/tcm.cmake
+  wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.3/get_tcm.cmake
   ```
-  * Include it in your CMakeLists.txt, e.g. 
   ```cmake
   set(TCM_DOWNLOAD_VERSION 0.3)
   include(cmake/get_tcm.cmake)
@@ -233,29 +232,14 @@ mkdir -p cmake
   
   *--or--*
 
-  * `tcm.cmake` - to get file directly
+  * `tcm.cmake` - to get file directly.
   ```bash
   wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.3/tcm.cmake
   ```
-
-  * Include it, e.g. `include(cmake/tcm.cmake)`
-
-### From CMake:
-
-
-```cmake
-file(
-    DOWNLOAD 
-        https://raw.githubusercontent.com/TBlauwe/tcm/refs/heads/master/cmake/tcm.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/cmake/tcm.cmake
-)
-include(${CMAKE_CURRENT_BINARY_DIR}/cmake/tcm.cmake)
-```
-
-### Manual:
-
-* Download and copy `tcm.cmake` in your project, e.g. `root/cmake/tcm.cmake`.
-* Include it, e.g. `include(cmake/tcm.cmake)`
+  ```cmake
+  set(TCM_DOWNLOAD_VERSION 0.3)
+  include(cmake/tcm.cmake)
+  ```
 
 ## Credits
 
