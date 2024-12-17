@@ -1,3 +1,12 @@
+# ------------------------------------------------------------------------------
+# --- SETUP-CACHE
+# ------------------------------------------------------------------------------
+# Description:
+#   Setup cache (only if top level project), like ccache (https://ccache.dev/) if available on system.
+
+# Usage :
+#   tcm_setup_cache()
+#
 function(tcm_setup_cache)
     if(EMSCRIPTEN) # Doesn't seems to work with emscripten (https://github.com/emscripten-core/emscripten/issues/11974)
         return()

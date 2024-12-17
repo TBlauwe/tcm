@@ -28,6 +28,7 @@ generate_mixin(06_Setup_Cache           TCM_SETUP_CACHE_MIXIN)
 generate_mixin(07_Setup_Project_Version TCM_SETUP_PROJECT_VERSION_MIXIN)
 generate_mixin(08_Add_Benchmarks        TCM_ADD_BENCHMARKS_MIXIN)
 generate_mixin(09_Add_Tests             TCM_ADD_TESTS_MIXIN)
+generate_mixin(10_Add_Examples          TCM_ADD_EXAMPLES_MIXIN)
 generate_mixin(98_Setup_Docs            TCM_SETUP_DOCS_MIXIN)
 generate_mixin(99_Closure               TCM_CLOSURE_MIXIN)
 

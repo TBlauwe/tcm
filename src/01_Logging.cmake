@@ -1,3 +1,9 @@
+# ------------------------------------------------------------------------------
+# --- LOGGING
+# ------------------------------------------------------------------------------
+# This section contains some utility functions for logging purposes
+# They are simple wrappers over `message()`, whom are mostly noop when current project is not top level.
+
 #-------------------------------------------------------------------------------
 #   Indent cmake message.
 #
@@ -40,8 +46,14 @@ endfunction()
 #   Print a WARN message.
 #
 function(tcm_warn _text)
-    if(TCM_VERBOSE)
-        message(STATUS "/!\\ ${_text}")
+    set(options AUTHOR_WARNING)
+    set(oneValueArgs)
+    set(multiValueArgs)
+    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    if(arg_AUTHOR_WARNING)
+        message(AUTHOR_WARNING "/!\\ ${_text}")
+    elseif(TCM_VERBOSE)
+        message("/!\\ ${_text}")
     endif()
 endfunction()
 

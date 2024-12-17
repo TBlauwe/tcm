@@ -111,7 +111,7 @@ You can easily add tests using __[Catch2](https://github.com/catchorg/Catch2)__.
 tcm_add_tests(TARGET a_target_name FILES some_test_files.cpp ...)
 ```
 
->[!NOTE]
+> [!NOTE]
 > 
 > Target is linked with Catch2::Catch2WithMain and tests are added to CTest.
 
@@ -125,7 +125,7 @@ You can easily add tests add benchmarks with __[Google Benchmarks](https://githu
 tcm_add_benchmarks(TARGET a_target_name FILES some_benchmark_files.cpp ...)
 ```
 
->[!NOTE]
+> [!NOTE]
 >
 > Target is linked with benchmark::benchmark_main.
 

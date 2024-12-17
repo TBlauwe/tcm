@@ -15,6 +15,7 @@ cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : http
 # ------------------------------------------------------------------------------
 # --- OPTIONS
 # ------------------------------------------------------------------------------
+
 option(TCM_VERBOSE "Verbose messages during CMake runs"         ${PROJECT_IS_TOP_LEVEL})
 
 
@@ -23,6 +24,7 @@ option(TCM_VERBOSE "Verbose messages during CMake runs"         ${PROJECT_IS_TOP
 # ------------------------------------------------------------------------------
 # This section contains some utility functions for logging purposes
 # They are simple wrappers over `message()`, whom are mostly noop when current project is not top level.
+
 #-------------------------------------------------------------------------------
 #   Indent cmake message.
 #
@@ -65,8 +67,14 @@ endfunction()
 #   Print a WARN message.
 #
 function(tcm_warn _text)
-    if(TCM_VERBOSE)
-        message(STATUS "/!\\ ${_text}")
+    set(options AUTHOR_WARNING)
+    set(oneValueArgs)
+    set(multiValueArgs)
+    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    if(arg_AUTHOR_WARNING)
+        message(AUTHOR_WARNING "/!\\ ${_text}")
+    elseif(TCM_VERBOSE)
+        message("/!\\ ${_text}")
     endif()
 endfunction()
 
@@ -183,6 +191,27 @@ endfunction()
 # ------------------------------------------------------------------------------
 # --- UTILITY
 # ------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+#
+function(tcm_counter_define _name)
+    set(_name 0 PARENT_SCOPE)
+endfunction()
+
+#-------------------------------------------------------------------------------
+#
+function(tcm_counter_increment _name)
+    MATH(EXPR _name "${_name} + 1")
+    set(_name ${_name} PARENT_SCOPE)
+endfunction()
+
+#-------------------------------------------------------------------------------
+#
+function(tcm_counter_decrement _name)
+    MATH(EXPR _name "${_name} - 1")
+    set(_name ${_name} PARENT_SCOPE)
+endfunction()
+
 #-------------------------------------------------------------------------------
 #   Prevent warnings from displaying when building target
 #   Useful when you do not want libraries warnings polluting your build output
@@ -308,7 +337,6 @@ endmacro()
 # ------------------------------------------------------------------------------
 # --- VARIABLES
 # ------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------
 #   For internal usage.
 #   Set some useful CMake variables.
 #
@@ -393,6 +421,7 @@ endmacro()
 # ------------------------------------------------------------------------------
 # See: https://github.com/cpm-cmake/CPM.cmake
 # Download and install CPM if not already present.
+#
 macro(tcm_setup_cpm)
     set(CPM_INDENT "(CPM) ")
     set(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
@@ -443,6 +472,7 @@ endmacro()
 
 # Usage :
 #   tcm_setup_cache()
+#
 function(tcm_setup_cache)
     if(EMSCRIPTEN) # Doesn't seems to work with emscripten (https://github.com/emscripten-core/emscripten/issues/11974)
         return()
@@ -486,6 +516,7 @@ endfunction()
 #
 # Usage :
 #   tcm_setup_project_version()
+#
 function(tcm_setup_project_version)
     find_package(Git QUIET)
     if (GIT_FOUND AND ${PROJECT_IS_TOP_LEVEL})
@@ -576,6 +607,7 @@ endfunction()
 
 # Usage :
 #   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
+#
 function(tcm_add_benchmarks)
     set(options)
     set(oneValueArgs
@@ -585,13 +617,13 @@ function(tcm_add_benchmarks)
     set(multiValueArgs
             FILES
     )
-    cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm_begin_section("BENCH")
 
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
-    tcm__default_value(TCM_GOOGLE_BENCHMARK_VERSION "v1.9.1")
+    tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
 
 
     # ------------------------------------------------------------------------------
@@ -601,7 +633,7 @@ function(tcm_add_benchmarks)
     if(NOT benchmark_FOUND OR benchmark_ADDED)
         CPMAddPackage(
                 NAME benchmark
-                GIT_TAG ${TCM_GOOGLE_BENCHMARK_VERSION}
+                GIT_TAG ${arg_GOOGLE_BENCHMARK_VERSION}
                 GITHUB_REPOSITORY google/benchmark
                 OPTIONS
                 "BENCHMARK_ENABLE_INSTALL_DOCS OFF"
@@ -618,16 +650,16 @@ function(tcm_add_benchmarks)
     # ------------------------------------------------------------------------------
     # --- Target
     # ------------------------------------------------------------------------------
-    add_executable(${TCM_TARGET} ${TCM_FILES})
-    target_link_libraries(${TCM_TARGET} PRIVATE benchmark::benchmark_main)
-    set_target_properties(${TCM_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+    add_executable(${arg_TARGET} ${arg_FILES})
+    target_link_libraries(${arg_TARGET} PRIVATE benchmark::benchmark_main)
+    set_target_properties(${arg_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
 
     # Copy google benchmark tools : compare.py and its requirements for ease of use
-    add_custom_command(TARGET ${TCM_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory
+    add_custom_command(TARGET ${arg_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory
             "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
     )
 
-    add_custom_command(TARGET ${TCM_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+    add_custom_command(TARGET ${arg_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
     )
 
@@ -640,9 +672,10 @@ endfunction()
 # ------------------------------------------------------------------------------
 # Description:
 #   Add tests using Catch2 (with provided main).
-
+#
 # Usage :
 #   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
+#
 function(tcm_add_tests)
     set(options)
     set(oneValueArgs
@@ -652,13 +685,13 @@ function(tcm_add_tests)
     set(multiValueArgs
             FILES
     )
-    cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm_begin_section("TESTS")
 
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
-    tcm__default_value(TCM_CATCH2_VERSION "v3.7.1")
+    tcm__default_value(arg_CATCH2_VERSION "v3.7.1")
 
 
     # ------------------------------------------------------------------------------
@@ -669,7 +702,7 @@ function(tcm_add_tests)
     if(NOT Catch2_FOUND OR Catch2_ADDED)
         CPMAddPackage(
                 NAME Catch2
-                GIT_TAG ${TCM_CATCH2_VERSION}
+                GIT_TAG ${arg_CATCH2_VERSION}
                 GITHUB_REPOSITORY catchorg/Catch2
         )
         if(NOT Catch2_ADDED)
@@ -682,14 +715,111 @@ function(tcm_add_tests)
     # ------------------------------------------------------------------------------
     # --- Target
     # ------------------------------------------------------------------------------
-    add_executable(${TCM_TARGET} ${TCM_FILES})
-    target_link_libraries(${TCM_TARGET} PRIVATE Catch2::Catch2WithMain)
-    set_target_properties(${TCM_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+    add_executable(${arg_TARGET} ${arg_FILES})
+    target_link_libraries(${arg_TARGET} PRIVATE Catch2::Catch2WithMain)
+    set_target_properties(${arg_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
 
     list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
     include(Catch)
-    catch_discover_tests(${TCM_TARGET})
+    catch_discover_tests(${arg_TARGET})
 
+    tcm_end_section()
+endfunction()
+
+
+# ------------------------------------------------------------------------------
+# --- ADD EXAMPLES
+# ------------------------------------------------------------------------------
+# Description:
+#   Convenience function to produce examples or a target for each source file (recursive).
+#   You shouldn't use it for "complex" examples, where some .cpp files do not provide a main entry point.
+#   There is not much to it. Here is what it does:
+#       - Each example defines a new target, named : <relative_path_to_examples_folder>_filename
+#       - Each example defines is a test (added to CTest)
+#       - Each example executables is outputted to ${TCM_EXE_DIR}/examples.
+#
+# Parameters:
+#   Take a folder path.
+#
+# Outputs:
+#   ${TCM_EXAMPLE_TARGETS} - List of all examples target __configured during this call !__
+#
+# Usage :
+#   tcm_add_examples(FOLDER examples/)
+#
+function(tcm_add_examples)
+    set(options WITH_BENCHMARK)
+    set(oneValueArgs
+            FOLDER
+            GOOGLE_BENCHMARK_VERSION
+    )
+    set(multiValueArgs)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    tcm_begin_section("EXAMPLES")
+
+    if(arg_WITH_BENCHMARK)
+        set(benchmark_target Benchmark_Examples)
+        add_executable(${benchmark_target})
+        target_link_libraries(${benchmark_target} benchmark::benchmark_main)
+        tcm_target_enable_optimisation(${benchmark_target})
+    endif ()
+
+    cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
+    file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
+
+    foreach (example IN LISTS examples)
+
+        cmake_path(REMOVE_EXTENSION example OUTPUT_VARIABLE target_name)
+
+        # Replace the slashes and dots with underscores to get a valid target name
+        # (e.g. 'foo_bar_cpp' from 'foo/bar.cpp')
+        string(REPLACE "/" "_" target_name ${target_name})
+
+        add_executable(${target_name} ${arg_FOLDER}/${example})
+        set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/examples")
+        add_test(NAME ${target_name} COMMAND ${target_name})
+
+        list(APPEND TARGETS ${target_name})
+
+        if(NOT arg_WITH_BENCHMARK)
+            tcm_log("Add ${target_name}")
+            continue()
+        endif ()
+
+        file(READ "${arg_FOLDER}/${example}" file_content)
+
+        string(REGEX MATCH " main[(][)]" can_benchmark "${file_content}")
+
+        if(NOT can_benchmark)
+            tcm_warn("Example \"${example}\" cannot be integrated in a benchmark.")
+            tcm_warn("Reason:  only empty `main()`signature is supported (and with a return value).")
+            continue()
+        endif ()
+
+        string(REGEX REPLACE " main[(]" " ${target_name}_main(" file_content "${file_content}")
+
+        # TODO I could check if a replaced happened and if yes, then we could generate one
+        list(APPEND file_content "
+#include <benchmark/benchmark.h>
+
+static void BM_example_${target_name}(benchmark::State& state)
+{
+for (auto _: state)
+    {
+        ${target_name}_main();
+    }
+}
+
+BENCHMARK(BM_example_${target_name});
+"
+        )
+        set(benchmark_file ${CMAKE_CURRENT_BINARY_DIR}/benchmarks/${target_name}.cpp)
+        file(WRITE ${benchmark_file} "${file_content}")
+        target_sources(${benchmark_target} PRIVATE ${benchmark_file})
+
+        tcm_log("Add ${target_name} with benchmark added to ${benchmark_target}.")
+    endforeach ()
+    set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
     tcm_end_section()
 endfunction()
 
@@ -710,13 +840,14 @@ endfunction()
 # * DOXYGEN_HTML_COLORSTYLE	LIGHT # required with Doxygen >= 1.9.5
 # * DOXYGEN_DOT_IMAGE_FORMAT svg
 #
-#   By default, DOXYGEN_USE_MDFILE_AS_MAINPAGE is set to "D:/workspace/TBlauwe/tcm/README.md".
+#   By default, DOXYGEN_USE_MDFILE_AS_MAINPAGE is set to "${PROJECT_SOURCE_DIR}/README.md".
 #
 #   Also, TCM provides a default header, footer, stylesheet, extra files (js script).
 #   You can override them, but as they are tightly linked together, you are better off not calling tcm_setup_docs().
 #
 # Usage :
 #   tcm_setup_docs()
+#
 function(tcm_setup_docs)
     set(options)
     set(oneValueArgs
@@ -1323,6 +1454,7 @@ endfunction()
 # ------------------------------------------------------------------------------
 # --- CLOSURE
 # ------------------------------------------------------------------------------
+
 macro(tcm_setup)
     tcm__setup_logging()
     tcm__setup_variables()

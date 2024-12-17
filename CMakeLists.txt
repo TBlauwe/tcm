@@ -24,6 +24,7 @@ tcm_setup_cache()
 tcm_setup_cpm()
 tcm_setup_project_version()
 tcm_setup_docs()
+#todo add examples path to doxygen ?
 
 include(CTest)
 enable_testing()
@@ -31,3 +32,4 @@ add_subdirectory(tests/simple)
 #include(tests/log.cmake) # Didn't find a suitable way to test log functionalities without having to modify tcm.cmake.
 add_subdirectory(tests/benchmark)
 add_subdirectory(tests/test)
+add_subdirectory(tests/examples)

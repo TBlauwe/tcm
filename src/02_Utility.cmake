@@ -1,3 +1,27 @@
+# ------------------------------------------------------------------------------
+# --- UTILITY
+# ------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+#
+function(tcm_counter_define _name)
+    set(_name 0 PARENT_SCOPE)
+endfunction()
+
+#-------------------------------------------------------------------------------
+#
+function(tcm_counter_increment _name)
+    MATH(EXPR _name "${_name} + 1")
+    set(_name ${_name} PARENT_SCOPE)
+endfunction()
+
+#-------------------------------------------------------------------------------
+#
+function(tcm_counter_decrement _name)
+    MATH(EXPR _name "${_name} - 1")
+    set(_name ${_name} PARENT_SCOPE)
+endfunction()
+
 #-------------------------------------------------------------------------------
 #   Prevent warnings from displaying when building target
 #   Useful when you do not want libraries warnings polluting your build output

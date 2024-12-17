@@ -1,3 +1,16 @@
+# ------------------------------------------------------------------------------
+# --- SETUP PROJECT VERSION
+# ------------------------------------------------------------------------------
+# Description:
+#   Set project's version using semantic versioning, either from git in dev mode or from version file.
+#   Expected to be called from root CMakeLists.txt and from a valid git directory.
+
+# Credits:
+#   Adapted from https://github.com/nunofachada/cmake-git-semver/blob/master/GetVersionFromGitTag.cmake
+#
+# Usage :
+#   tcm_setup_project_version()
+#
 function(tcm_setup_project_version)
     find_package(Git QUIET)
     if (GIT_FOUND AND ${PROJECT_IS_TOP_LEVEL})

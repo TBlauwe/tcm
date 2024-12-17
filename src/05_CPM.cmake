@@ -1,3 +1,9 @@
+# ------------------------------------------------------------------------------
+# --- SETUP CPM
+# ------------------------------------------------------------------------------
+# See: https://github.com/cpm-cmake/CPM.cmake
+# Download and install CPM if not already present.
+#
 macro(tcm_setup_cpm)
     set(CPM_INDENT "(CPM) ")
     set(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories

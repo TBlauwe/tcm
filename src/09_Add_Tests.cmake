@@ -1,3 +1,12 @@
+# ------------------------------------------------------------------------------
+# --- ADD TESTS
+# ------------------------------------------------------------------------------
+# Description:
+#   Add tests using Catch2 (with provided main).
+#
+# Usage :
+#   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
+#
 function(tcm_add_tests)
     set(options)
     set(oneValueArgs
@@ -7,13 +16,13 @@ function(tcm_add_tests)
     set(multiValueArgs
             FILES
     )
-    cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm_begin_section("TESTS")
 
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
-    tcm__default_value(TCM_CATCH2_VERSION "v3.7.1")
+    tcm__default_value(arg_CATCH2_VERSION "v3.7.1")
 
 
     # ------------------------------------------------------------------------------
@@ -24,7 +33,7 @@ function(tcm_add_tests)
     if(NOT Catch2_FOUND OR Catch2_ADDED)
         CPMAddPackage(
                 NAME Catch2
-                GIT_TAG ${TCM_CATCH2_VERSION}
+                GIT_TAG ${arg_CATCH2_VERSION}
                 GITHUB_REPOSITORY catchorg/Catch2
         )
         if(NOT Catch2_ADDED)
@@ -37,13 +46,13 @@ function(tcm_add_tests)
     # ------------------------------------------------------------------------------
     # --- Target
     # ------------------------------------------------------------------------------
-    add_executable(${TCM_TARGET} ${TCM_FILES})
-    target_link_libraries(${TCM_TARGET} PRIVATE Catch2::Catch2WithMain)
-    set_target_properties(${TCM_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+    add_executable(${arg_TARGET} ${arg_FILES})
+    target_link_libraries(${arg_TARGET} PRIVATE Catch2::Catch2WithMain)
+    set_target_properties(${arg_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
 
     list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
     include(Catch)
-    catch_discover_tests(${TCM_TARGET})
+    catch_discover_tests(${arg_TARGET})
 
     tcm_end_section()
 endfunction()

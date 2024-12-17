@@ -1,3 +1,27 @@
+# ------------------------------------------------------------------------------
+# --- SETUP-DOCUMENTATION
+# ------------------------------------------------------------------------------
+# Description:
+#   Setup documentation using doxygen and doxygen-awesome.
+#   Use doxygen_add_docs() under the hood.
+#   Any Doxygen config option can be override by setting relevant variables before calling `tcm_setup_docs()`.
+#   For more information : https://cmake.org/cmake/help/latest/module/FindDoxygen.html
+#
+#   However, following parameters cannot not be overridden, since tcm_setup_docs() is setting them:
+# * DOXYGEN_GENERATE_TREEVIEW YES
+# * DOXYGEN_DISABLE_INDEX NO
+# * DOXYGEN_FULL_SIDEBAR NO
+# * DOXYGEN_HTML_COLORSTYLE	LIGHT # required with Doxygen >= 1.9.5
+# * DOXYGEN_DOT_IMAGE_FORMAT svg
+#
+#   By default, DOXYGEN_USE_MDFILE_AS_MAINPAGE is set to "${PROJECT_SOURCE_DIR}/README.md".
+#
+#   Also, TCM provides a default header, footer, stylesheet, extra files (js script).
+#   You can override them, but as they are tightly linked together, you are better off not calling tcm_setup_docs().
+#
+# Usage :
+#   tcm_setup_docs()
+#
 function(tcm_setup_docs)
     set(options)
     set(oneValueArgs
