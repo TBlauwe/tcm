@@ -6,7 +6,7 @@
 #   You shouldn't use it for "complex" examples, where some .cpp files do not provide a main entry point.
 #   There is not much to it. Here is what it does:
 #       - Each example defines a new target, named : <relative_path_to_examples_folder>_filename
-#       - Each example defines is a test (added to CTest)
+#       - Each example is a test (added to CTest)
 #       - Each example executable is outputted to ${TCM_EXE_DIR}/examples.
 #       - Each example can be added to a benchmark target with function option `WITH_BENCHMARK`.
 #
@@ -29,17 +29,24 @@ function(tcm_add_examples)
     set(oneValueArgs
             FOLDER
             GOOGLE_BENCHMARK_VERSION
+            INTERFACE
     )
     set(multiValueArgs)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm_begin_section("EXAMPLES")
 
     if(arg_WITH_BENCHMARK)
-        set(benchmark_target Benchmark_Examples)
-        add_executable(${benchmark_target})
-        target_link_libraries(${benchmark_target} benchmark::benchmark_main)
-        tcm_target_enable_optimisation(${benchmark_target})
+        if(NOT TARGET Benchmark_Examples)
+            add_executable(Benchmark_Examples)
+            target_link_libraries(Benchmark_Examples PRIVATE benchmark::benchmark_main)
+            tcm_target_enable_optimisation(Benchmark_Examples)
+        endif ()
+
+        if(arg_INTERFACE AND TARGET Benchmark_Examples)
+                target_link_libraries(Benchmark_Examples PUBLIC ${arg_INTERFACE})
+        endif ()
     endif ()
+
 
     cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
     file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
@@ -53,6 +60,9 @@ function(tcm_add_examples)
         string(REPLACE "/" "_" target_name ${target_name})
 
         add_executable(${target_name} ${arg_FOLDER}/${example})
+        if(arg_INTERFACE)
+            target_link_libraries(${target_name} PUBLIC ${arg_INTERFACE})
+        endif ()
         set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/examples")
         add_test(NAME ${target_name} COMMAND ${target_name})
 
@@ -92,10 +102,18 @@ BENCHMARK(BM_example_${target_name});
         )
         set(benchmark_file ${CMAKE_CURRENT_BINARY_DIR}/benchmarks/${target_name}.cpp)
         file(WRITE ${benchmark_file} "${file_content}")
-        target_sources(${benchmark_target} PRIVATE ${benchmark_file})
+        target_sources(Benchmark_Examples PRIVATE ${benchmark_file})
 
-        tcm_log("Add ${target_name} with benchmark added to ${benchmark_target}.")
+        tcm_log("Add ${target_name} with benchmark added to Benchmark_Examples target.")
     endforeach ()
     set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
     tcm_end_section()
 endfunction()
+
+
+# ------------------------------------------------------------------------------
+#   For internal usage.
+#   Set some useful CMake variables.
+#
+macro(tcm__setup_examples)
+endmacro()

@@ -11,6 +11,7 @@ Only use what suits you !
 * Setup documentation with __[Doxygen](https://www.doxygen.nl/)__ (if installed) and __[Doxygen Awesome](https://github.com/jothepro/doxygen-awesome-css)__.
 * Add tests with __[Catch2](https://github.com/catchorg/Catch2)__.
 * Add benchmarks with __[Google Benchmarks](https://github.com/google/benchmark)__.
+* Add examples with optional benchmarking.
 
 And some other handy functions :
 * Logging facilities for your cmake files
@@ -123,6 +124,31 @@ You can easily add tests add benchmarks with __[Google Benchmarks](https://githu
 
 ```cmake 
 tcm_add_benchmarks(TARGET a_target_name FILES some_benchmark_files.cpp ...)
+```
+
+> [!NOTE]
+>
+> Target is linked with benchmark::benchmark_main.
+ 
+---
+
+### Add examples
+
+
+Let's say you have a folder called `examples`, with many standalone sources files. Calling `tcm_add_examples`, let's you:
+* create a target for each source file,
+* each target is added to CTest,
+* each target can be linked against an interface target specified with `INTERFACE` parameter.
+* each target can be added to `Benchmark_Examples` to benchmark its execution.
+  * source file must use an empty main signature, otherwise it is ignored.
+  * source file must explicitly return a value, otherwise it won't compile.
+
+```cmake 
+tcm_add_examples(
+        FOLDER examples/    # Recursively look for .cpp file.
+        INTERFACE a_target  # Each example's target will link to this interface (to inherit some properties)
+        WITH_BENCHMARK      # If using an empty signature `main()`, then example can be benchmarked.
+)
 ```
 
 > [!NOTE]
