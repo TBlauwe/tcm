@@ -266,6 +266,34 @@ mkdir -p cmake
   set(TCM_DOWNLOAD_VERSION 0.3)
   include(cmake/tcm.cmake)
   ```
+  
+## A note about ISPC
+
+Since CMake +3.19, __[ISPC](https://ispc.github.io/downloads.html)__ is quite straightforward to use.
+Make sure to install __[ISPC](https://ispc.github.io/downloads.html)__ and add its executable to `path`.
+`.ispc` files can be added as regular sources files to a target, e.g. for `tests/ispc/` :
+
+```cmake
+project(TEST_Ispc 
+        LANGUAGES
+            C CXX
+            ISPC    # REQUIRED 
+)
+add_library(ispc_lib STATIC simple.ispc)
+```
+
+Following properties are overridable: 
+* `ISPC_HEADER_DIRECTORY` per target, or `CMAKE_ISPC_HEADER_DIRECTORY` globally (default `CMAKE_CURRENT_BINARY`).
+* `ISPC_HEADER_SUFFIX` per target, or `CMAKE_ISPC_HEADER_SUFFIX` globally (default `_ispc.h`).
+* `ISPC_INSTRUCTION_SETS` per target, or `CMAKE_ISPC_INSTRUCTION_SETS` globally (default should be the most capable one if we follow [ispc's documentation](https://ispc.github.io/ispc.html#using-the-ispc-compiler)).
+
+There are nothing else to do for executable targets. 
+However, by default, a library with `.ispc` files doesn't include `ISPC_HEADER_DIRECTORY`, so the following is needed.
+
+```cmake
+target_include_directories(ispc_lib PUBLIC $<TARGET_PROPERTY:ISPC_HEADER_DIRECTORY>)
+```
+
 
 ## Credits
 
