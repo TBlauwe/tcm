@@ -12,10 +12,7 @@ Only use what suits you !
 * Add tests with __[Catch2](https://github.com/catchorg/Catch2)__.
 * Add benchmarks with __[Google Benchmarks](https://github.com/google/benchmark)__.
 * Add examples with optional benchmarking.
-
-And some other handy functions :
-* Logging facilities for your cmake files
-* and some other functions.
+* and some other handy functions.
 
 See [Overview](#overview) below for a closer look.
 
@@ -263,7 +260,13 @@ Define `-D${_option}` for `_target` when `_option` is ON.
 tcm_target_assets(_target _src_dir _dst_dir)
 ```
 Copy folder `_src_dir` to `_dst_dir` before target is built.
- 
+
+```cmake
+tcm_generate_export_header(_target)
+```
+
+A wrapper over `generate_export_header` with some preferred default, properties set (VERSION, SOVERSION, etc.), and export directory already included.
+
 ___
 
 ### Variables

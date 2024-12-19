@@ -9,4 +9,4 @@ tcm_target_setup_ispc(ispc_lib)
 
 add_executable(test_ispc main.cpp)
 target_link_libraries(test_ispc PRIVATE ispc_lib)
-add_test(NAME TEST_ISPC COMMAND test_ispc)
+add_test(NAME ISPC COMMAND test_ispc)

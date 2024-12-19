@@ -21,6 +21,8 @@ cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : http
 
 @TCM_VARIABLES_MIXIN@
 
+@TCM_SHARED_MIXIN@
+
 @TCM_CPM_MIXIN@
 
 @TCM_SETUP_CACHE_MIXIN@
