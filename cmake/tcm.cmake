@@ -9,6 +9,7 @@
 #   Opinionated CMake module to share and manage common functionality and settings for C++ / C project.
 #   Functions and macros are all prefixed with tcm_.
 #   Private functions and macros are all prefixed with tcm__ (double underscore).
+#   For more details about a mixin, see related cmake file.
 # ------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : https://cmake.org/cmake/help/latest/command/try_compile.html
 
@@ -846,6 +847,33 @@ endfunction()
 #
 macro(tcm__setup_examples)
 endmacro()
+
+
+# ------------------------------------------------------------------------------
+# --- ISPC
+# ------------------------------------------------------------------------------
+
+function(tcm_target_setup_ispc)
+    set(options)
+    set(oneValueArgs
+            HEADER_DIR
+            HEADER_SUFFIX
+            INSTRUCTION_SETS
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+
+    if(arg_HEADER_DIR)
+        set_target_properties(ispc_lib PROPERTIES ISPC_HEADER_DIRECTORY ${arg_HEADER_DIR})
+    endif ()
+    if(arg_HEADER_SUFFIX)
+        set_target_properties(ispc_lib PROPERTIES ISPC_HEADER_SUFFIX ${arg_HEADER_SUFFIX})
+    endif ()
+    if(arg_INSTRUCTION_SETS)
+        set_target_properties(ispc_lib PROPERTIES ISPC_INSTRUCTION_SETS ${arg_INSTRUCTION_SETS})
+    endif ()
+
+    target_include_directories(ispc_lib PUBLIC $<TARGET_PROPERTY:ISPC_HEADER_DIRECTORY>)
+endfunction()
 
 
 # ------------------------------------------------------------------------------

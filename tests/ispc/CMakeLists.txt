@@ -5,8 +5,7 @@ project(TEST_ISPC LANGUAGES C CXX ISPC)
 include(../../cmake/tcm.cmake)
 
 add_library(ispc_lib STATIC simple.ispc)
-set_target_properties(ispc_lib PROPERTIES ISPC_HEADER_SUFFIX ".h")
-target_include_directories(ispc_lib PUBLIC $<TARGET_PROPERTY:ISPC_HEADER_DIRECTORY>)
+tcm_target_setup_ispc(ispc_lib HEADER_SUFFIX ".")
 
 add_executable(test_ispc main.cpp)
 target_link_libraries(test_ispc PRIVATE ispc_lib)
