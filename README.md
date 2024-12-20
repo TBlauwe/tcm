@@ -9,6 +9,7 @@ Only use what suits you !
 * Setup project's version from git in dev mode or from generated `VERSION` file in consumed mode.
 * Setup cache using tools like __[ccache](https://ccache.dev/)__.
 * Setup documentation with __[Doxygen](https://www.doxygen.nl/)__ (if installed) and __[Doxygen Awesome](https://github.com/jothepro/doxygen-awesome-css)__.
+* Setup target to be used with __[Emscripten](https://emscripten.org)__ (if installed).
 * Add tests with __[Catch2](https://github.com/catchorg/Catch2)__.
 * Add benchmarks with __[Google Benchmarks](https://github.com/google/benchmark)__.
 * Add examples with optional benchmarking.
@@ -151,6 +152,32 @@ tcm_add_examples(
 > [!NOTE]
 >
 > Target is linked with benchmark::benchmark_main.
+ 
+___
+
+## Emscripten
+
+In order to use __[Emscripten](https://emscripten.org)__, you must install it on your system.
+See __[Emscripten]()__, on how to use it with CMake. 
+
+> _TL;DR: Provide Emscripten's toolchain to CMake. 
+> One way is to pass `CMAKE_TOOLCHAIN_FILE "$env{EMROOT}/cmake/Modules/Platform/emscripten.cmake"`
+> `EMROOT` is a variable environment (name may differ) set to the root of emscripten's install directory._ 
+
+````cmake
+cmake_minimum_required(VERSION 3.25)
+
+add_executable(test_emscripten main.cpp)
+tcm_target_setup_for_emscripten(test_emscripten
+        [SHELL_FILE  ...]   # Override default shell file.
+        [ASSETS_DIR     ]   # Specify an assets directory if you want to copy it alongside output.
+)
+
+#NOTE: If you want to open a .html, you may use emrum, a tool provided by emscripten.
+#Here is a utility target to open generated .html
+add_custom_target(open_html COMMAND emrun "$<TARGET:RUNTIME_OUTPUT_DIRECTORY>/test_emscripten.html")
+add_dependencies(open_html test_emscripten)
+````
 
 ___
 
@@ -299,7 +326,7 @@ mkdir -p cmake
   wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.3/get_tcm.cmake
   ```
   ```cmake
-  set(TCM_DOWNLOAD_VERSION 0.3)
+  set(TCM_DOWNLOAD_VERSION 0.4)
   include(cmake/get_tcm.cmake)
   ```
   
@@ -310,10 +337,16 @@ mkdir -p cmake
   wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.3/tcm.cmake
   ```
   ```cmake
-  set(TCM_DOWNLOAD_VERSION 0.3)
+  set(TCM_DOWNLOAD_VERSION 0.4)
   include(cmake/tcm.cmake)
   ```
-  
+
+## TODO
+
+- [ ] Check user install and warn for missing tools
+- [ ] Install
+- [ ] Packing
+- [ ] Bindings
 
 ## Credits
 

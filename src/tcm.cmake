@@ -37,6 +37,8 @@ cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : http
 
 @TCM_ISPC_MIXIN@
 
+@TCM_EMSCRIPTEN_MIXIN@
+
 @TCM_SETUP_DOCS_MIXIN@
 
 @TCM_CLOSURE_MIXIN@

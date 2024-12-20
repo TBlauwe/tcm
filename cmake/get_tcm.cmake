@@ -19,7 +19,7 @@ function(download_tcm)
 endfunction()
 
 if(NOT DEFINED TCM_DOWNLOAD_VERSION)
-    set(TCM_DOWNLOAD_VERSION 0.3.0)
+    set(TCM_DOWNLOAD_VERSION 0.4.0)
 endif()
 
 if(TCM_SOURCE_CACHE)

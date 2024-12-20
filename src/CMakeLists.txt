@@ -18,6 +18,7 @@ embed_file(${PROJECT_SOURCE_DIR}/docs/doxygen/header.html       TCM_DOXYGEN_HTML
 embed_file(${PROJECT_SOURCE_DIR}/docs/doxygen/footer.html       TCM_DOXYGEN_HTML_FOOTER_DEFAULT)
 embed_file(${PROJECT_SOURCE_DIR}/docs/doxygen/custom.css        TCM_DOXYGEN_HTML_EXTRA_STYLESHEET_DEFAULT)
 embed_file(${PROJECT_SOURCE_DIR}/docs/doxygen/DoxygenLayout.xml TCM_DOXYGEN_LAYOUT_FILE_DEFAULT)
+embed_file(${PROJECT_SOURCE_DIR}/assets/shell_minimal.html      TCM_EMSCRIPTEN_SHELL_DEFAULT)
 
 generate_mixin(00_Options               TCM_OPTIONS_MIXIN)
 generate_mixin(01_Logging               TCM_LOGGING_MIXIN)
@@ -31,6 +32,7 @@ generate_mixin(08_Add_Benchmarks        TCM_ADD_BENCHMARKS_MIXIN)
 generate_mixin(09_Add_Tests             TCM_ADD_TESTS_MIXIN)
 generate_mixin(10_Add_Examples          TCM_ADD_EXAMPLES_MIXIN)
 generate_mixin(11_ISPC                  TCM_ISPC_MIXIN)
+generate_mixin(12_Emscripten            TCM_EMSCRIPTEN_MIXIN)
 generate_mixin(98_Setup_Docs            TCM_SETUP_DOCS_MIXIN)
 generate_mixin(99_Closure               TCM_CLOSURE_MIXIN)
 
