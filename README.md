@@ -158,7 +158,7 @@ ___
 ## Emscripten
 
 In order to use __[Emscripten](https://emscripten.org)__, you must install it on your system.
-See __[Emscripten]()__, on how to use it with CMake. 
+See __[Emscripten](https://github.com/emscripten-core/emscripten/blob/main/cmake/Modules/Platform/Emscripten.cmake)__, on how to use it with CMake. 
 
 > _TL;DR: Provide Emscripten's toolchain to CMake. 
 > One way is to pass `CMAKE_TOOLCHAIN_FILE "$env{EMROOT}/cmake/Modules/Platform/emscripten.cmake"`
