@@ -9,7 +9,37 @@ The documentation for each module includes :
 * the potential side effects and how it cooperates with CMake,
 * and the API.
 
+------------------------------------------------------------------------------------------------------------------------
+##  
 
+### Setup
+
+This module is available on `tcm.cmake` inclusion.
+
+Available options :
+```cmake
+set(TCM_VERBOSE ON) # Toggleable verbosity
+```
+
+### Side-effects
+
+During `tcm.cmake` inclusion:
+
+* If `CMAKE_MESSAGE_CONTEXT_SHOW` is not already set by the user, it defaults to `TRUE`.
+* If `CMAKE_MESSAGE_CONTEXT` is not already set by the user, it defaults to `${PROJECT_NAME}`.
+
+__TCM__ provides two handy functions to manipulate `CMAKE_MESSAGE_CONTEXT` :
+* `tcm_section("...")` - append a name to `CMAKE_MESSAGE_CONTEXT`.
+* `tcm_section_end()` - pop last element from `CMAKE_MESSAGE_CONTEXT`.
+
+This module plays nicely with `CMAKE_MESSAGE_CONTEXT` and respect scoping rules.
+Most of the time, you don't have to close a section, unless you want to open and close them in the same scope.
+
+
+### API
+
+
+------------------------------------------------------------------------------------------------------------------------
 ## Logging
 
 ### Setup
