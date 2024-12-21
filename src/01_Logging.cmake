@@ -35,8 +35,8 @@ endfunction()
 #   Print an ERROR message. If FATAL is passed then a FATAL_ERROR is emitted.
 #
 function(tcm_error arg_TEXT)
-    set(_OPTIONS FATAL)
-    cmake_parse_arguments(PARSE_ARGV 1 "arg" "${_OPTIONS}" "" "")
+    set(options FATAL)
+    cmake_parse_arguments(PARSE_ARGV 1 "arg" "${options}" "" "")
     if(arg_FATAL)
         message(FATAL_ERROR " [X] ${arg_TEXT}")
     elseif (TCM_VERBOSE)
@@ -48,8 +48,8 @@ endfunction()
 #   Print a WARN message.
 #
 function(tcm_warn arg_TEXT)
-    set(_OPTIONS AUTHOR_WARNING)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "${_OPTIONS}" "" "")
+    set(options AUTHOR_WARNING)
+    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "" "")
     if(arg_AUTHOR_WARNING)
         message(AUTHOR_WARNING "/!\\ ${arg_TEXT}")
     elseif(TCM_VERBOSE)

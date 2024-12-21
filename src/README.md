@@ -22,10 +22,10 @@ Overall, I prefer the explicit over the implicit.
 
 * Public functions are prefixed by `tcm_` and use `tcm_snake_case()`.
 * Private functions are prefixed by `tcm__` (double underscore) and use `tcm_snake_case()`.
-* Variables use `CAMEL_CASE`
+* Variables use `CAMEL_CASE`, except local variables.
     * To prevent clash with cache and parent variables (unless desired) :
       * arguments are prefixed by `arg_`.
-      * local variables are prefixed by `_`.
+      * local variables use `snake_case`.
 * Options are prefixed by `TCM_`
 * _[There are other considerations when using macros](https://cmake.org/cmake/help/latest/command/cmake_parse_arguments.html)_.
   * e.g. if using `cmake_parse_arguments` don't prefix by `arg_` but by `arg_macro_name_`.

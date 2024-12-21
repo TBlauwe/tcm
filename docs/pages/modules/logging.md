@@ -2,16 +2,17 @@
 
 ## Setup
 
-This module is available on `tcm.cmake` inclusion.
+This module is automatically setup on `tcm.cmake` inclusion.
 
 Available options :
+
 ```cmake
 set(TCM_VERBOSE ON) # Toggleable verbosity
 ```
 
 ## Side-effects
 
-During `tcm.cmake` inclusion:
+During setup:
 
 * If `CMAKE_MESSAGE_CONTEXT_SHOW` is not already set by the user, it defaults to `TRUE`.
 * If `CMAKE_MESSAGE_CONTEXT` is not already set by the user, it defaults to `${PROJECT_NAME}`.
