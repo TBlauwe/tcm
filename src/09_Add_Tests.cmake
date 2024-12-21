@@ -17,7 +17,7 @@ function(tcm_add_tests)
             FILES
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm_begin_section("TESTS")
+    tcm_section("TESTS")
 
     # ------------------------------------------------------------------------------
     # --- Default values
@@ -54,5 +54,5 @@ function(tcm_add_tests)
     include(Catch)
     catch_discover_tests(${arg_TARGET})
 
-    tcm_end_section()
+    tcm_section_end()
 endfunction()

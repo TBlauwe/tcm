@@ -30,7 +30,7 @@ function(tcm_setup_docs)
     set(multiValueArgs)
     cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
-    tcm_begin_section("DOCS")
+    tcm_section("DOCS")
 
     # ------------------------------------------------------------------------------
     # --- Default values
@@ -65,7 +65,7 @@ function(tcm_setup_docs)
     find_package(Doxygen REQUIRED dot QUIET)
     if(NOT Doxygen_FOUND)
         tcm_warn("Doxygen not found -> Skipping docs.")
-        tcm_end_section()
+        tcm_section_end()
         return()
     endif()
 
@@ -77,7 +77,7 @@ function(tcm_setup_docs)
     )
     if(NOT DOXYGEN_AWESOME_CSS_ADDED)
         tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
-        tcm_end_section()
+        tcm_section_end()
         return()
     endif()
 
@@ -124,6 +124,6 @@ function(tcm_setup_docs)
     # Utility target to open docs
     add_custom_target(open_docs COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
     add_dependencies(open_docs docs)
-    tcm_end_section()
+    tcm_section_end()
 
 endfunction()

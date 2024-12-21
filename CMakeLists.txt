@@ -31,7 +31,7 @@ enable_testing()
 if(NOT EMSCRIPTEN)
     add_subdirectory(tests/simple)
     add_subdirectory(tests/shared_static)
-    #include(tests/log.cmake) # Didn't find a suitable way to test log functionalities without having to modify tcm.cmake.
+    add_subdirectory(tests/logging)
     add_subdirectory(tests/benchmark)
     add_subdirectory(tests/test)
     add_subdirectory(tests/examples)

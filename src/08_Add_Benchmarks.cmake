@@ -17,7 +17,7 @@ function(tcm_add_benchmarks)
             FILES
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm_begin_section("BENCH")
+    tcm_section("BENCH")
 
     # ------------------------------------------------------------------------------
     # --- Default values
@@ -62,5 +62,5 @@ function(tcm_add_benchmarks)
             "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
     )
 
-    tcm_end_section()
+    tcm_section_end()
 endfunction()

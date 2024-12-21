@@ -23,14 +23,18 @@ option(TCM_VERBOSE "Verbose messages during CMake runs"         ${PROJECT_IS_TOP
 # ------------------------------------------------------------------------------
 # --- LOGGING
 # ------------------------------------------------------------------------------
-# This section contains some utility functions for logging purposes
+# This module defines functions/macros for logging purposes in CMake.
 # They are simple wrappers over `message()`, whom are mostly noop when current project is not top level.
+
+macro(tcm_indent)
+    list(APPEND CMAKE_MESSAGE_INDENT "    ")
+endmacro()
 
 #-------------------------------------------------------------------------------
 #   Indent cmake message.
 #
 macro(tcm_indent)
-    list(APPEND CMAKE_MESSAGE_INDENT "    ${ARGN}")
+    list(APPEND CMAKE_MESSAGE_INDENT "    ")
 endmacro()
 
 #-------------------------------------------------------------------------------
@@ -52,75 +56,71 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Print an ERROR message. If FATAL is passed then a FATAL_ERROR is emitted.
 #
-function(tcm_error _text)
-    set(options FATAL)
-    set(oneValueArgs)
-    set(multiValueArgs)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+function(tcm_error arg_TEXT)
+    set(_OPTIONS FATAL)
+    cmake_parse_arguments(PARSE_ARGV 1 "arg" "${_OPTIONS}" "" "")
     if(arg_FATAL)
-        message(FATAL_ERROR " [X] ${_text}")
+        message(FATAL_ERROR " [X] ${arg_TEXT}")
     elseif (TCM_VERBOSE)
-        message(STATUS "[!] ${_text}")
+        message(STATUS "[!] ${arg_TEXT}")
     endif ()
 endfunction()
 
 #-------------------------------------------------------------------------------
 #   Print a WARN message.
 #
-function(tcm_warn _text)
-    set(options AUTHOR_WARNING)
-    set(oneValueArgs)
-    set(multiValueArgs)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+function(tcm_warn arg_TEXT)
+    set(_OPTIONS AUTHOR_WARNING)
+    cmake_parse_arguments(PARSE_ARGV 1 arg "${_OPTIONS}" "" "")
     if(arg_AUTHOR_WARNING)
-        message(AUTHOR_WARNING "/!\\ ${_text}")
+        message(AUTHOR_WARNING "/!\\ ${arg_TEXT}")
     elseif(TCM_VERBOSE)
-        message("/!\\ ${_text}")
+        message(STATUS "/!\\ ${arg_TEXT}")
     endif()
 endfunction()
 
 #-------------------------------------------------------------------------------
 #   Print an INFO message.
 #
-function(tcm_info _text)
+function(tcm_info arg_TEXT)
     if(TCM_VERBOSE)
-        message(STATUS "(!) ${_text}")
+        message(STATUS "(!) ${arg_TEXT}")
     endif()
 endfunction()
 
 #-------------------------------------------------------------------------------
 #   Print an STATUS message.
 #
-function(tcm_log _text)
+function(tcm_log arg_TEXT)
     if(TCM_VERBOSE)
-        message(STATUS "${_text}")
+        message(STATUS "${arg_TEXT}")
     endif()
 endfunction()
 
 #-------------------------------------------------------------------------------
 #   Print a DEBUG message.
 #
-function(tcm_debug _text)
+function(tcm_debug arg_TEXT)
     if(TCM_VERBOSE)
-        message(DEBUG "${_text}")
+        message(DEBUG "${arg_TEXT}")
     endif()
 endfunction()
 
 #-------------------------------------------------------------------------------
 #   Print a TRACE message.
 #
-function(tcm_trace _text)
+function(tcm_trace arg_TEXT)
     if(TCM_VERBOSE)
-        message(TRACE "${_text}")
+        message(TRACE "${arg_TEXT}")
     endif()
 endfunction()
 
 #-------------------------------------------------------------------------------
 #   Begin a check section.
 #
-macro(tcm_check_start _text)
+macro(tcm_check_start arg_TEXT)
     if(TCM_VERBOSE)
-        message(CHECK_START "${_text}")
+        message(CHECK_START "${arg_TEXT}")
     endif()
     tcm_indent()
 endmacro()
@@ -128,65 +128,54 @@ endmacro()
 #-------------------------------------------------------------------------------
 #   Pass a check section.
 #
-macro(tcm_check_pass _text)
+macro(tcm_check_pass arg_TEXT)
     tcm_outdent()
     if(TCM_VERBOSE)
-        message(CHECK_PASS "(v) ${_text}")
+        message(CHECK_PASS "(v) ${arg_TEXT}")
     endif()
 endmacro()
 
 #-------------------------------------------------------------------------------
 #   Fail a check section.
 #
-macro(tcm_check_fail _text)
+macro(tcm_check_fail arg_TEXT)
     tcm_outdent()
     if(TCM_VERBOSE)
-        message(CHECK_FAIL "(x) ${_text}")
+        message(CHECK_FAIL "(x) ${arg_TEXT}")
     endif()
-endmacro()
-
-#-------------------------------------------------------------------------------
-#   End a section.
-#
-macro(tcm_end_section)
-    list(POP_BACK TCM__SECTION_LIST)
-    tcm__refresh_message_context()
 endmacro()
 
 #-------------------------------------------------------------------------------
 #   Begin a section.
 #
-macro(tcm_begin_section _name)
-    list(APPEND TCM__SECTION_LIST ${_name})
-    tcm__refresh_message_context()
+macro(tcm_section arg_NAME)
+    list(APPEND CMAKE_MESSAGE_CONTEXT ${arg_NAME})
 endmacro()
 
 #-------------------------------------------------------------------------------
 #   End a section.
 #
-macro(tcm_end_section)
-    list(POP_BACK TCM__SECTION_LIST)
-    tcm__refresh_message_context()
+macro(tcm_section_end)
+    list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endmacro()
 
 #-------------------------------------------------------------------------------
 #   For internal usage.
-#   Setup logging by setting some variables.
+#   Setup logging module.
 #
 macro(tcm__setup_logging)
-    set(CMAKE_MESSAGE_CONTEXT_SHOW  TRUE)
-    set(TCM__SECTION_LIST "${PROJECT_NAME}")
-    tcm__refresh_message_context()
-endmacro()
+    if(NOT DEFINED CMAKE_MESSAGE_CONTEXT_SHOW)
+        set(CMAKE_MESSAGE_CONTEXT_SHOW TRUE)
+    endif ()
 
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Refresh CMAKE_MESSAGE_CONTEXT a section.
-#
-function(tcm__refresh_message_context)
-    string(REPLACE ";" " | " _TCM_SECTIONS_STRING "${TCM__SECTION_LIST}")
-    set(CMAKE_MESSAGE_CONTEXT ${_TCM_SECTIONS_STRING} PARENT_SCOPE)
-endfunction()
+    if(NOT DEFINED CMAKE_MESSAGE_CONTEXT)
+        set(CMAKE_MESSAGE_CONTEXT ${PROJECT_NAME})
+    endif ()
+
+    if(NOT PROJECT_IS_TOP_LEVEL AND NOT ${PROJECT_NAME} IN_LIST CMAKE_MESSAGE_CONTEXT)
+        tcm_section(${PROJECT_NAME})
+    endif ()
+endmacro()
 
 
 # ------------------------------------------------------------------------------
@@ -660,7 +649,7 @@ function(tcm_add_benchmarks)
             FILES
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm_begin_section("BENCH")
+    tcm_section("BENCH")
 
     # ------------------------------------------------------------------------------
     # --- Default values
@@ -705,7 +694,7 @@ function(tcm_add_benchmarks)
             "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
     )
 
-    tcm_end_section()
+    tcm_section_end()
 endfunction()
 
 
@@ -728,7 +717,7 @@ function(tcm_add_tests)
             FILES
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm_begin_section("TESTS")
+    tcm_section("TESTS")
 
     # ------------------------------------------------------------------------------
     # --- Default values
@@ -765,7 +754,7 @@ function(tcm_add_tests)
     include(Catch)
     catch_discover_tests(${arg_TARGET})
 
-    tcm_end_section()
+    tcm_section_end()
 endfunction()
 
 
@@ -804,7 +793,7 @@ function(tcm_add_examples)
     )
     set(multiValueArgs)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm_begin_section("EXAMPLES")
+    tcm_section("EXAMPLES")
 
     if(arg_WITH_BENCHMARK)
         if(NOT TARGET Benchmark_Examples)
@@ -878,7 +867,7 @@ BENCHMARK(BM_example_${target_name});
         tcm_log("Add ${target_name} with benchmark added to Benchmark_Examples target.")
     endforeach ()
     set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
-    tcm_end_section()
+    tcm_section_end()
 endfunction()
 
 
@@ -1067,7 +1056,7 @@ function(tcm_setup_docs)
     set(multiValueArgs)
     cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
-    tcm_begin_section("DOCS")
+    tcm_section("DOCS")
 
     # ------------------------------------------------------------------------------
     # --- Default values
@@ -1497,7 +1486,7 @@ $generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="foote
     find_package(Doxygen REQUIRED dot QUIET)
     if(NOT Doxygen_FOUND)
         tcm_warn("Doxygen not found -> Skipping docs.")
-        tcm_end_section()
+        tcm_section_end()
         return()
     endif()
 
@@ -1509,7 +1498,7 @@ $generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="foote
     )
     if(NOT DOXYGEN_AWESOME_CSS_ADDED)
         tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
-        tcm_end_section()
+        tcm_section_end()
         return()
     endif()
 
@@ -1657,7 +1646,7 @@ html.light-mode #projectlogo img {
     # Utility target to open docs
     add_custom_target(open_docs COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
     add_dependencies(open_docs docs)
-    tcm_end_section()
+    tcm_section_end()
 
 endfunction()
 
@@ -1667,11 +1656,20 @@ endfunction()
 # ------------------------------------------------------------------------------
 
 macro(tcm_setup)
+    if(NOT TARGET TCM)          # A target cannot be defined more than once.
+        add_custom_target(TCM)  # Utility target to store some internal settings.
+    endif ()
+
+    # We keep going even if setup was already called in some top projects.
+    # Some setup functions could behave differently if it is the main project or not.
+    # As TCM requires CMake > 3.25, we are sure that PROJECT_IS_TOP_LEVEL is defined.
+    # It was added in 3.21 : https://cmake.org/cmake/help/latest/variable/PROJECT_IS_TOP_LEVEL.html.
+    # TODO: May not be a good idea. include_guard() or not ?
+
     tcm__setup_logging()
     tcm__setup_variables()
     tcm__setup_emscripten()
 endmacro()
 
-# Automatically setup tcm on include
 tcm_setup()
 

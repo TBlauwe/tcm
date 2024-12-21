@@ -33,7 +33,7 @@ function(tcm_add_examples)
     )
     set(multiValueArgs)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm_begin_section("EXAMPLES")
+    tcm_section("EXAMPLES")
 
     if(arg_WITH_BENCHMARK)
         if(NOT TARGET Benchmark_Examples)
@@ -107,7 +107,7 @@ BENCHMARK(BM_example_${target_name});
         tcm_log("Add ${target_name} with benchmark added to Benchmark_Examples target.")
     endforeach ()
     set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
-    tcm_end_section()
+    tcm_section_end()
 endfunction()
 
 
