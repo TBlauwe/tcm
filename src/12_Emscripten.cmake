@@ -44,6 +44,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   For internal usage.
 #   Embed and setup a default html shell file for emscripten.
+#   TODO : Could it be done only when explicitly calling setup target ?
 macro(tcm__setup_emscripten)
     file(WRITE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html.in" [=[@TCM_EMSCRIPTEN_SHELL_DEFAULT@]=])
     configure_file("${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html.in" "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html" @ONLY)

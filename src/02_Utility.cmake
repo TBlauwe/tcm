@@ -27,18 +27,63 @@ function(tcm_target_options arg_TARGET)
 endfunction()
 
 #-------------------------------------------------------------------------------
-#   TODO Also look at embedding ?
-#   TODO No need to specify dir, copy at at $<TARGET:FILE_DIR>
-#   Copy FOLDER alongside target file
+#   Post-build, copy files and folder to an asset/ folder inside target's output directory.
 #
-function(tcm_target_assets arg_TARGET)
-    set(one_value_args SOURCE DESTINATION)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "" "${one_value_args}" "")
-    add_custom_target(${arg_TARGET}_copy_assets
-            COMMAND ${CMAKE_COMMAND} -E copy_directory "${arg_SOURCE}" "${arg_DESTINATION}"
-            COMMENT "(${arg_TARGET}) - Copying assets from directory \"${arg_SOURCE}\" to \"${arg_DESTINATION}\""
+function(tcm_target_copy_assets arg_TARGET)
+    set(one_value_args
+            OUTPUT_DIR
     )
-    add_dependencies(${arg_TARGET} ${arg_TARGET}_copy_assets)
+    set(multi_value_args
+            FILES
+            FOLDERS
+    )
+    cmake_parse_arguments(PARSE_ARGV 1 arg "" "${one_value_args}" "${multi_value_args}")
+
+
+    if(arg_FILES)
+
+        # Convert files to absolute path.
+        foreach (item IN LISTS arg_FILES)
+            file(REAL_PATH ${item} path)
+            list(APPEND files ${path})
+        endforeach ()
+
+        # copy_if_different requires destination folder to exists.
+        add_custom_command(
+                TARGET ${arg_TARGET}
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                COMMENT "Making directory $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                VERBATIM
+        )
+        add_custom_command(
+                TARGET ${arg_TARGET}
+                POST_BUILD
+                #OUTPUT ${SHADER_HEADER}
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${files} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                #DEPENDS ${SHADER}
+                COMMENT "Copying files [${files}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
+                VERBATIM
+        )
+    endif ()
+
+    if(arg_FOLDERS)
+        # Convert folders to absolute path.
+        foreach (item IN LISTS arg_FOLDERS)
+            file(REAL_PATH ${item} path)
+            list(APPEND folders ${path})
+        endforeach ()
+
+        add_custom_command(
+                TARGET ${arg_TARGET}
+                POST_BUILD
+                #OUTPUT ${SHADER_HEADER}
+                COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${folders} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                #DEPENDS ${SHADER}
+                COMMENT "Copying directories [${folders}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
+                VERBATIM
+        )
+    endif ()
 endfunction()
 
 #-------------------------------------------------------------------------------

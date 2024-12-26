@@ -3,7 +3,7 @@
 #         Author : TBlauwe
 #    Description : Root CMakeLists.txt. Useful only for dev mode (to test tcm.cmake)
 # ------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.26)
 
 project(TCM
         DESCRIPTION "A CMake Script to provide several functionalities shared across C / C++ projects."

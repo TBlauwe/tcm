@@ -11,7 +11,7 @@
 #   Private functions and macros are all prefixed with tcm__ (double underscore).
 #   For more details about a mixin, see related cmake file.
 # ------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : https://cmake.org/cmake/help/latest/command/try_compile.html
+cmake_minimum_required(VERSION 3.26) # Required for `copy_directory_if_different`.
 
 @TCM_OPTIONS_MIXIN@
 

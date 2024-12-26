@@ -11,7 +11,7 @@
 #   Private functions and macros are all prefixed with tcm__ (double underscore).
 #   For more details about a mixin, see related cmake file.
 # ------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.25) # Required for `SOURCE_FROM_CONTENT` : https://cmake.org/cmake/help/latest/command/try_compile.html
+cmake_minimum_required(VERSION 3.26) # Required for `copy_directory_if_different`.
 
 # ------------------------------------------------------------------------------
 # --- OPTIONS
@@ -207,16 +207,63 @@ function(tcm_target_options arg_TARGET)
 endfunction()
 
 #-------------------------------------------------------------------------------
-#   TODO Also look at embedding ?
-#   Copy folder _src_dir to _dst_dir before arg_TARGET is built.
+#   Post-build, copy files and folder to an asset/ folder inside target's output directory.
 #
-function(tcm_target_assets arg_TARGET _src_dir _dst_dir)
-    add_custom_target(${arg_TARGET}_copy_assets
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${_src_dir} ${_dst_dir}
-            COMMENT "(${arg_TARGET}) - Copying assets from directory ${_src_dir} to ${_dst_dir}"
+function(tcm_target_copy_assets arg_TARGET)
+    set(one_value_args
+            OUTPUT_DIR
     )
-    add_dependencies(${arg_TARGET} ${arg_TARGET}_copy_assets)
+    set(multi_value_args
+            FILES
+            FOLDERS
+    )
+    cmake_parse_arguments(PARSE_ARGV 1 arg "" "${one_value_args}" "${multi_value_args}")
+
+
+    if(arg_FILES)
+
+        # Convert files to absolute path.
+        foreach (item IN LISTS arg_FILES)
+            file(REAL_PATH ${item} path)
+            list(APPEND files ${path})
+        endforeach ()
+
+        # copy_if_different requires destination folder to exists.
+        add_custom_command(
+                TARGET ${arg_TARGET}
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                COMMENT "Making directory $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                VERBATIM
+        )
+        add_custom_command(
+                TARGET ${arg_TARGET}
+                POST_BUILD
+                #OUTPUT ${SHADER_HEADER}
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${files} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                #DEPENDS ${SHADER}
+                COMMENT "Copying files [${files}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
+                VERBATIM
+        )
+    endif ()
+
+    if(arg_FOLDERS)
+        # Convert folders to absolute path.
+        foreach (item IN LISTS arg_FOLDERS)
+            file(REAL_PATH ${item} path)
+            list(APPEND folders ${path})
+        endforeach ()
+
+        add_custom_command(
+                TARGET ${arg_TARGET}
+                POST_BUILD
+                #OUTPUT ${SHADER_HEADER}
+                COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${folders} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                #DEPENDS ${SHADER}
+                COMMENT "Copying directories [${folders}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
+                VERBATIM
+        )
+    endif ()
 endfunction()
 
 #-------------------------------------------------------------------------------
@@ -938,6 +985,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   For internal usage.
 #   Embed and setup a default html shell file for emscripten.
+#   TODO : Could it be done only when explicitly calling setup target ?
 macro(tcm__setup_emscripten)
     file(WRITE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html.in" [=[<!doctype html>
 <html lang="en-us">

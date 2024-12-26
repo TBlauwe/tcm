@@ -1,6 +1,6 @@
 # TCM - A Collection of CMake Modules
 
-![CMake](https://img.shields.io/badge/CMake%20%3E%3D%203.25-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
+![CMake](https://img.shields.io/badge/CMake%20%3E%3D%203.26-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
 __TCM__ is a collection of CMake modules to reduce boilerplate and ease setup of some functionalities across projects C or C++:
 
@@ -21,7 +21,7 @@ __TCM__ is a collection of CMake modules to reduce boilerplate and ease setup of
 * Add examples with optional benchmarking.
   * `tcm_add_examples(FOLDER examples/ WITH_BENCHMARK)`
 * and some other handy functions.
-  * logging, warnings and optimization flags, etc.
+  * logging, warnings and optimization flags, copying assets, etc.
 
 See [documentation](TODO) for a closer look.
 
@@ -101,6 +101,7 @@ wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.4
 - [ ] Install
 - [ ] Packing
 - [ ] Bindings
+- [ ] Emscripten / add shader compiler
 
 
 ## Credits
