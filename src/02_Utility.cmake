@@ -3,6 +3,21 @@
 # ------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
+#   For internal usage.
+#   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
+#
+function(tcm__ensure_target)
+    if((NOT arg_TARGET) AND (NOT ARGV0))    # A target must be specified
+        tcm_warn(AUTHOR_WARNING "Missing target. Needs to be either first argument or specified with keyword `TARGET`.")
+    elseif(NOT arg_TARGET AND ARGV0)        # If not using TARGET, then put ARGV0 as target
+        if(NOT TARGET ${ARGV0})             # Make sur that ARGV0 is a target
+            tcm_warn(AUTHOR_WARNING "Missing target. Keyword TARGET is missing and first argument \"${ARGV0}\" is not a target.")
+        endif()
+        set(arg_TARGET ${ARGV0} PARENT_SCOPE)
+    endif ()
+endfunction()
+
+#-------------------------------------------------------------------------------
 #   Prevent warnings from displaying when building target
 #   Useful when you do not want libraries warnings polluting your build output
 #   TODO Seems to work in some cases but not all.
@@ -29,7 +44,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Post-build, copy files and folder to an asset/ folder inside target's output directory.
 #
-function(tcm_target_copy_assets arg_TARGET)
+function(tcm_target_copy_assets)
     set(one_value_args
             OUTPUT_DIR
     )
@@ -37,11 +52,10 @@ function(tcm_target_copy_assets arg_TARGET)
             FILES
             FOLDERS
     )
-    cmake_parse_arguments(PARSE_ARGV 1 arg "" "${one_value_args}" "${multi_value_args}")
-
+    cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}")
+    tcm__ensure_target()
 
     if(arg_FILES)
-
         # Convert files to absolute path.
         foreach (item IN LISTS arg_FILES)
             file(REAL_PATH ${item} path)
