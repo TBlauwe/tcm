@@ -6,16 +6,16 @@
 #   For internal usage.
 #   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
 #
-function(tcm__ensure_target)
+macro(tcm__ensure_target)
     if((NOT arg_TARGET) AND (NOT ARGV0))    # A target must be specified
         tcm_author_warn("Missing target. Needs to be either first argument or specified with keyword `TARGET`.")
     elseif(NOT arg_TARGET AND ARGV0)        # If not using TARGET, then put ARGV0 as target
         if(NOT TARGET ${ARGV0})             # Make sur that ARGV0 is a target
             tcm_author_warn("Missing target. Keyword TARGET is missing and first argument \"${ARGV0}\" is not a target.")
         endif()
-        set(arg_TARGET ${ARGV0} PARENT_SCOPE)
+        set(arg_TARGET ${ARGV0})
     endif ()
-endfunction()
+endmacro()
 
 #-------------------------------------------------------------------------------
 #   Prevent warnings from displaying when building target
@@ -29,11 +29,14 @@ endfunction()
 
 
 #-------------------------------------------------------------------------------
-#   Define "-D${arg_OPTION}" for arg_TARGET when arg_OPTION is ON.
+#   Define "-D${OPTION}" for TARGET for each option that is ON.
 #
-function(tcm_target_options arg_TARGET)
+function(tcm_target_options)
+    set(one_value_args TARGET)
     set(multi_value_args OPTIONS)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "" "" "${multi_value_args}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    tcm__ensure_target()
+
     foreach (item IN LISTS arg_OPTIONS)
         if (${item})
             target_compile_definitions(${arg_TARGET} PUBLIC "${item}")
@@ -46,6 +49,7 @@ endfunction()
 #
 function(tcm_target_copy_assets)
     set(one_value_args
+            TARGET
             OUTPUT_DIR
     )
     set(multi_value_args

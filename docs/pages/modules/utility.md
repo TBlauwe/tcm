@@ -14,6 +14,33 @@ No side effects
 
 ## API
 
+### tcm_target_options()
+
+Add homonym compile define if option is ON. 
+
+```cmake
+tcm_target_options ([TARGET] <target>
+        <OPTIONS> [options...]
+)
+```
+#### Example
+
+Full example available here `tests/utility/CMakeLists.txt`.
+
+```cmake
+option(OPTION_A "A test option" ON)
+option(OPTION_B "A test option" OFF)
+option(OPTION_C "A test option" ON)
+
+add_executable(test_utility main.cpp)
+
+tcm_target_options(test_utility OPTIONS OPTION_A OPTION_B OPTION_C)
+#-DOPTION_A -DOPTION_C are added to compile definitions.
+```
+
+
+--------------------------------------------------------------------------------
+
 ### tcm_target_copy_assets()
 
 Copy files and folders to destination folder.

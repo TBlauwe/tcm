@@ -1,6 +1,8 @@
-#include <iostream>
-
 int main()
 {
-    std::cout << "Hello World!\n";
+#ifdef OPTION_A && OPTION_C && !OPTION_B
+    return 0;
+#else
+    return 1;
+#endif
 };

@@ -9,7 +9,7 @@ macro(tcm_setup)
 
     # We keep going even if setup was already called in some top projects.
     # Some setup functions could behave differently if it is the main project or not.
-    # As TCM requires CMake > 3.25, we are sure that PROJECT_IS_TOP_LEVEL is defined.
+    # As TCM requires CMake > 3.21, we are sure that PROJECT_IS_TOP_LEVEL is defined.
     # It was added in 3.21 : https://cmake.org/cmake/help/latest/variable/PROJECT_IS_TOP_LEVEL.html.
     # TODO: May not be a good idea. include_guard() or not ?
 

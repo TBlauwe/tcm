@@ -15,17 +15,7 @@ add_executable(test_utility main.cpp)
 #   TEST: Target options
 #
 tcm_target_options(test_utility OPTIONS OPTION_A OPTION_B OPTION_C)
-
-get_target_property(definitions test_utility COMPILE_DEFINITIONS)
-if(
-                ("OPTION_A" IN_LIST definitions)
-        AND NOT ("OPTION_B" IN_LIST definitions)
-        AND     ("OPTION_C" IN_LIST definitions)
-)
-    add_test(NAME Target_Options COMMAND ${CMAKE_COMMAND} -E true)
-else ()
-    add_test(NAME Target_Options COMMAND ${CMAKE_COMMAND} -E false)
-endif ()
+add_test(NAME Target_Options COMMAND $<TARGET_FILE:test_utility>)   # program returns 0 if defines are correctly set.
 
 #-------------------------------------------------------------------------------
 #   TEST : Assets copy

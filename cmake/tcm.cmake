@@ -55,23 +55,25 @@ endfunction()
 #   Short-hand functions are also available below.
 #   Credits : https://stackoverflow.com/questions/18968979/how-to-make-colorized-message-with-cmake
 function(tcm_message)
-    string(ASCII 27 Esc)
-    set(reset        "${Esc}[m")
-    set(bold         "${Esc}[1m")
-    set(red          "${Esc}[31m")
-    set(green        "${Esc}[32m")
-    set(yellow       "${Esc}[33m")
-    set(blue         "${Esc}[34m")
-    set(magenta      "${Esc}[35m")
-    set(cyan         "${Esc}[36m")
-    set(white        "${Esc}[37m")
-    set(bold_red     "${Esc}[1;31m")
-    set(bold_green   "${Esc}[1;32m")
-    set(bold_yellow  "${Esc}[1;33m")
-    set(bold_blue    "${Esc}[1;34m")
-    set(bold_magenta "${Esc}[1;35m")
-    set(bold_cyan    "${Esc}[1;36m")
-    set(bold_white   "${Esc}[1;37m")
+    if(CLICOLOR)
+        string(ASCII 27 Esc)
+        set(reset        "${Esc}[m")
+        set(bold         "${Esc}[1m")
+        set(red          "${Esc}[31m")
+        set(green        "${Esc}[32m")
+        set(yellow       "${Esc}[33m")
+        set(blue         "${Esc}[34m")
+        set(magenta      "${Esc}[35m")
+        set(cyan         "${Esc}[36m")
+        set(white        "${Esc}[37m")
+        set(bold_red     "${Esc}[1;31m")
+        set(bold_green   "${Esc}[1;32m")
+        set(bold_yellow  "${Esc}[1;33m")
+        set(bold_blue    "${Esc}[1;34m")
+        set(bold_magenta "${Esc}[1;35m")
+        set(bold_cyan    "${Esc}[1;36m")
+        set(bold_white   "${Esc}[1;37m")
+    endif ()
 
     list(GET ARGV 0 type)
     if(type STREQUAL FATAL_ERROR OR type STREQUAL SEND_ERROR)
@@ -232,16 +234,16 @@ endmacro()
 #   For internal usage.
 #   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
 #
-function(tcm__ensure_target)
+macro(tcm__ensure_target)
     if((NOT arg_TARGET) AND (NOT ARGV0))    # A target must be specified
-        tcm_warn(AUTHOR_WARNING "Missing target. Needs to be either first argument or specified with keyword `TARGET`.")
+        tcm_author_warn("Missing target. Needs to be either first argument or specified with keyword `TARGET`.")
     elseif(NOT arg_TARGET AND ARGV0)        # If not using TARGET, then put ARGV0 as target
         if(NOT TARGET ${ARGV0})             # Make sur that ARGV0 is a target
-            tcm_warn(AUTHOR_WARNING "Missing target. Keyword TARGET is missing and first argument \"${ARGV0}\" is not a target.")
+            tcm_author_warn("Missing target. Keyword TARGET is missing and first argument \"${ARGV0}\" is not a target.")
         endif()
-        set(arg_TARGET ${ARGV0} PARENT_SCOPE)
+        set(arg_TARGET ${ARGV0})
     endif ()
-endfunction()
+endmacro()
 
 #-------------------------------------------------------------------------------
 #   Prevent warnings from displaying when building target
@@ -255,11 +257,14 @@ endfunction()
 
 
 #-------------------------------------------------------------------------------
-#   Define "-D${arg_OPTION}" for arg_TARGET when arg_OPTION is ON.
+#   Define "-D${OPTION}" for TARGET for each option that is ON.
 #
-function(tcm_target_options arg_TARGET)
+function(tcm_target_options)
+    set(one_value_args TARGET)
     set(multi_value_args OPTIONS)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "" "" "${multi_value_args}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    tcm__ensure_target()
+
     foreach (item IN LISTS arg_OPTIONS)
         if (${item})
             target_compile_definitions(${arg_TARGET} PUBLIC "${item}")
@@ -272,6 +277,7 @@ endfunction()
 #
 function(tcm_target_copy_assets)
     set(one_value_args
+            TARGET
             OUTPUT_DIR
     )
     set(multi_value_args
@@ -333,7 +339,7 @@ endfunction()
 #
 function(tcm_prevent_in_source_build)
     if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-        tcm_error("In-source builds are not allowed. Please create a separate build directory and run cmake from there" FATAL)
+        tcm_fatal_error("In-source builds are not allowed. Please create a separate build directory and run cmake from there")
     endif()
 endfunction()
 
@@ -1755,7 +1761,7 @@ macro(tcm_setup)
 
     # We keep going even if setup was already called in some top projects.
     # Some setup functions could behave differently if it is the main project or not.
-    # As TCM requires CMake > 3.25, we are sure that PROJECT_IS_TOP_LEVEL is defined.
+    # As TCM requires CMake > 3.21, we are sure that PROJECT_IS_TOP_LEVEL is defined.
     # It was added in 3.21 : https://cmake.org/cmake/help/latest/variable/PROJECT_IS_TOP_LEVEL.html.
     # TODO: May not be a good idea. include_guard() or not ?
 
