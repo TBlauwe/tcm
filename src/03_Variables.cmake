@@ -1,11 +1,13 @@
 # ------------------------------------------------------------------------------
 # --- VARIABLES
 # ------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
 #   For internal usage.
 #   Set some useful CMake variables.
 #
 macro(tcm__setup_variables)
-    tcm__default_value(TCM_EXE_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
+    tcm__default_value(TCM_EXE_DIR "${PROJECT_BINARY_DIR}/bin")
 
     #-------------------------------------------------------------------------------
     # Set host machine
