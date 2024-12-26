@@ -28,26 +28,29 @@ Most of the time, you don't have to close a section, unless you want to open and
 ## API
 
 ```cmake 
-tcm_error("Abort message." FATAL)     # A FATAL_ERROR message under the hood. 
-tcm_error("Expected error message.")  # A STATUS message under the hood.
-tcm_warn("Expected warning message.") # A STATUS message under the hood or as AUTHOR_WARNING by adding AUTHOR_WARNING .
-tcm_info("An info information.")      # A STATUS message under the hood.
-tcm_log("A normal message.")          # A STATUS message under the hood.
+#tcm_fatal_error("Error message")
+tcm_error("Expected error message.")
+tcm_warn("Expected warning message.")
+#tcm_author_warn("Expected author warning message.")
+tcm_info("An info message.")
+tcm_log("A normal message.")
+tcm_debug("YOU SHOULD NOT SEE THIS.")
+tcm_trace("YOU SHOULD NOT SEE THIS.")
+tcm_check_start("Start a section")
+    tcm_check_start("Should ...")
+    tcm_check_fail("fail.")
+tcm_check_pass("done.")
 
-set(CMAKE_MESSAGE_LOG_LEVEL TRACE)    # To enable lower-level message.
-tcm_debug("A debug message.")
-tcm_trace("A trace message.")
-
-# Nestable sections
 tcm_section("SECTION")
-    tcm_log("A normal message in a section.")
-    
-    tcm_section("SUBSECTION")
-        tcm_log("A normal message in a subsection.")
-    # tcm_section_end() # OPTIONAL - Scoping rules take care of this.
-# tcm_section_end() # OPTIONAL - Scoping rules take care of this.
+    tcm_info("An info message.")
+    tcm_section("TRACE_LEVEL")
+        set(CMAKE_MESSAGE_LOG_LEVEL TRACE)
+        tcm_log("Setting CMAKE_MESSAGE_LOG_LEVEL to TRACE")
+        tcm_debug("A debug message.")
+        tcm_trace("A trace message.")
+#    tcm_section_end() #OPTIONAL - Scoping rule will take care of this.
+# tcm_section_end() # OPTIONAL - Scoping rule will take care of this.
 ```
+![sample_documentation.png](/assets/sample_documentation.png)
 
-Some additional functions:
-* `tcm_check_start(), tcm_check_pass(), tcm_check_fail()` for check section.
-* `tcm_indent(), tcm_outdent()` for indenting/outdenting messages.
+You can also use `tcm_indent()` and `tcm_outdent()` for indenting/outdenting messages.

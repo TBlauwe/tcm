@@ -10,6 +10,10 @@ project(TCM
         HOMEPAGE_URL "https://github.com/TBlauwe/tcm"
 )
 
+set(CMAKE_COLOR_DIAGNOSTICS ON)
+set(CMAKE_COLOR_MAKEFILE  ON)
+set(CLICOLOR  1)
+set(CLICOLOR_FORCE  1)
 if(NOT PROJECT_IS_TOP_LEVEL)
     return() # If consumed, we should do nothing as this file is only for testing purposes
 endif()

@@ -21,7 +21,7 @@ __TCM__ is a collection of CMake modules to reduce boilerplate and ease setup of
 * Add examples with optional benchmarking.
   * `tcm_add_examples(FOLDER examples/ WITH_BENCHMARK)`
 * and some other handy functions.
-  * logging, warnings and optimization flags, copying assets, etc.
+  * some colored logging functions, warnings and optimization flags, copying assets, etc.
 
 See [documentation](TODO) for a closer look.
 

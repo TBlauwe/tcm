@@ -8,10 +8,10 @@
 #
 function(tcm__ensure_target)
     if((NOT arg_TARGET) AND (NOT ARGV0))    # A target must be specified
-        tcm_warn(AUTHOR_WARNING "Missing target. Needs to be either first argument or specified with keyword `TARGET`.")
+        tcm_author_warn("Missing target. Needs to be either first argument or specified with keyword `TARGET`.")
     elseif(NOT arg_TARGET AND ARGV0)        # If not using TARGET, then put ARGV0 as target
         if(NOT TARGET ${ARGV0})             # Make sur that ARGV0 is a target
-            tcm_warn(AUTHOR_WARNING "Missing target. Keyword TARGET is missing and first argument \"${ARGV0}\" is not a target.")
+            tcm_author_warn("Missing target. Keyword TARGET is missing and first argument \"${ARGV0}\" is not a target.")
         endif()
         set(arg_TARGET ${ARGV0} PARENT_SCOPE)
     endif ()
@@ -107,7 +107,7 @@ endfunction()
 #
 function(tcm_prevent_in_source_build)
     if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-        tcm_error("In-source builds are not allowed. Please create a separate build directory and run cmake from there" FATAL)
+        tcm_fatal_error("In-source builds are not allowed. Please create a separate build directory and run cmake from there")
     endif()
 endfunction()
 

@@ -2,13 +2,18 @@ project(TEST_Logging)
 
 include(../../cmake/tcm.cmake)
 
-#tcm_error("Error message" FATAL) # For FATAL Error
+#tcm_fatal_error("Error message")
 tcm_error("Expected error message.")
 tcm_warn("Expected warning message.")
+#tcm_author_warn("Expected author warning message.")
 tcm_info("An info message.")
 tcm_log("A normal message.")
 tcm_debug("YOU SHOULD NOT SEE THIS.")
 tcm_trace("YOU SHOULD NOT SEE THIS.")
+tcm_check_start("Start a section")
+    tcm_check_start("Should ...")
+    tcm_check_fail("fail.")
+tcm_check_pass("done.")
 
 tcm_section("SECTION")
     tcm_info("An info message.")
