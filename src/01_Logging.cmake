@@ -4,10 +4,6 @@
 # This module defines functions/macros for logging purposes in CMake.
 # They are simple wrappers over `message()`, whom are mostly noop when current project is not top level.
 
-macro(tcm_indent)
-    list(APPEND CMAKE_MESSAGE_INDENT "    ")
-endmacro()
-
 #-------------------------------------------------------------------------------
 #   Indent cmake message.
 #
