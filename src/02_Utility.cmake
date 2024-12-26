@@ -17,6 +17,18 @@ macro(tcm__ensure_target)
     endif ()
 endmacro()
 
+
+#-------------------------------------------------------------------------------
+#   For internal usage.
+#   Set a default _value to a _var if not defined.
+#
+macro(tcm__default_value arg_VAR arg_VALUE)
+    if(NOT DEFINED ${arg_VAR})
+        set(${arg_VAR} ${arg_VALUE})
+    endif ()
+endmacro()
+
+
 #-------------------------------------------------------------------------------
 #   Prevent warnings from displaying when building target
 #   Useful when you do not want libraries warnings polluting your build output
@@ -118,7 +130,11 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Enable optimisation flags on release builds for arg_TARGET
 #
-function(tcm_target_enable_optimisation arg_TARGET)
+function(tcm_target_enable_optimisation_flags)
+    set(one_value_args TARGET)
+    cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}")
+    tcm__ensure_target()
+
     if(TCM_EMSCRIPTEN)
         target_compile_options(${arg_TARGET} PUBLIC "-Os")
         target_link_options(${arg_TARGET} PUBLIC "-Os")
@@ -145,7 +161,11 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Enable warnings flags for arg_TARGET
 #
-function(tcm_target_enable_warnings arg_TARGET)
+function(tcm_target_enable_warning_flags)
+    set(one_value_args TARGET)
+    cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}")
+    tcm__ensure_target()
+
     if (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC OR TCM_EMSCRIPTEN)
         target_compile_options(${arg_TARGET} PRIVATE
                 #$<$<CONFIG:RELEASE>:-Werror> # Treat warnings as error
@@ -183,12 +203,3 @@ function(tcm_target_enable_warnings arg_TARGET)
                 "Following compiler are supported: Clang, GNU, MSVC, AppleClang and emscripten.")
     endif ()
 endfunction()
-
-#-------------------------------------------------------------------------------
-#   Set a default _value to a _var if not defined.
-#
-macro(tcm__default_value arg_VAR arg_VALUE)
-    if(NOT DEFINED ${arg_VAR})
-        set(${arg_VAR} ${arg_VALUE})
-    endif ()
-endmacro()

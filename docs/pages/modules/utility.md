@@ -38,7 +38,6 @@ tcm_target_options(test_utility OPTIONS OPTION_A OPTION_B OPTION_C)
 #-DOPTION_A -DOPTION_C are added to compile definitions.
 ```
 
-
 --------------------------------------------------------------------------------
 
 ### tcm_target_copy_assets()
@@ -75,5 +74,24 @@ tcm_target_copy_assets(test_utility
 )
 ```
 
+--------------------------------------------------------------------------------
+
+### tcm_target_enable_optimisation_flags()
+
+Enable optimisation flags for target (speed for desktop, size for web) for RELEASE builds.
+
+```cmake
+tcm_target_enable_optimisation_flags ([TARGET] <target>)
+```
+
+--------------------------------------------------------------------------------
+
+### tcm_target_enable_warning_flags()
+
+Enable warnings flags for target.
+
+```cmake
+tcm_target_enable_warning_flags ([TARGET] <target>)
+```
 
 --------------------------------------------------------------------------------
