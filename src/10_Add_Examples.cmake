@@ -39,7 +39,7 @@ function(tcm_add_examples)
         if(NOT TARGET Benchmark_Examples)
             add_executable(Benchmark_Examples)
             target_link_libraries(Benchmark_Examples PRIVATE benchmark::benchmark_main)
-            tcm_target_enable_optimisation(Benchmark_Examples)
+            tcm_target_enable_optimisation_flags(Benchmark_Examples)
         endif ()
 
         if(arg_INTERFACE AND TARGET Benchmark_Examples)

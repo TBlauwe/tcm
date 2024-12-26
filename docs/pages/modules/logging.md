@@ -8,6 +8,7 @@ Available options :
 
 ```cmake
 set(TCM_VERBOSE ON) # Toggleable verbosity
+set(CMAKE_COLOR_DIAGNOSTICS  OFF) # Disable colors
 ```
 
 ## Side-effects
