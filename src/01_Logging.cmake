@@ -33,7 +33,7 @@ endfunction()
 #   Short-hand functions are also available below.
 #   Credits : https://stackoverflow.com/questions/18968979/how-to-make-colorized-message-with-cmake
 function(tcm_message)
-    if(CLICOLOR)
+    if(CMAKE_COLOR_DIAGNOSTICS)
         string(ASCII 27 Esc)
         set(reset        "${Esc}[m")
         set(bold         "${Esc}[1m")

@@ -10,10 +10,6 @@ project(TCM
         HOMEPAGE_URL "https://github.com/TBlauwe/tcm"
 )
 
-set(CMAKE_COLOR_DIAGNOSTICS ON)
-set(CMAKE_COLOR_MAKEFILE  ON)
-set(CLICOLOR  1)
-set(CLICOLOR_FORCE  1)
 if(NOT PROJECT_IS_TOP_LEVEL)
     return() # If consumed, we should do nothing as this file is only for testing purposes
 endif()
@@ -35,7 +31,7 @@ enable_testing()
 if(NOT EMSCRIPTEN)
     add_subdirectory(tests/simple)
     add_subdirectory(tests/shared_static)
-    add_subdirectory(tests/logging)
+    add_test(NAME Logging COMMAND ${CMAKE_COMMAND} -B ${CMAKE_CURRENT_BINARY_DIR}/tests/logging -S ${CMAKE_CURRENT_SOURCE_DIR}/tests/logging)
     add_subdirectory(tests/utility)
     add_subdirectory(tests/benchmark)
     add_subdirectory(tests/test)

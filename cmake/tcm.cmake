@@ -55,7 +55,7 @@ endfunction()
 #   Short-hand functions are also available below.
 #   Credits : https://stackoverflow.com/questions/18968979/how-to-make-colorized-message-with-cmake
 function(tcm_message)
-    if(CLICOLOR)
+    if(CMAKE_COLOR_DIAGNOSTICS)
         string(ASCII 27 Esc)
         set(reset        "${Esc}[m")
         set(bold         "${Esc}[1m")
@@ -252,6 +252,10 @@ endmacro()
 #   TODO Isn't it dangerous ? Should we not append rather than setting ?
 #
 function(tcm_target_suppress_warnings arg_TARGET)
+    set(one_value_args TARGET)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    tcm__ensure_target()
+
     set_target_properties(${arg_TARGET} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${arg_TARGET},INTERFACE_INCLUDE_DIRECTORIES>)
 endfunction()
 
@@ -305,9 +309,7 @@ function(tcm_target_copy_assets)
         add_custom_command(
                 TARGET ${arg_TARGET}
                 POST_BUILD
-                #OUTPUT ${SHADER_HEADER}
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different ${files} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
-                #DEPENDS ${SHADER}
                 COMMENT "Copying files [${files}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
                 VERBATIM
         )
@@ -323,9 +325,7 @@ function(tcm_target_copy_assets)
         add_custom_command(
                 TARGET ${arg_TARGET}
                 POST_BUILD
-                #OUTPUT ${SHADER_HEADER}
                 COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${folders} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
-                #DEPENDS ${SHADER}
                 COMMENT "Copying directories [${folders}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
                 VERBATIM
         )
