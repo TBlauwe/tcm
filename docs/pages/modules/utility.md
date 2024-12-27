@@ -1,16 +1,6 @@
-# Module : Utility functions
+# Module : Utility
 
-This module provides some miscellaneous / utility functions.
-
-## Setup
-
-No setup.
-
-
-## Side-effects
-
-No side effects 
-
+This module provides standalone utility functions.
 
 ## API
 

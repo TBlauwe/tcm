@@ -346,7 +346,7 @@ endfunction()
 
 #-------------------------------------------------------------------------------
 #   Disallow in-source builds
-#   Not recommended, you should still do it, as it should be called as early as possible, before installing tcm.
+#   Not recommended. You should do it manually and early.
 #   From : https://github.com/friendlyanon/cmake-init/
 #
 function(tcm_prevent_in_source_build)
@@ -508,7 +508,7 @@ macro(tcm__setup_variables)
     if(PROJECT_IS_TOP_LEVEL)
         set(TCM_WARNING_GUARD "")
     else()
-        option(TCM_INCLUDES_WITH_SYSTEM "Use SYSTEM modifier for shared's includes, disabling warnings" ON)
+        option(TCM_INCLUDES_WITH_SYSTEM "Use SYSTEM modifier for shared includes, disabling warnings" ON)
         mark_as_advanced(TCM_INCLUDES_WITH_SYSTEM)
         if(TCM_INCLUDES_WITH_SYSTEM)
             set(TCM_WARNING_GUARD SYSTEM)
@@ -1765,7 +1765,11 @@ endfunction()
 # --- CLOSURE
 # ------------------------------------------------------------------------------
 
-macro(tcm_setup)
+function(tcm_setup)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    message("CLICOLOR: ${CLICOLOR}")
+    message("CMAKE_COLOR_DIAGNOSTICS: ${CMAKE_COLOR_DIAGNOSTICS}")
+
     if(NOT TARGET TCM)          # A target cannot be defined more than once.
         add_custom_target(TCM)  # Utility target to store some internal settings.
     endif ()
@@ -1778,8 +1782,7 @@ macro(tcm_setup)
 
     tcm__setup_logging()
     tcm__setup_variables()
+    tcm_setup_cpm()
     tcm__setup_emscripten()
-endmacro()
-
-tcm_setup()
+endfunction()
 

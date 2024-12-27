@@ -118,7 +118,7 @@ endfunction()
 
 #-------------------------------------------------------------------------------
 #   Disallow in-source builds
-#   Not recommended, you should still do it, as it should be called as early as possible, before installing tcm.
+#   Not recommended. You should do it manually and early.
 #   From : https://github.com/friendlyanon/cmake-init/
 #
 function(tcm_prevent_in_source_build)

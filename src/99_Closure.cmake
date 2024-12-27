@@ -2,7 +2,11 @@
 # --- CLOSURE
 # ------------------------------------------------------------------------------
 
-macro(tcm_setup)
+function(tcm_setup)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    message("CLICOLOR: ${CLICOLOR}")
+    message("CMAKE_COLOR_DIAGNOSTICS: ${CMAKE_COLOR_DIAGNOSTICS}")
+
     if(NOT TARGET TCM)          # A target cannot be defined more than once.
         add_custom_target(TCM)  # Utility target to store some internal settings.
     endif ()
@@ -15,7 +19,6 @@ macro(tcm_setup)
 
     tcm__setup_logging()
     tcm__setup_variables()
+    tcm_setup_cpm()
     tcm__setup_emscripten()
-endmacro()
-
-tcm_setup()
+endfunction()

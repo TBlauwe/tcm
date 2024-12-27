@@ -1,8 +1,11 @@
 # Module : Logging
 
+This module provides logging functions.
+
 ## Description
 
-Available options :
+You can use the logging module as soon as `tcm.cmake` is included.
+Following variables will alter its behaviours:
 
 ```cmake
 set(TCM_VERBOSE ON) # Toggleable verbosity
@@ -12,13 +15,13 @@ During setup:
 
 * If `CMAKE_MESSAGE_CONTEXT_SHOW` is not already set by the user, it defaults to `TRUE`.
 * If `CMAKE_MESSAGE_CONTEXT` is not already set by the user, it defaults to `${PROJECT_NAME}`.
-
+ 
 __TCM__ provides two handy functions to manipulate `CMAKE_MESSAGE_CONTEXT` :
 * `tcm_section("...")` - append a name to `CMAKE_MESSAGE_CONTEXT`.
 * `tcm_section_end()` - pop last element from `CMAKE_MESSAGE_CONTEXT`.
 
-Logging functions play nicely with `CMAKE_MESSAGE_CONTEXT` and respect scoping rules. 
 Most of the time, you don't have to close a section, unless you want to open and close them in the same scope.
+CMake's scoping rules take care of this.
 
 
 ## API
