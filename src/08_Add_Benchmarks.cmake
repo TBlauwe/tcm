@@ -1,30 +1,20 @@
 # ------------------------------------------------------------------------------
 # --- ADD BENCHMARKS
 # ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 # Description:
-#   Add benchmarks using google benchmark (with provided main).
+#   Setup benchmarks using google benchmark (with provided main).
 #
 # Usage :
-#   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
+#   tcm_setup_benchmark([GOOGLE_BENCHMARK_VERSION vX.X.X])
 #
-function(tcm_add_benchmarks)
-    set(oneValueArgs
-            TARGET
-            GOOGLE_BENCHMARK_VERSION
-    )
-    set(multiValueArgs FILES)
+function(tcm_setup_benchmark)
+    set(oneValueArgs GOOGLE_BENCHMARK_VERSION)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm__ensure_target()
-
-    # ------------------------------------------------------------------------------
-    # --- Default values
-    # ------------------------------------------------------------------------------
     tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
 
-
-    # ------------------------------------------------------------------------------
-    # --- Dependencies
-    # ------------------------------------------------------------------------------
     find_package(benchmark QUIET)
     if(NOT benchmark_FOUND OR benchmark_ADDED)
         CPMAddPackage(
@@ -41,23 +31,36 @@ function(tcm_add_benchmarks)
             return()
         endif ()
     endif()
+endfunction()
 
 
-    # ------------------------------------------------------------------------------
-    # --- Target
-    # ------------------------------------------------------------------------------
-    add_executable(${arg_TARGET} ${arg_FILES})
-    target_link_libraries(${arg_TARGET} PRIVATE benchmark::benchmark_main)
-    set_target_properties(${arg_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
-
-    # Copy google benchmark tools : compare.py and its requirements for ease of use
-    add_custom_command(TARGET ${arg_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory
-            "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
+# ------------------------------------------------------------------------------
+# Description:
+#   Add benchmarks using google benchmark (with provided main).
+#
+# Usage :
+#   tcm_benchmarks(TARGET your_target FILES your_source.cpp ...)
+#
+function(tcm_benchmarks)
+    set(oneValueArgs
+            NAME
     )
+    set(multiValueArgs FILES)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    tcm__default_value(arg_NAME "TCM_BENCHMARK")
 
-    add_custom_command(TARGET ${arg_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
-    )
+    tcm_setup_benchmark()
 
-    tcm_section_end()
+    if(NOT TARGET ${arg_NAME})
+        add_executable(${arg_NAME} ${arg_FILES})
+        target_link_libraries(${arg_NAME} PRIVATE benchmark::benchmark_main)
+        set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+        # Copy google benchmark tools : compare.py and its requirements for ease of use
+        add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
+        )
+    else ()
+        target_sources(${arg_NAME} PRIVATE ${arg_FILES})
+    endif ()
+
 endfunction()

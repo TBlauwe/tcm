@@ -4,7 +4,7 @@
 # Description:
 #   Set project's version using semantic versioning, either from git in dev mode or from version file.
 #   Expected to be called from root CMakeLists.txt and from a valid git directory.
-
+#
 # Credits:
 #   Adapted from https://github.com/nunofachada/cmake-git-semver/blob/master/GetVersionFromGitTag.cmake
 #

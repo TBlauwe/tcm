@@ -11,7 +11,7 @@ project(TCM
 )
 
 if(NOT PROJECT_IS_TOP_LEVEL)
-    return() # If consumed, we should do nothing. This project is used only for generating tcm and for testing purposes.
+    return() # This project should not be consumed. If it does, do nothing.
 endif()
 
 add_subdirectory(src) # Generate tcm.cmake
@@ -20,13 +20,6 @@ add_subdirectory(src) # Generate tcm.cmake
 # --- TESTS
 # ------------------------------------------------------------------------------
 include(cmake/tcm.cmake) # Automatically calls tcm_setup
-tcm_setup(
-        SETUP_CACHE
-        SETUP_CPM
-        SETUP_PROJECT_VERSION
-        DOCS
-        TEST
-)
 tcm_setup_cache()
 tcm_setup_cpm()
 tcm_setup_project_version()

@@ -1,36 +1,29 @@
 # Module : Benchmarking
 
-This module provides some convenience functions for benchmarking using __[Google Benchmarks](https://github.com/google/benchmark)__.
-
-## API
+This module provides a single function for benchmarking using __[Google Benchmarks](https://github.com/google/benchmark)__.
 
 ```cmake
-tcm_suppress_warnings(arg_TARGET)
+tcm_benchmarks (
+        [NAME <name>] 
+        FILES <file>...
+)
 ```
-Should suppress warnings emitted from `arg_target`, by adding `SYSTEM` modifier to its include directories.
+If no `NAME` is provided, then sources files are added to default target `TCM_BENCHMARKS`.
+Otherwise, a target with provided name is created.
+Every target is linked with `benchmark::benchmark_main`, so no need to provide a `main` function.
+Multiple calls with the same target will just add sources files to the target.
 
-> [!WARNING]
->
-> Doesn't seem to always works.
+#### Example
 
-
-------------------------------------------------------------------------------------------------------------------------
 ```cmake
-tcm_option_define(_target _option)
+tcm_benchmarks(FILES benchmark_1.cpp benchmark_2.cpp) # Added to default target `TCM_BENCHMARKS`
+tcm_benchmarks(NAME my_target FILES benchmark_1.cpp benchmark_2.cpp) # Added to target `my_target`
 ```
-Define `-D${_option}` for `_target` when `_option` is ON.
 
+If you wish to override __[Google Benchmarks](https://github.com/google/benchmark)__, do the following once before calling `tcm_benchmarks`:
 
-------------------------------------------------------------------------------------------------------------------------
 ```cmake
-tcm_target_assets(_target _src_dir _dst_dir)
-```
-Copy folder `_src_dir` to `_dst_dir` before target is built.
-
-
-------------------------------------------------------------------------------------------------------------------------
-```cmake
-tcm_generate_export_header(_target)
+tcm_setup_benchmark(GOOGLE_BENCHMARK_VERSION "vX.X.X")
 ```
 
-A wrapper over `generate_export_header` with some preferred default, properties set (VERSION, SOVERSION, etc.), and export directory already included.
+

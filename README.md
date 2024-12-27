@@ -17,7 +17,7 @@ __TCM__ is a collection of CMake modules to reduce boilerplate and ease setup of
 * Add tests with __[Catch2](https://github.com/catchorg/Catch2)__.
   * `tcm_add_tests(TARGET test FILES test.cpp ...)`
 * Add benchmarks with __[Google Benchmarks](https://github.com/google/benchmark)__.
-  * `tcm_add_benchmarks(TARGET bench FILES bench.cpp ...)`
+  * `tcm_benchmarks([NAME my_target] FILES bench.cpp ...)`
 * Add examples with optional benchmarking.
   * `tcm_add_examples(FOLDER examples/ WITH_BENCHMARK)`
 * and some other handy functions.

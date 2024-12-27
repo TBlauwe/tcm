@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.25)
 
 project(TEST_Utility)
 
-tcm_setup()
-
 option(OPTION_A "A test option" ON)
 option(OPTION_B "A test option" OFF)
 option(OPTION_C "A test option" ON)

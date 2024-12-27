@@ -566,12 +566,9 @@ endfunction()
 # Download and install CPM if not already present.
 #
 macro(tcm_setup_cpm)
-    set(CPM_INDENT "(CPM)")
-    set(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
-    if(NOT DEFINED CPM_DOWNLOAD_VERSION)
-        set(CPM_DOWNLOAD_VERSION 0.40.2)
-        set(CPM_HASH_SUM "c8cdc32c03816538ce22781ed72964dc864b2a34a310d3b7104812a5ca2d835d")
-    endif()
+    tcm__default_value(CPM_INDENT "(CPM)")
+    tcm__default_value(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
+    tcm__default_value(CPM_DOWNLOAD_VERSION 0.40.2)
 
     if(CPM_SOURCE_CACHE)
         set(CPM_DOWNLOAD_LOCATION "${CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
@@ -582,23 +579,17 @@ macro(tcm_setup_cpm)
     endif()
 
     # Expand relative path. This is important if the provided path contains a tilde (~)
-    get_filename_component(CPM_DOWNLOAD_LOCATION ${CPM_DOWNLOAD_LOCATION} ABSOLUTE)
-
-    function(download_cpm)
-        tcm_info("Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
-        file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake
-                ${CPM_DOWNLOAD_LOCATION}
-                EXPECTED_HASH SHA256=${CPM_HASH_SUM}
-        )
-    endfunction()
+    file(REAL_PATH ${CPM_DOWNLOAD_LOCATION} CPM_DOWNLOAD_LOCATION)
 
     if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
-        download_cpm()
+        tcm_info("Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
+        file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake ${CPM_DOWNLOAD_LOCATION})
     else()
         # resume download if it previously failed
         file(READ ${CPM_DOWNLOAD_LOCATION} check)
         if("${check}" STREQUAL "")
-            download_cpm()
+            tcm_info("Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
+            file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake ${CPM_DOWNLOAD_LOCATION})
         endif()
     endif()
 
@@ -653,7 +644,7 @@ endfunction()
 # Description:
 #   Set project's version using semantic versioning, either from git in dev mode or from version file.
 #   Expected to be called from root CMakeLists.txt and from a valid git directory.
-
+#
 # Credits:
 #   Adapted from https://github.com/nunofachada/cmake-git-semver/blob/master/GetVersionFromGitTag.cmake
 #
@@ -745,30 +736,20 @@ endfunction()
 # ------------------------------------------------------------------------------
 # --- ADD BENCHMARKS
 # ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 # Description:
-#   Add benchmarks using google benchmark (with provided main).
+#   Setup benchmarks using google benchmark (with provided main).
 #
 # Usage :
-#   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
+#   tcm_setup_benchmark([GOOGLE_BENCHMARK_VERSION vX.X.X])
 #
-function(tcm_add_benchmarks)
-    set(oneValueArgs
-            TARGET
-            GOOGLE_BENCHMARK_VERSION
-    )
-    set(multiValueArgs FILES)
+function(tcm_setup_benchmark)
+    set(oneValueArgs GOOGLE_BENCHMARK_VERSION)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm__ensure_target()
-
-    # ------------------------------------------------------------------------------
-    # --- Default values
-    # ------------------------------------------------------------------------------
     tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
 
-
-    # ------------------------------------------------------------------------------
-    # --- Dependencies
-    # ------------------------------------------------------------------------------
     find_package(benchmark QUIET)
     if(NOT benchmark_FOUND OR benchmark_ADDED)
         CPMAddPackage(
@@ -785,25 +766,38 @@ function(tcm_add_benchmarks)
             return()
         endif ()
     endif()
+endfunction()
 
 
-    # ------------------------------------------------------------------------------
-    # --- Target
-    # ------------------------------------------------------------------------------
-    add_executable(${arg_TARGET} ${arg_FILES})
-    target_link_libraries(${arg_TARGET} PRIVATE benchmark::benchmark_main)
-    set_target_properties(${arg_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
-
-    # Copy google benchmark tools : compare.py and its requirements for ease of use
-    add_custom_command(TARGET ${arg_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory
-            "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
+# ------------------------------------------------------------------------------
+# Description:
+#   Add benchmarks using google benchmark (with provided main).
+#
+# Usage :
+#   tcm_benchmarks(TARGET your_target FILES your_source.cpp ...)
+#
+function(tcm_benchmarks)
+    set(oneValueArgs
+            NAME
     )
+    set(multiValueArgs FILES)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    tcm__default_value(arg_NAME "TCM_BENCHMARK")
 
-    add_custom_command(TARGET ${arg_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
-    )
+    tcm_setup_benchmark()
 
-    tcm_section_end()
+    if(NOT TARGET ${arg_NAME})
+        add_executable(${arg_NAME} ${arg_FILES})
+        target_link_libraries(${arg_NAME} PRIVATE benchmark::benchmark_main)
+        set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+        # Copy google benchmark tools : compare.py and its requirements for ease of use
+        add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
+        )
+    else ()
+        target_sources(${arg_NAME} PRIVATE ${arg_FILES})
+    endif ()
+
 endfunction()
 
 
@@ -1764,25 +1758,7 @@ endfunction()
 # ------------------------------------------------------------------------------
 # --- CLOSURE
 # ------------------------------------------------------------------------------
-
-function(tcm_setup)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    message("CLICOLOR: ${CLICOLOR}")
-    message("CMAKE_COLOR_DIAGNOSTICS: ${CMAKE_COLOR_DIAGNOSTICS}")
-
-    if(NOT TARGET TCM)          # A target cannot be defined more than once.
-        add_custom_target(TCM)  # Utility target to store some internal settings.
-    endif ()
-
-    # We keep going even if setup was already called in some top projects.
-    # Some setup functions could behave differently if it is the main project or not.
-    # As TCM requires CMake > 3.21, we are sure that PROJECT_IS_TOP_LEVEL is defined.
-    # It was added in 3.21 : https://cmake.org/cmake/help/latest/variable/PROJECT_IS_TOP_LEVEL.html.
-    # TODO: May not be a good idea. include_guard() or not ?
-
-    tcm__setup_logging()
-    tcm__setup_variables()
-    tcm_setup_cpm()
-    tcm__setup_emscripten()
-endfunction()
+tcm__setup_logging()
+tcm__setup_variables()
+tcm__setup_emscripten()
 
