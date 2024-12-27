@@ -5,4 +5,4 @@ project(TEST_GBench)
 include(../../cmake/tcm.cmake)
 
 tcm_benchmarks(FILES bench.cpp)
-add_test(NAME GBench COMMAND test_gbench)
+add_test(NAME Benchmarking COMMAND TCM_BENCHMARK)

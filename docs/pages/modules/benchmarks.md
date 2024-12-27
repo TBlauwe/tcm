@@ -8,7 +8,7 @@ tcm_benchmarks (
         FILES <file>...
 )
 ```
-If no `NAME` is provided, then sources files are added to default target `TCM_BENCHMARKS`.
+If no `NAME` is provided, then sources files are added to default target `tcm_Benchmarks`.
 Otherwise, a target with provided name is created.
 Every target is linked with `benchmark::benchmark_main`, so no need to provide a `main` function.
 Multiple calls with the same target will just add sources files to the target.
@@ -16,7 +16,7 @@ Multiple calls with the same target will just add sources files to the target.
 #### Example
 
 ```cmake
-tcm_benchmarks(FILES benchmark_1.cpp benchmark_2.cpp) # Added to default target `TCM_BENCHMARKS`
+tcm_benchmarks(FILES benchmark_1.cpp benchmark_2.cpp) # Added to default target `tcm_Benchmarks`
 tcm_benchmarks(NAME my_target FILES benchmark_1.cpp benchmark_2.cpp) # Added to target `my_target`
 ```
 

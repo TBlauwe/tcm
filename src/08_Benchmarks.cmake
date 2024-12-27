@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# --- ADD BENCHMARKS
+# --- MODULE: BENCHMARKS
 # ------------------------------------------------------------------------------
 
 
@@ -42,12 +42,10 @@ endfunction()
 #   tcm_benchmarks(TARGET your_target FILES your_source.cpp ...)
 #
 function(tcm_benchmarks)
-    set(oneValueArgs
-            NAME
-    )
-    set(multiValueArgs FILES)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm__default_value(arg_NAME "TCM_BENCHMARK")
+    set(one_value_args NAME)
+    set(multi_value_args FILES)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    tcm__default_value(arg_NAME "tcm_Benchmarks")
 
     tcm_setup_benchmark()
 
