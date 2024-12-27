@@ -3,21 +3,18 @@
 # ------------------------------------------------------------------------------
 # Description:
 #   Add benchmarks using google benchmark (with provided main).
-
+#
 # Usage :
 #   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
 #
 function(tcm_add_benchmarks)
-    set(options)
     set(oneValueArgs
             TARGET
             GOOGLE_BENCHMARK_VERSION
     )
-    set(multiValueArgs
-            FILES
-    )
+    set(multiValueArgs FILES)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm_section("BENCH")
+    tcm__ensure_target()
 
     # ------------------------------------------------------------------------------
     # --- Default values

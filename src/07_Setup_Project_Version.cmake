@@ -89,5 +89,5 @@ function(tcm_setup_project_version)
         set(PROJECT_VERSION_PATCH ${VALUE} PARENT_SCOPE)
     endif()
 
-    tcm_log("Project Version : ${VERSION}")
+    tcm_info("Project Version : ${VERSION}")
 endfunction()

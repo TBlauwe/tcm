@@ -1,8 +1,6 @@
 # Module : Logging
 
-## Setup
-
-This module is automatically setup on `tcm.cmake` inclusion.
+## Description
 
 Available options :
 
@@ -10,9 +8,6 @@ Available options :
 set(TCM_VERBOSE ON) # Toggleable verbosity
 set(CMAKE_COLOR_DIAGNOSTICS  OFF) # Disable colors
 ```
-
-## Side-effects
-
 During setup:
 
 * If `CMAKE_MESSAGE_CONTEXT_SHOW` is not already set by the user, it defaults to `TRUE`.
@@ -22,7 +17,7 @@ __TCM__ provides two handy functions to manipulate `CMAKE_MESSAGE_CONTEXT` :
 * `tcm_section("...")` - append a name to `CMAKE_MESSAGE_CONTEXT`.
 * `tcm_section_end()` - pop last element from `CMAKE_MESSAGE_CONTEXT`.
 
-This module plays nicely with `CMAKE_MESSAGE_CONTEXT` and respect scoping rules. 
+Logging functions play nicely with `CMAKE_MESSAGE_CONTEXT` and respect scoping rules. 
 Most of the time, you don't have to close a section, unless you want to open and close them in the same scope.
 
 

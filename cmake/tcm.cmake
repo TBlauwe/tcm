@@ -78,21 +78,21 @@ function(tcm_message)
     list(GET ARGV 0 type)
     if(type STREQUAL FATAL_ERROR OR type STREQUAL SEND_ERROR)
         list(REMOVE_AT ARGV 0)
-        message(${type} "${bold_red}[X] ${ARGV}${reset}")
+        message(${type} "${bold_red}[X]${reset} ${ARGV}")
     elseif(type STREQUAL ERROR)
         list(REMOVE_AT ARGV 0)
-        message(STATUS "${red}[!] ${ARGV}${reset}")
+        message(STATUS "${bold_red}[!]${reset} ${ARGV}")
     elseif(type STREQUAL WARNING)
         list(REMOVE_AT ARGV 0)
-        message(STATUS "${bold_yellow}/!\\ ${ARGV}${reset}")
+        message(STATUS "${bold_yellow}/!\\${reset} ${ARGV}")
     elseif(type STREQUAL AUTHOR_WARNING)
         list(REMOVE_AT ARGV 0)
-        message(${type} "${bold_cyan}/!\\ ${ARGV}${reset}")
+        message(${type} "${bold_cyan}/!\\${reset} ${ARGV}")
     elseif(NOT TCM_VERBOSE)
         return()
     elseif(type STREQUAL INFO)
         list(REMOVE_AT ARGV 0)
-        message(STATUS "${bold_blue}(!) ${ARGV}${reset}")
+        message(STATUS "${bold_blue}(!)${reset} ${ARGV}")
     elseif(type STREQUAL CHECK_PASS)
         list(REMOVE_AT ARGV 0)
         message(${type} "${bold_green}${ARGV}${reset}")
@@ -263,7 +263,7 @@ endmacro()
 #   TODO Seems to work in some cases but not all.
 #   TODO Isn't it dangerous ? Should we not append rather than setting ?
 #
-function(tcm_target_suppress_warnings arg_TARGET)
+function(tcm_target_suppress_warnings)
     set(one_value_args TARGET)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
@@ -526,34 +526,35 @@ include(GenerateExportHeader)
 #   Generate export header for a target.
 #   Export header directory will be included in a private scope.
 #
-function(tcm_generate_export_header target)
-    set(options)
-    set(oneValueArgs)
-    set(multiValueArgs)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+function(tcm_generate_export_header)
+    set(one_value_args
+            TARGET
+            EXPORT_FILE_NAME
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    tcm__ensure_target()
     tcm__default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${target}/export.h")
 
     generate_export_header(
-            ${target}
+            ${arg_TARGET}
             EXPORT_FILE_NAME ${arg_EXPORT_FILE_NAME}
     )
 
-    string(TOUPPER ${target} UPPER_NAME)
+    string(TOUPPER ${arg_TARGET} UPPER_NAME)
     if(NOT BUILD_SHARED_LIBS)
-        target_compile_definitions(${target} PUBLIC ${UPPER_NAME}_STATIC_DEFINE)
+        target_compile_definitions(${arg_TARGET} PUBLIC ${UPPER_NAME}_STATIC_DEFINE)
     endif()
 
-
-    set_target_properties(${target} PROPERTIES
+    set_target_properties(${arg_TARGET} PROPERTIES
             CXX_VISIBILITY_PRESET hidden
             VISIBILITY_INLINES_HIDDEN YES
             VERSION "${PROJECT_VERSION}"
             SOVERSION "${PROJECT_VERSION_MAJOR}"
-            EXPORT_NAME ${target}
-            OUTPUT_NAME ${target}
+            EXPORT_NAME ${arg_TARGET}
+            OUTPUT_NAME ${arg_TARGET}
     )
 
-    target_include_directories(${target} SYSTEM PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/export>)
+    target_include_directories(${arg_TARGET} SYSTEM PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/export>)
 endfunction()
 
 
@@ -565,7 +566,7 @@ endfunction()
 # Download and install CPM if not already present.
 #
 macro(tcm_setup_cpm)
-    set(CPM_INDENT "(CPM) ")
+    set(CPM_INDENT "(CPM)")
     set(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
     if(NOT DEFINED CPM_DOWNLOAD_VERSION)
         set(CPM_DOWNLOAD_VERSION 0.40.2)
@@ -602,7 +603,7 @@ macro(tcm_setup_cpm)
     endif()
 
     include(${CPM_DOWNLOAD_LOCATION})
-    tcm_log("Using CPM : ${CPM_DOWNLOAD_LOCATION}")
+    tcm_info("Using CPM : ${CPM_DOWNLOAD_LOCATION}")
 endmacro()
 
 
@@ -636,7 +637,7 @@ function(tcm_setup_cache)
 
     find_program(CACHE_BINARY NAMES ${CACHE_OPTION_VALUES})
     if(CACHE_BINARY)
-        tcm_log("Using Cache System : ${CACHE_BINARY}.")
+        tcm_info("Using Cache System : ${CACHE_BINARY}.")
         set(CMAKE_CXX_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
         set(CMAKE_C_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
         set(CMAKE_CUDA_COMPILER_LAUNCHER "${CACHE_BINARY}" PARENT_SCOPE)
@@ -737,7 +738,7 @@ function(tcm_setup_project_version)
         set(PROJECT_VERSION_PATCH ${VALUE} PARENT_SCOPE)
     endif()
 
-    tcm_log("Project Version : ${VERSION}")
+    tcm_info("Project Version : ${VERSION}")
 endfunction()
 
 
@@ -746,21 +747,18 @@ endfunction()
 # ------------------------------------------------------------------------------
 # Description:
 #   Add benchmarks using google benchmark (with provided main).
-
+#
 # Usage :
 #   tcm_add_benchmarks(TARGET your_target FILES your_source.cpp ...)
 #
 function(tcm_add_benchmarks)
-    set(options)
     set(oneValueArgs
             TARGET
             GOOGLE_BENCHMARK_VERSION
     )
-    set(multiValueArgs
-            FILES
-    )
+    set(multiValueArgs FILES)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm_section("BENCH")
+    tcm__ensure_target()
 
     # ------------------------------------------------------------------------------
     # --- Default values

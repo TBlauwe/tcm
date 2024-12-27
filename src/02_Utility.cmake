@@ -35,7 +35,7 @@ endmacro()
 #   TODO Seems to work in some cases but not all.
 #   TODO Isn't it dangerous ? Should we not append rather than setting ?
 #
-function(tcm_target_suppress_warnings arg_TARGET)
+function(tcm_target_suppress_warnings)
     set(one_value_args TARGET)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()

@@ -11,7 +11,7 @@ project(TCM
 )
 
 if(NOT PROJECT_IS_TOP_LEVEL)
-    return() # If consumed, we should do nothing as this file is only for testing purposes
+    return() # If consumed, we should do nothing. This project is used only for generating tcm and for testing purposes.
 endif()
 
 add_subdirectory(src) # Generate tcm.cmake

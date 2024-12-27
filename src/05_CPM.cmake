@@ -5,7 +5,7 @@
 # Download and install CPM if not already present.
 #
 macro(tcm_setup_cpm)
-    set(CPM_INDENT "(CPM) ")
+    set(CPM_INDENT "(CPM)")
     set(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
     if(NOT DEFINED CPM_DOWNLOAD_VERSION)
         set(CPM_DOWNLOAD_VERSION 0.40.2)
@@ -42,5 +42,5 @@ macro(tcm_setup_cpm)
     endif()
 
     include(${CPM_DOWNLOAD_LOCATION})
-    tcm_log("Using CPM : ${CPM_DOWNLOAD_LOCATION}")
+    tcm_info("Using CPM : ${CPM_DOWNLOAD_LOCATION}")
 endmacro()

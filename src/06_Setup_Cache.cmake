@@ -28,7 +28,7 @@ function(tcm_setup_cache)
 
     find_program(CACHE_BINARY NAMES ${CACHE_OPTION_VALUES})
     if(CACHE_BINARY)
-        tcm_log("Using Cache System : ${CACHE_BINARY}.")
+        tcm_info("Using Cache System : ${CACHE_BINARY}.")
         set(CMAKE_CXX_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
         set(CMAKE_C_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
         set(CMAKE_CUDA_COMPILER_LAUNCHER "${CACHE_BINARY}" PARENT_SCOPE)
