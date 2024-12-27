@@ -27,8 +27,7 @@ tcm_setup_docs()
 #todo add examples path to doxygen ?
 
 include(CTest)
-enable_testing()
-if(NOT EMSCRIPTEN)
+if(NOT EMSCRIPTEN AND BUILD_TESTING)
     add_subdirectory(tests/simple)
     add_subdirectory(tests/shared_static)
     add_test(NAME Logging COMMAND ${CMAKE_COMMAND} -B ${CMAKE_CURRENT_BINARY_DIR}/tests/logging -S ${CMAKE_CURRENT_SOURCE_DIR}/tests/logging)

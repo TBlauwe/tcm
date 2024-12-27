@@ -792,6 +792,7 @@ function(tcm_benchmarks)
         add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                 "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
         )
+        tcm_target_enable_optimisation_flags(${arg_NAME})
     else ()
         target_sources(${arg_NAME} PRIVATE ${arg_FILES})
     endif ()
@@ -878,33 +879,28 @@ endfunction()
 #   ${TCM_EXAMPLE_TARGETS} - List of all examples target __configured during this call !__
 #
 # Usage :
-#   tcm_add_examples(FOLDER examples/)
+#   tcm_examples(FOLDER examples/)
 #
-# TODO:
-#   * Pass a INTERFACE target for examples and benchmarks (or add necessary properties after the call)
-#   * Only one call should work for WITH_BENCHMARK (only one target). Solution : re use it (cache it)
-#
-#
-function(tcm_add_examples)
+function(tcm_examples)
     set(options WITH_BENCHMARK)
-    set(oneValueArgs
+    set(one_value_args
             FOLDER
-            GOOGLE_BENCHMARK_VERSION
             INTERFACE
     )
-    set(multiValueArgs)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm_section("EXAMPLES")
+    set(multi_value_args)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
 
+    tcm_setup_test()
     if(arg_WITH_BENCHMARK)
-        if(NOT TARGET Benchmark_Examples)
-            add_executable(Benchmark_Examples)
-            target_link_libraries(Benchmark_Examples PRIVATE benchmark::benchmark_main)
-            tcm_target_enable_optimisation_flags(Benchmark_Examples)
+        tcm_setup_benchmark()
+        if(NOT TARGET tcm_Benchmarks)
+            add_executable(tcm_Benchmarks)
+            target_link_libraries(tcm_Benchmarks PRIVATE benchmark::benchmark_main)
+            tcm_target_enable_optimisation_flags(tcm_Benchmarks)
         endif ()
 
-        if(arg_INTERFACE AND TARGET Benchmark_Examples)
-                target_link_libraries(Benchmark_Examples PUBLIC ${arg_INTERFACE})
+        if(arg_INTERFACE)
+                target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
         endif ()
     endif ()
 
@@ -912,8 +908,9 @@ function(tcm_add_examples)
     cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
     file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
 
+    tcm_log("Configuring tests:")
+    tcm_indent()
     foreach (example IN LISTS examples)
-
         cmake_path(REMOVE_EXTENSION example OUTPUT_VARIABLE target_name)
 
         # Replace the slashes and dots with underscores to get a valid target name
@@ -930,7 +927,7 @@ function(tcm_add_examples)
         list(APPEND TARGETS ${target_name})
 
         if(NOT arg_WITH_BENCHMARK)
-            tcm_log("Add ${target_name}")
+            tcm_log("* ${target_name}")
             continue()
         endif ()
 
@@ -963,21 +960,12 @@ BENCHMARK(BM_example_${target_name});
         )
         set(benchmark_file ${CMAKE_CURRENT_BINARY_DIR}/benchmarks/${target_name}.cpp)
         file(WRITE ${benchmark_file} "${file_content}")
-        target_sources(Benchmark_Examples PRIVATE ${benchmark_file})
+        target_sources(tcm_Benchmarks PRIVATE ${benchmark_file})
 
-        tcm_log("Add ${target_name} with benchmark added to Benchmark_Examples target.")
+        tcm_log("* ${target_name} (w/ benchmark)")
     endforeach ()
     set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
-    tcm_section_end()
 endfunction()
-
-
-# ------------------------------------------------------------------------------
-#   For internal usage.
-#   Set some useful CMake variables.
-#
-macro(tcm__setup_examples)
-endmacro()
 
 
 # ------------------------------------------------------------------------------

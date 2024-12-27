@@ -57,6 +57,7 @@ function(tcm_benchmarks)
         add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                 "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
         )
+        tcm_target_enable_optimisation_flags(${arg_NAME})
     else ()
         target_sources(${arg_NAME} PRIVATE ${arg_FILES})
     endif ()

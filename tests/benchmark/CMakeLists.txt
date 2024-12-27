@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(TEST_GBench)
+project(Benchmarking)
 
 include(../../cmake/tcm.cmake)
 
 tcm_benchmarks(FILES bench.cpp)
-add_test(NAME Benchmarking COMMAND TCM_BENCHMARK)
+add_test(NAME Benchmarking COMMAND tcm_Benchmarks)

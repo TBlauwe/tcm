@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(TEST_Examples LANGUAGES C)
+project(Examples LANGUAGES C CXX)
+
+include(../../cmake/tcm.cmake)
+tcm_setup_cpm()
 
 # Create a simple library
 add_library(MyLib my_lib/my_lib.c)
@@ -10,4 +13,4 @@ target_include_directories(MyLib PUBLIC my_lib)
 add_library(ExampleInterface INTERFACE)
 target_link_libraries(ExampleInterface INTERFACE MyLib)
 
-tcm_add_examples(FOLDER examples WITH_BENCHMARK INTERFACE ExampleInterface)
+tcm_examples(FOLDER examples WITH_BENCHMARK INTERFACE ExampleInterface)
