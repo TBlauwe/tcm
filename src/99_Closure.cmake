@@ -3,4 +3,4 @@
 # ------------------------------------------------------------------------------
 tcm__setup_logging()
 tcm__setup_variables()
-tcm__setup_emscripten()
+tcm__module_emscripten()

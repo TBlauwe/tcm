@@ -102,6 +102,7 @@ wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.4
 - [ ] Packing
 - [ ] Bindings
 - [ ] Emscripten / add shader compiler
+- [ ] Maybe propose a single function to parametrize target according to current settings (optimization, warnings, emscripten)
 
 
 ## Credits
