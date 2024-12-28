@@ -11,7 +11,7 @@
 # Usage:
 #   include(cmake/get_tcm.cmake)
 # ------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION @CMAKE_MINIMUM_REQUIRED_VERSION@)
 
 function(download_tcm)
     message(STATUS "Downloading TCM.cmake to ${TCM_DOWNLOAD_LOCATION}")
@@ -19,7 +19,7 @@ function(download_tcm)
 endfunction()
 
 if(NOT DEFINED TCM_DOWNLOAD_VERSION)
-    set(TCM_DOWNLOAD_VERSION 0.5.0)
+    set(TCM_DOWNLOAD_VERSION @PROJECT_VERSION@)
 endif()
 
 if(TCM_SOURCE_CACHE)

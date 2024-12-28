@@ -1,17 +1,11 @@
 # ------------------------------------------------------------------------------
-# File:
-#   tcm.cmake
-#
-# Author:
-#   TBlauwe
-#
-# Description:
-#   Opinionated CMake module to share and manage common functionality and settings for C++ / C project.
-#   Functions and macros are all prefixed with tcm_.
-#   Private functions and macros are all prefixed with tcm__ (double underscore).
-#   For more details about a mixin, see related cmake file.
+#        File: tcm.cmake
+#      Author: TBlauwe
+# Description: @PROJECT_DESCRIPTION@
 # ------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.26) # Required for `copy_directory_if_different`.
+include_guard()
+
+cmake_minimum_required(VERSION @CMAKE_MINIMUM_REQUIRED_VERSION@)
 
 @TCM_OPTIONS_MIXIN@
 

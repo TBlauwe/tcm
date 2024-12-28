@@ -189,7 +189,7 @@ endmacro()
 #   For internal usage.
 #   Setup logging module.
 #
-macro(tcm__setup_logging)
+macro(tcm__module_logging)
     if(NOT DEFINED CMAKE_MESSAGE_CONTEXT_SHOW)
         set(CMAKE_MESSAGE_CONTEXT_SHOW TRUE)
     endif ()

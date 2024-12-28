@@ -72,7 +72,7 @@ function(tcm_target_copy_assets)
             FILES
             FOLDERS
     )
-    cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
     if(arg_FILES)
@@ -132,7 +132,7 @@ endfunction()
 #
 function(tcm_target_enable_optimisation_flags)
     set(one_value_args TARGET)
-    cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
     if(TCM_EMSCRIPTEN)
@@ -163,7 +163,7 @@ endfunction()
 #
 function(tcm_target_enable_warning_flags)
     set(one_value_args TARGET)
-    cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
     if (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC OR TCM_EMSCRIPTEN)

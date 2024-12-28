@@ -1,17 +1,11 @@
 # ------------------------------------------------------------------------------
-# File:
-#   tcm.cmake
-#
-# Author:
-#   TBlauwe
-#
-# Description:
-#   Opinionated CMake module to share and manage common functionality and settings for C++ / C project.
-#   Functions and macros are all prefixed with tcm_.
-#   Private functions and macros are all prefixed with tcm__ (double underscore).
-#   For more details about a mixin, see related cmake file.
+#        File: tcm.cmake
+#      Author: TBlauwe
+# Description: A CMake module to share several functionalities used across C / C++ projects.
 # ------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.26) # Required for `copy_directory_if_different`.
+include_guard()
+
+cmake_minimum_required(VERSION 3.26)
 
 # ------------------------------------------------------------------------------
 # --- OPTIONS
@@ -211,7 +205,7 @@ endmacro()
 #   For internal usage.
 #   Setup logging module.
 #
-macro(tcm__setup_logging)
+macro(tcm__module_logging)
     if(NOT DEFINED CMAKE_MESSAGE_CONTEXT_SHOW)
         set(CMAKE_MESSAGE_CONTEXT_SHOW TRUE)
     endif ()
@@ -300,7 +294,7 @@ function(tcm_target_copy_assets)
             FILES
             FOLDERS
     )
-    cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
     if(arg_FILES)
@@ -360,7 +354,7 @@ endfunction()
 #
 function(tcm_target_enable_optimisation_flags)
     set(one_value_args TARGET)
-    cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
     if(TCM_EMSCRIPTEN)
@@ -391,7 +385,7 @@ endfunction()
 #
 function(tcm_target_enable_warning_flags)
     set(one_value_args TARGET)
-    cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
     if (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC OR TCM_EMSCRIPTEN)
@@ -533,7 +527,7 @@ function(tcm_generate_export_header)
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
-    tcm__default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${target}/export.h")
+    tcm__default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${arg_TARGET}/export.h")
 
     generate_export_header(
             ${arg_TARGET}
@@ -1764,7 +1758,11 @@ endfunction()
 # ------------------------------------------------------------------------------
 # --- CLOSURE
 # ------------------------------------------------------------------------------
-tcm__setup_logging()
+# Each `tcm__module` setup and configure cmake to enable modules' functionalities.
+set(TCM_VERSION 0.5.0)
+tcm_info("TCM Version: ${TCM_VERSION}")
+
+tcm__module_logging()
 tcm__setup_variables()
 tcm__module_emscripten()
 
