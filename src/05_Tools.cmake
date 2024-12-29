@@ -53,14 +53,8 @@ function(tcm__setup_cache)
     set(CACHE_OPTION "ccache" CACHE STRING "Compiler cache to be used")
     set(CACHE_OPTION_VALUES "ccache" "sccache")
     set_property(CACHE CACHE_OPTION PROPERTY STRINGS ${CACHE_OPTION_VALUES})
-    list(
-            FIND
-            CACHE_OPTION_VALUES
-            ${CACHE_OPTION}
-            CACHE_OPTION_INDEX
-    )
 
-    if(${CACHE_OPTION_INDEX} EQUAL -1)
+    if(NOT ${CACHE_OPTIONS} IN_LIST CACHE_OPTION_VALUES)
         tcm_warn("Using custom compiler cache system: '${CACHE_OPTION}'. Supported entries are ${CACHE_OPTION_VALUES}")
     endif()
 
