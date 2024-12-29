@@ -15,8 +15,10 @@ function(tcm_setup_benchmark)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
 
+    tcm_section("Benchmarks")
     find_package(benchmark QUIET)
     if(NOT benchmark_FOUND OR benchmark_ADDED)
+        tcm_check_start("Setup ...")
         CPMAddPackage(
                 NAME benchmark
                 GIT_TAG ${arg_GOOGLE_BENCHMARK_VERSION}
@@ -27,9 +29,10 @@ function(tcm_setup_benchmark)
                 "BENCHMARK_INSTALL_DOCS OFF"
         )
         if(NOT benchmark_ADDED)
-            tcm_warn("Couldn't found and install google benchmark (using CPM) --> Skipping benchmark.")
+            tcm_fail("failed. Couldn't found and install google benchmark (using CPM) --> Skipping benchmark.")
             return()
         endif ()
+        tcm_check_pass("done.")
     endif()
 endfunction()
 
@@ -52,12 +55,13 @@ function(tcm_benchmarks)
     if(NOT TARGET ${arg_NAME})
         add_executable(${arg_NAME} ${arg_FILES})
         target_link_libraries(${arg_NAME} PRIVATE benchmark::benchmark_main)
-        set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+        tcm_target_enable_optimisation_flags(${arg_NAME})
+        set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/benchmarks")
+        set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
         # Copy google benchmark tools : compare.py and its requirements for ease of use
         add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                 "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
         )
-        tcm_target_enable_optimisation_flags(${arg_NAME})
     else ()
         target_sources(${arg_NAME} PRIVATE ${arg_FILES})
     endif ()

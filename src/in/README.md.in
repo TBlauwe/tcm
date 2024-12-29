@@ -50,10 +50,11 @@ See [documentation](TODO) for a closer look.
     Also, overtime, template will update, fix bugs, bring new functionalities and so on.
     There are ways to sync changes, but there are still some friction, notably with generated code.
     With CMake modules, you can easily combine them and use them with a template.
-
-__There is no "TCM over cmake-init" or any other templates, modules, etc.__
-__TCM__ is an opinionated CMake module. Use functionalities you like and discard others without cluttering your code.
-You can perfectly start a project with __[cmake-init](https://github.com/friendlyanon/cmake-init)__ and use some functionalities provided by __TCM__.
+ 
+> [!NOTE]
+> __There is no "TCM over cmake-init" or any other templates, modules, etc.__
+> __TCM__ is an opinionated CMake module. Use functionalities you like and discard others without cluttering your code.
+> You can perfectly start a project with __[cmake-init](https://github.com/friendlyanon/cmake-init)__ and use some functionalities provided by __TCM__.
 
 
 ## Getting Started

@@ -10,7 +10,6 @@ cmake_minimum_required(VERSION 3.26)
 # ------------------------------------------------------------------------------
 # --- OPTIONS
 # ------------------------------------------------------------------------------
-
 option(TCM_VERBOSE "Verbose messages during CMake runs"         ${PROJECT_IS_TOP_LEVEL})
 
 
@@ -744,8 +743,10 @@ function(tcm_setup_benchmark)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
 
+    tcm_section("Benchmarks")
     find_package(benchmark QUIET)
     if(NOT benchmark_FOUND OR benchmark_ADDED)
+        tcm_check_start("Setup ...")
         CPMAddPackage(
                 NAME benchmark
                 GIT_TAG ${arg_GOOGLE_BENCHMARK_VERSION}
@@ -756,9 +757,10 @@ function(tcm_setup_benchmark)
                 "BENCHMARK_INSTALL_DOCS OFF"
         )
         if(NOT benchmark_ADDED)
-            tcm_warn("Couldn't found and install google benchmark (using CPM) --> Skipping benchmark.")
+            tcm_fail("failed. Couldn't found and install google benchmark (using CPM) --> Skipping benchmark.")
             return()
         endif ()
+        tcm_check_pass("done.")
     endif()
 endfunction()
 
@@ -781,12 +783,13 @@ function(tcm_benchmarks)
     if(NOT TARGET ${arg_NAME})
         add_executable(${arg_NAME} ${arg_FILES})
         target_link_libraries(${arg_NAME} PRIVATE benchmark::benchmark_main)
-        set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+        tcm_target_enable_optimisation_flags(${arg_NAME})
+        set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/benchmarks")
+        set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
         # Copy google benchmark tools : compare.py and its requirements for ease of use
         add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                 "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
         )
-        tcm_target_enable_optimisation_flags(${arg_NAME})
     else ()
         target_sources(${arg_NAME} PRIVATE ${arg_FILES})
     endif ()
@@ -810,20 +813,24 @@ function(tcm_setup_test)
     set(oneValueArgs CATCH2_VERSION)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__default_value(arg_CATCH2_VERSION "v3.7.1")
-    find_package(Catch2 3 QUIET)
 
+    tcm_section("Tests")
+
+    find_package(Catch2 3 QUIET)
     if(NOT Catch2_FOUND OR Catch2_ADDED)
+        tcm_check_start("Setup ...")
         CPMAddPackage(
                 NAME Catch2
                 GIT_TAG ${arg_CATCH2_VERSION}
                 GITHUB_REPOSITORY catchorg/Catch2
         )
         if(NOT Catch2_ADDED)
-            tcm_warn("Couldn't found and install Catch2 (using CPM) --> Skipping tests.")
+            tcm_check_fail("failed. Couldn't found and install Catch2 (using CPM) --> Skipping tests.")
             return()
         endif ()
         list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
         include(Catch)
+        tcm_check_pass("done.")
     endif()
 endfunction()
 
@@ -845,7 +852,8 @@ function(tcm_tests)
     if(NOT TARGET ${arg_NAME})
         add_executable(${arg_NAME} ${arg_FILES})
         target_link_libraries(${arg_NAME} PRIVATE Catch2::Catch2WithMain)
-        set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}")
+        set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/tests")
+        set_target_properties(${target_name} PROPERTIES FOLDER "Tests")
         catch_discover_tests(${arg_NAME})
     else ()
         target_sources(${arg_NAME} PRIVATE ${arg_FILES})
@@ -887,22 +895,15 @@ function(tcm_examples)
     tcm_setup_test()
     if(arg_WITH_BENCHMARK)
         tcm_setup_benchmark()
-        if(NOT TARGET tcm_Benchmarks)
-            add_executable(tcm_Benchmarks)
-            target_link_libraries(tcm_Benchmarks PRIVATE benchmark::benchmark_main)
-            tcm_target_enable_optimisation_flags(tcm_Benchmarks)
-        endif ()
-
-        if(arg_INTERFACE)
-                target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
-        endif ()
+        target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
     endif ()
 
+    tcm_section("Examples")
 
     cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
     file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
 
-    tcm_log("Configuring tests:")
+    tcm_log("Configuring examples:")
     tcm_indent()
     foreach (example IN LISTS examples)
         cmake_path(REMOVE_EXTENSION example OUTPUT_VARIABLE target_name)
@@ -916,12 +917,13 @@ function(tcm_examples)
             target_link_libraries(${target_name} PUBLIC ${arg_INTERFACE})
         endif ()
         set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/examples")
+        set_target_properties(${target_name} PROPERTIES FOLDER "Examples")
         add_test(NAME ${target_name} COMMAND ${target_name})
 
         list(APPEND TARGETS ${target_name})
 
         if(NOT arg_WITH_BENCHMARK)
-            tcm_log("* ${target_name}")
+            tcm_log("- ${target_name}")
             continue()
         endif ()
 
@@ -954,7 +956,7 @@ BENCHMARK(BM_example_${target_name});
         )
         set(benchmark_file ${CMAKE_CURRENT_BINARY_DIR}/benchmarks/${target_name}.cpp)
         file(WRITE ${benchmark_file} "${file_content}")
-        target_sources(tcm_Benchmarks PRIVATE ${benchmark_file})
+        tcm_benchmarks(FILES ${benchmark_file})
 
         tcm_log("* ${target_name} (w/ benchmark)")
     endforeach ()
@@ -1154,22 +1156,23 @@ endmacro()
 #
 function(tcm_setup_docs)
     set(options)
-    set(oneValueArgs
+    set(one_value_args
             DOXYGEN_AWESOME_VERSION
     )
-    set(multiValueArgs)
-    cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    set(multi_value_args)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
 
-    tcm_section("DOCS")
-
+    tcm_section("Documentation")
+    tcm_check_start("Setup ...")
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
-    tcm__default_value(TCM_DOXYGEN_AWESOME_VERSION      "v2.3.4")
+    tcm__default_value(arg_DOXYGEN_AWESOME_VERSION      "v2.3.4")
     tcm__default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
     tcm__default_value(DOXYGEN_OUTPUT_DIRECTORY         "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 
     if(NOT DEFINED DOXYGEN_HTML_HEADER)
+        tcm_log("Generating default html header")
         set(TMP_DOXYGEN_HTML_HEADER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html.temp")
         file(WRITE ${TMP_DOXYGEN_HTML_HEADER} [=[<!-- HTML header for doxygen 1.9.7-->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -1279,6 +1282,7 @@ function(tcm_setup_docs)
     endif ()
 
     if(NOT DEFINED DOXYGEN_HTML_FOOTER)
+        tcm_log("Generating default html footer")
         set(TMP_DOXYGEN_HTML_FOOTER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html.temp")
         file(WRITE ${TMP_DOXYGEN_HTML_FOOTER} [=[<!-- HTML footer for doxygen 1.9.8-->
 <!-- start footer part -->
@@ -1306,6 +1310,7 @@ $generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="foote
     endif ()
 
     if(NOT DEFINED DOXYGEN_LAYOUT_FILE)
+        tcm_log("Generating default layout file")
         set(DOXYGEN_LAYOUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
         file(WRITE ${DOXYGEN_LAYOUT_FILE} [=[<?xml version="1.0" encoding="UTF-8"?>
 <doxygenlayout version="1.0">
@@ -1589,20 +1594,18 @@ $generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="foote
     # Doxygen is a documentation generator and static analysis tool for software source trees.
     find_package(Doxygen REQUIRED dot QUIET)
     if(NOT Doxygen_FOUND)
-        tcm_warn("Doxygen not found -> Skipping docs.")
-        tcm_section_end()
+        tcm_check_fail("failed. Doxygen not found -> Skipping docs.")
         return()
     endif()
 
     # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
     CPMAddPackage(
             NAME DOXYGEN_AWESOME_CSS
-            GIT_TAG ${TCM_DOXYGEN_AWESOME_VERSION}
+            GIT_TAG ${arg_DOXYGEN_AWESOME_VERSION}
             GITHUB_REPOSITORY jothepro/doxygen-awesome-css
     )
     if(NOT DOXYGEN_AWESOME_CSS_ADDED)
-        tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
-        tcm_section_end()
+        tcm_check_fail("failed. Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
         return()
     endif()
 
@@ -1745,12 +1748,13 @@ html.light-mode #projectlogo img {
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION
     # ------------------------------------------------------------------------------
-    doxygen_add_docs(docs)
+    doxygen_add_docs(tcm_Documentation)
 
     # Utility target to open docs
-    add_custom_target(open_docs COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
-    add_dependencies(open_docs docs)
-    tcm_section_end()
+    add_custom_target(tcm_Open_docs COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
+    set_target_properties(${target_name} PROPERTIES FOLDER "Utility")
+    add_dependencies(tcm_Open_docs tcm_Documentation)
+    tcm_check_pass("done.")
 
 endfunction()
 

@@ -24,22 +24,23 @@
 #
 function(tcm_setup_docs)
     set(options)
-    set(oneValueArgs
+    set(one_value_args
             DOXYGEN_AWESOME_VERSION
     )
-    set(multiValueArgs)
-    cmake_parse_arguments(PARSE_ARGV 0 TCM "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    set(multi_value_args)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
 
-    tcm_section("DOCS")
-
+    tcm_section("Documentation")
+    tcm_check_start("Setup ...")
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
-    tcm__default_value(TCM_DOXYGEN_AWESOME_VERSION      "v2.3.4")
+    tcm__default_value(arg_DOXYGEN_AWESOME_VERSION      "v2.3.4")
     tcm__default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
     tcm__default_value(DOXYGEN_OUTPUT_DIRECTORY         "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 
     if(NOT DEFINED DOXYGEN_HTML_HEADER)
+        tcm_log("Generating default html header")
         set(TMP_DOXYGEN_HTML_HEADER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html.temp")
         file(WRITE ${TMP_DOXYGEN_HTML_HEADER} [=[@TCM_DOXYGEN_HTML_HEADER_DEFAULT@]=])
         set(DOXYGEN_HTML_HEADER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html")
@@ -47,6 +48,7 @@ function(tcm_setup_docs)
     endif ()
 
     if(NOT DEFINED DOXYGEN_HTML_FOOTER)
+        tcm_log("Generating default html footer")
         set(TMP_DOXYGEN_HTML_FOOTER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html.temp")
         file(WRITE ${TMP_DOXYGEN_HTML_FOOTER} [=[@TCM_DOXYGEN_HTML_FOOTER_DEFAULT@]=])
         set(DOXYGEN_HTML_FOOTER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html")
@@ -54,6 +56,7 @@ function(tcm_setup_docs)
     endif ()
 
     if(NOT DEFINED DOXYGEN_LAYOUT_FILE)
+        tcm_log("Generating default layout file")
         set(DOXYGEN_LAYOUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
         file(WRITE ${DOXYGEN_LAYOUT_FILE} [=[@TCM_DOXYGEN_LAYOUT_FILE_DEFAULT@]=])
     endif ()
@@ -64,20 +67,18 @@ function(tcm_setup_docs)
     # Doxygen is a documentation generator and static analysis tool for software source trees.
     find_package(Doxygen REQUIRED dot QUIET)
     if(NOT Doxygen_FOUND)
-        tcm_warn("Doxygen not found -> Skipping docs.")
-        tcm_section_end()
+        tcm_check_fail("failed. Doxygen not found -> Skipping docs.")
         return()
     endif()
 
     # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
     CPMAddPackage(
             NAME DOXYGEN_AWESOME_CSS
-            GIT_TAG ${TCM_DOXYGEN_AWESOME_VERSION}
+            GIT_TAG ${arg_DOXYGEN_AWESOME_VERSION}
             GITHUB_REPOSITORY jothepro/doxygen-awesome-css
     )
     if(NOT DOXYGEN_AWESOME_CSS_ADDED)
-        tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
-        tcm_section_end()
+        tcm_check_fail("failed. Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
         return()
     endif()
 
@@ -119,11 +120,12 @@ function(tcm_setup_docs)
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION
     # ------------------------------------------------------------------------------
-    doxygen_add_docs(docs)
+    doxygen_add_docs(tcm_Documentation)
 
     # Utility target to open docs
-    add_custom_target(open_docs COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
-    add_dependencies(open_docs docs)
-    tcm_section_end()
+    add_custom_target(tcm_Open_docs COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
+    set_target_properties(${target_name} PROPERTIES FOLDER "Utility")
+    add_dependencies(tcm_Open_docs tcm_Documentation)
+    tcm_check_pass("done.")
 
 endfunction()
