@@ -553,12 +553,14 @@ endfunction()
 
 
 # ------------------------------------------------------------------------------
-# --- SETUP CPM
+# --- TOOLS
+# ------------------------------------------------------------------------------
+
 # ------------------------------------------------------------------------------
 # See: https://github.com/cpm-cmake/CPM.cmake
 # Download and install CPM if not already present.
 #
-macro(tcm_setup_cpm)
+macro(tcm__setup_cpm)
     tcm__default_value(CPM_INDENT "(CPM)")
     tcm__default_value(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
     tcm__default_value(CPM_DOWNLOAD_VERSION 0.40.2)
@@ -587,20 +589,17 @@ macro(tcm_setup_cpm)
     endif()
 
     include(${CPM_DOWNLOAD_LOCATION})
-    tcm_info("Using CPM : ${CPM_DOWNLOAD_LOCATION}")
+    tcm_info("CPM: ${CPM_DOWNLOAD_LOCATION}")
 endmacro()
 
-
-# ------------------------------------------------------------------------------
-# --- SETUP-CACHE
 # ------------------------------------------------------------------------------
 # Description:
 #   Setup cache (only if top level project), like ccache (https://ccache.dev/) if available on system.
-
+#
 # Usage :
 #   tcm_setup_cache()
 #
-function(tcm_setup_cache)
+function(tcm__setup_cache)
     if(EMSCRIPTEN) # Doesn't seems to work with emscripten (https://github.com/emscripten-core/emscripten/issues/11974)
         return()
     endif()
@@ -616,12 +615,12 @@ function(tcm_setup_cache)
     )
 
     if(${CACHE_OPTION_INDEX} EQUAL -1)
-        tcm_log("Using custom compiler cache system: '${CACHE_OPTION}'. Supported entries are ${CACHE_OPTION_VALUES}")
+        tcm_warn("Using custom compiler cache system: '${CACHE_OPTION}'. Supported entries are ${CACHE_OPTION_VALUES}")
     endif()
 
     find_program(CACHE_BINARY NAMES ${CACHE_OPTION_VALUES})
     if(CACHE_BINARY)
-        tcm_info("Using Cache System : ${CACHE_BINARY}.")
+        tcm_info("Cache System: ${CACHE_BINARY}.")
         set(CMAKE_CXX_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
         set(CMAKE_C_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
         set(CMAKE_CUDA_COMPILER_LAUNCHER "${CACHE_BINARY}" PARENT_SCOPE)
@@ -743,10 +742,9 @@ function(tcm_setup_benchmark)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
 
-    tcm_section("Benchmarks")
     find_package(benchmark QUIET)
     if(NOT benchmark_FOUND OR benchmark_ADDED)
-        tcm_check_start("Setup ...")
+        tcm_check_start("Setup Benchmarks")
         CPMAddPackage(
                 NAME benchmark
                 GIT_TAG ${arg_GOOGLE_BENCHMARK_VERSION}
@@ -814,11 +812,9 @@ function(tcm_setup_test)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__default_value(arg_CATCH2_VERSION "v3.7.1")
 
-    tcm_section("Tests")
-
     find_package(Catch2 3 QUIET)
     if(NOT Catch2_FOUND OR Catch2_ADDED)
-        tcm_check_start("Setup ...")
+        tcm_check_start("Setup Tests")
         CPMAddPackage(
                 NAME Catch2
                 GIT_TAG ${arg_CATCH2_VERSION}
@@ -897,8 +893,6 @@ function(tcm_examples)
         tcm_setup_benchmark()
         target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
     endif ()
-
-    tcm_section("Examples")
 
     cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
     file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
@@ -1162,8 +1156,7 @@ function(tcm_setup_docs)
     set(multi_value_args)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
 
-    tcm_section("Documentation")
-    tcm_check_start("Setup ...")
+    tcm_check_start("Setup Documentation")
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
@@ -1764,9 +1757,22 @@ endfunction()
 # ------------------------------------------------------------------------------
 # Each `tcm__module` setup and configure cmake to enable modules' functionalities.
 set(TCM_VERSION 0.5.0)
-tcm_info("TCM Version: ${TCM_VERSION}")
-
 tcm__module_logging()
 tcm__setup_variables()
-tcm__module_emscripten()
+
+tcm_check_start("Setup TCM")
+    tcm_info("Version: ${TCM_VERSION}")
+
+    tcm__default_value(TCM_TOOLS "CPM;CCACHE")
+
+    if(CPM IN_LIST TCM_TOOLS)
+        tcm__setup_cpm()
+    endif ()
+
+    if(CCACHE IN_LIST TCM_TOOLS)
+        tcm__setup_cache()
+    endif ()
+
+    tcm__module_emscripten()
+tcm_check_pass("done.")
 

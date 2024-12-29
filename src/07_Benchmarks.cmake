@@ -15,10 +15,9 @@ function(tcm_setup_benchmark)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
 
-    tcm_section("Benchmarks")
     find_package(benchmark QUIET)
     if(NOT benchmark_FOUND OR benchmark_ADDED)
-        tcm_check_start("Setup ...")
+        tcm_check_start("Setup Benchmarks")
         CPMAddPackage(
                 NAME benchmark
                 GIT_TAG ${arg_GOOGLE_BENCHMARK_VERSION}

@@ -15,11 +15,9 @@ function(tcm_setup_test)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__default_value(arg_CATCH2_VERSION "v3.7.1")
 
-    tcm_section("Tests")
-
     find_package(Catch2 3 QUIET)
     if(NOT Catch2_FOUND OR Catch2_ADDED)
-        tcm_check_start("Setup ...")
+        tcm_check_start("Setup Tests")
         CPMAddPackage(
                 NAME Catch2
                 GIT_TAG ${arg_CATCH2_VERSION}

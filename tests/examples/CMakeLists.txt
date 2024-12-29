@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.25)
 project(Examples LANGUAGES C CXX)
 
 include(../../cmake/tcm.cmake)
-tcm_setup_cpm()
 
 # Create a simple library
 add_library(MyLib my_lib/my_lib.c)

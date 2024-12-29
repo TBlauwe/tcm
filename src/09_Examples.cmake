@@ -34,8 +34,6 @@ function(tcm_examples)
         target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
     endif ()
 
-    tcm_section("Examples")
-
     cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
     file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
 

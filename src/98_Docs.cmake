@@ -30,8 +30,7 @@ function(tcm_setup_docs)
     set(multi_value_args)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
 
-    tcm_section("Documentation")
-    tcm_check_start("Setup ...")
+    tcm_check_start("Setup Documentation")
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
