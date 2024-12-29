@@ -33,12 +33,11 @@ function(tcm_examples)
         tcm_setup_benchmark()
         target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
     endif ()
+    tcm_section("Examples")
 
     cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
     file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
 
-    tcm_log("Configuring examples:")
-    tcm_indent()
     foreach (example IN LISTS examples)
         cmake_path(REMOVE_EXTENSION example OUTPUT_VARIABLE target_name)
 
@@ -57,7 +56,7 @@ function(tcm_examples)
         list(APPEND TARGETS ${target_name})
 
         if(NOT arg_WITH_BENCHMARK)
-            tcm_log("- ${target_name}")
+            tcm_log("Configuring example \"${target_name}\"")
             continue()
         endif ()
 
@@ -92,7 +91,7 @@ BENCHMARK(BM_example_${target_name});
         file(WRITE ${benchmark_file} "${file_content}")
         tcm_benchmarks(FILES ${benchmark_file})
 
-        tcm_log("* ${target_name} (w/ benchmark)")
+        tcm_log("Configuring example \"${target_name}\" (w/ benchmark)")
     endforeach ()
     set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
 endfunction()

@@ -203,3 +203,21 @@ function(tcm_target_enable_warning_flags)
                 "Following compiler are supported: Clang, GNU, MSVC, AppleClang and emscripten.")
     endif ()
 endfunction()
+
+#-------------------------------------------------------------------------------
+#   Prevents messages below NOTICE.
+#
+macro(tcm_silence_message)
+    cmake_language(GET_MESSAGE_LOG_LEVEL PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL)
+    set(CMAKE_MESSAGE_LOG_LEVEL NOTICE)
+endmacro()
+
+#-------------------------------------------------------------------------------
+#   Restore previous message log level.
+#
+macro(tcm_restore_message_log_level)
+    if(DEFINED ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
+        set(CMAKE_MESSAGE_LOG_LEVEL ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
+    endif ()
+endmacro()
+

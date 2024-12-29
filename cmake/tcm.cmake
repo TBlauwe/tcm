@@ -425,6 +425,24 @@ function(tcm_target_enable_warning_flags)
     endif ()
 endfunction()
 
+#-------------------------------------------------------------------------------
+#   Prevents messages below NOTICE.
+#
+macro(tcm_silence_message)
+    cmake_language(GET_MESSAGE_LOG_LEVEL PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL)
+    set(CMAKE_MESSAGE_LOG_LEVEL NOTICE)
+endmacro()
+
+#-------------------------------------------------------------------------------
+#   Restore previous message log level.
+#
+macro(tcm_restore_message_log_level)
+    if(DEFINED ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
+        set(CMAKE_MESSAGE_LOG_LEVEL ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
+    endif ()
+endmacro()
+
+
 
 # ------------------------------------------------------------------------------
 # --- VARIABLES
@@ -434,7 +452,7 @@ endfunction()
 #   For internal usage.
 #   Set some useful CMake variables.
 #
-macro(tcm__setup_variables)
+macro(tcm__module_variables)
     tcm__default_value(TCM_EXE_DIR "${PROJECT_BINARY_DIR}/bin")
 
     #-------------------------------------------------------------------------------
@@ -487,8 +505,13 @@ macro(tcm__setup_variables)
     #-------------------------------------------------------------------------------
     #   Computed Gotos
     #
-    try_compile(TCM_SUPPORT_COMPUTED_GOTOS SOURCE_FROM_CONTENT computed_goto_test.c "int main() { static void* labels[] = {&&label1, &&label2}; int i = 0; goto *labels[i]; label1: return 0; label2: return 1; } ")
-    tcm_debug("Feature support - computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
+    if(NOT DEFINED TCM_SUPPORT_COMPUTED_GOTOS)
+        try_compile(TCM_SUPPORT_COMPUTED_GOTOS SOURCE_FROM_CONTENT computed_goto_test.c "int main() { static void* labels[] = {&&label1, &&label2}; int i = 0; goto *labels[i]; label1: return 0; label2: return 1; } ")
+        set(TCM_SUPPORT_COMPUTED_GOTOS "${TCM_SUPPORT_COMPUTED_GOTOS}" CACHE INTERNAL "Does compiler support computed gotos ?")
+        tcm_info("Has computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
+    else ()
+        tcm_debug("Has computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
+    endif ()
 
     #-------------------------------------------------------------------------------
     #   Warning Guard
@@ -565,31 +588,37 @@ macro(tcm__setup_cpm)
     tcm__default_value(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
     tcm__default_value(CPM_DOWNLOAD_VERSION 0.40.2)
 
-    if(CPM_SOURCE_CACHE)
-        set(CPM_DOWNLOAD_LOCATION "${CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
-    elseif(DEFINED ENV{CPM_SOURCE_CACHE})
-        set(CPM_DOWNLOAD_LOCATION "$ENV{CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
-    else()
-        set(CPM_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
-    endif()
+    if(NOT EXISTS ${CPM_FILE})
+        if(CPM_SOURCE_CACHE)
+            set(CPM_DOWNLOAD_LOCATION "${CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+        elseif(DEFINED ENV{CPM_SOURCE_CACHE})
+            set(CPM_DOWNLOAD_LOCATION "$ENV{CPM_SOURCE_CACHE}/cpm/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+        else()
+            set(CPM_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
+        endif()
 
-    # Expand relative path. This is important if the provided path contains a tilde (~)
-    file(REAL_PATH ${CPM_DOWNLOAD_LOCATION} CPM_DOWNLOAD_LOCATION)
+        # Expand relative path. This is important if the provided path contains a tilde (~)
+        file(REAL_PATH ${CPM_DOWNLOAD_LOCATION} CPM_DOWNLOAD_LOCATION)
 
-    if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
-        tcm_info("Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
-        file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake ${CPM_DOWNLOAD_LOCATION})
-    else()
-        # resume download if it previously failed
-        file(READ ${CPM_DOWNLOAD_LOCATION} check)
-        if("${check}" STREQUAL "")
+        if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
             tcm_info("Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
             file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake ${CPM_DOWNLOAD_LOCATION})
         endif()
-    endif()
+        tcm_info("CPM: ${CPM_DOWNLOAD_LOCATION}")
+        include(${CPM_DOWNLOAD_LOCATION})
+    else ()
+        tcm_debug("CPM: ${CPM_FILE}")
+        include(${CPM_FILE})
+    endif ()
+endmacro()
 
-    include(${CPM_DOWNLOAD_LOCATION})
-    tcm_info("CPM: ${CPM_DOWNLOAD_LOCATION}")
+# ------------------------------------------------------------------------------
+#   Prevents unimportant messages (below NOTICE) from packages managed by CPM
+#
+macro(tcm_silence_cpm_package arg_PACKAGE)
+    if(CPM_PACKAGE_${arg_PACKAGE}_SOURCE_DIR)
+        tcm_silence_message()
+    endif ()
 endmacro()
 
 # ------------------------------------------------------------------------------
@@ -609,12 +638,19 @@ function(tcm__setup_cache)
     set_property(CACHE CACHE_OPTION PROPERTY STRINGS ${CACHE_OPTION_VALUES})
 
     if(NOT ${CACHE_OPTIONS} IN_LIST CACHE_OPTION_VALUES)
-        tcm_warn("Using custom compiler cache system: '${CACHE_OPTION}'. Supported entries are ${CACHE_OPTION_VALUES}")
+        tcm_warn("Trying to use an unsupported custom compiler cache system: '${CACHE_OPTION}'. Supported entries are ${CACHE_OPTION_VALUES}.")
     endif()
 
-    find_program(CACHE_BINARY NAMES ${CACHE_OPTION_VALUES})
+    if(NOT DEFINED CACHE_BINARY)
+        find_program(CACHE_BINARY NAMES ${CACHE_OPTION_VALUES})
+        if(CACHE_BINARY) # First time setting cache binary
+            tcm_info("Cache System: ${CACHE_BINARY}.")
+        endif ()
+    elseif (CACHE_BINARY) # Already set.
+        tcm_debug("Cache System: ${CACHE_BINARY}.")
+    endif ()
+
     if(CACHE_BINARY)
-        tcm_info("Cache System: ${CACHE_BINARY}.")
         set(CMAKE_CXX_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
         set(CMAKE_C_COMPILER_LAUNCHER ${CACHE_BINARY} PARENT_SCOPE)
         set(CMAKE_CUDA_COMPILER_LAUNCHER "${CACHE_BINARY}" PARENT_SCOPE)
@@ -622,6 +658,22 @@ function(tcm__setup_cache)
         tcm_warn("${CACHE_OPTION} is enabled but was not found. Not using it")
     endif()
 endfunction()
+
+# ------------------------------------------------------------------------------
+#   FOR INTERNAL USAGE.
+# Description:  Setup various tools depending on cache variable `TCM_TOOLS`.
+#
+macro(tcm__module_tools)
+    tcm__default_value(TCM_TOOLS "CPM;CCACHE")
+
+    if(CPM IN_LIST TCM_TOOLS)
+        tcm__setup_cpm()
+    endif ()
+
+    if(CCACHE IN_LIST TCM_TOOLS)
+        tcm__setup_cache()
+    endif ()
+endmacro()
 
 
 # ------------------------------------------------------------------------------
@@ -735,24 +787,26 @@ function(tcm_setup_benchmark)
     set(oneValueArgs GOOGLE_BENCHMARK_VERSION)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
+    tcm_section("Benchmarks")
 
     find_package(benchmark QUIET)
-    if(NOT benchmark_FOUND OR benchmark_ADDED)
-        tcm_check_start("Setup Benchmarks")
+    if(NOT benchmark_FOUND)
+        tcm_silence_cpm_package(benchmark)
         CPMAddPackage(
                 NAME benchmark
                 GIT_TAG ${arg_GOOGLE_BENCHMARK_VERSION}
                 GITHUB_REPOSITORY google/benchmark
                 OPTIONS
+                "BENCHMARK_ENABLE_INSTALL OFF"
                 "BENCHMARK_ENABLE_INSTALL_DOCS OFF"
                 "BENCHMARK_ENABLE_TESTING OFF"
                 "BENCHMARK_INSTALL_DOCS OFF"
         )
+        tcm_restore_message_log_level()
         if(NOT benchmark_ADDED)
-            tcm_fail("failed. Couldn't found and install google benchmark (using CPM) --> Skipping benchmark.")
+            tcm_warn("Couldn't find and install google benchmark (using CPM) --> Skipping benchmark.")
             return()
         endif ()
-        tcm_check_pass("done.")
     endif()
 endfunction()
 
@@ -771,8 +825,9 @@ function(tcm_benchmarks)
     tcm__default_value(arg_NAME "tcm_Benchmarks")
 
     tcm_setup_benchmark()
-
+    tcm_section("Benchmarks")
     if(NOT TARGET ${arg_NAME})
+        tcm_log("Configuring ${arg_NAME}.")
         add_executable(${arg_NAME} ${arg_FILES})
         target_link_libraries(${arg_NAME} PRIVATE benchmark::benchmark_main)
         tcm_target_enable_optimisation_flags(${arg_NAME})
@@ -783,6 +838,7 @@ function(tcm_benchmarks)
                 "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
         )
     else ()
+        tcm_debug("Adding sources to ${arg_NAME}: ${arg_FILES}.")
         target_sources(${arg_NAME} PRIVATE ${arg_FILES})
     endif ()
 
@@ -805,22 +861,23 @@ function(tcm_setup_test)
     set(oneValueArgs CATCH2_VERSION)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__default_value(arg_CATCH2_VERSION "v3.7.1")
+    tcm_section("Tests")
 
     find_package(Catch2 3 QUIET)
-    if(NOT Catch2_FOUND OR Catch2_ADDED)
-        tcm_check_start("Setup Tests")
+    if(NOT Catch2_FOUND)
+        tcm_silence_cpm_package(Catch2)
         CPMAddPackage(
                 NAME Catch2
                 GIT_TAG ${arg_CATCH2_VERSION}
                 GITHUB_REPOSITORY catchorg/Catch2
         )
+        tcm_restore_message_log_level()
         if(NOT Catch2_ADDED)
-            tcm_check_fail("failed. Couldn't found and install Catch2 (using CPM) --> Skipping tests.")
+            tcm_warn("failed. Couldn't find and install Catch2 (using CPM) --> Skipping tests.")
             return()
         endif ()
         list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
         include(Catch)
-        tcm_check_pass("done.")
     endif()
 endfunction()
 
@@ -839,13 +896,16 @@ function(tcm_tests)
     tcm__default_value(arg_NAME "tcm_Tests")
 
     tcm_setup_test()
+    tcm_section("Tests")
     if(NOT TARGET ${arg_NAME})
+        tcm_log("Configuring ${arg_NAME}.")
         add_executable(${arg_NAME} ${arg_FILES})
         target_link_libraries(${arg_NAME} PRIVATE Catch2::Catch2WithMain)
         set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/tests")
         set_target_properties(${target_name} PROPERTIES FOLDER "Tests")
         catch_discover_tests(${arg_NAME})
     else ()
+        tcm_debug("Adding sources to ${arg_NAME}: ${arg_FILES}.")
         target_sources(${arg_NAME} PRIVATE ${arg_FILES})
     endif ()
 
@@ -887,12 +947,11 @@ function(tcm_examples)
         tcm_setup_benchmark()
         target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
     endif ()
+    tcm_section("Examples")
 
     cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
     file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
 
-    tcm_log("Configuring examples:")
-    tcm_indent()
     foreach (example IN LISTS examples)
         cmake_path(REMOVE_EXTENSION example OUTPUT_VARIABLE target_name)
 
@@ -911,7 +970,7 @@ function(tcm_examples)
         list(APPEND TARGETS ${target_name})
 
         if(NOT arg_WITH_BENCHMARK)
-            tcm_log("- ${target_name}")
+            tcm_log("Configuring example \"${target_name}\"")
             continue()
         endif ()
 
@@ -946,7 +1005,7 @@ BENCHMARK(BM_example_${target_name});
         file(WRITE ${benchmark_file} "${file_content}")
         tcm_benchmarks(FILES ${benchmark_file})
 
-        tcm_log("* ${target_name} (w/ benchmark)")
+        tcm_log("Configuring example \"${target_name}\" (w/ benchmark)")
     endforeach ()
     set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
 endfunction()
@@ -1002,11 +1061,10 @@ function(tcm_target_setup_for_emscripten)
     cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__ensure_target()
 
-    if(NOT arg_SHELL_FILE)
-        tcm__emscripten_generate_default_shell_file()
-        tcm__default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
-    endif ()
+    tcm__default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
+    tcm__emscripten_generate_default_shell_file()
 
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
     target_link_options(${arg_TARGET} PRIVATE --shell-file ${arg_SHELL_FILE})
     target_link_options(${arg_TARGET} PRIVATE -sMAX_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1 -sSTACK_SIZE=1mb)
     target_link_options(${arg_TARGET} PRIVATE -sEXPORTED_RUNTIME_METHODS=cwrap --no-heap-copy)
@@ -1034,7 +1092,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   For internal usage.
 #   Generate a default html shell file for emscripten.
-macro(tcm__emscripten_generate_default_shell_file)
+function(tcm__emscripten_generate_default_shell_file)
     if(EMSCRIPTEN)
         set(embed_shell_file "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
         if(NOT EXISTS ${embed_shell_file})
@@ -1108,14 +1166,8 @@ macro(tcm__emscripten_generate_default_shell_file)
         endif ()
         configure_file("${embed_shell_file}.in" ${embed_shell_file} @ONLY)
     endif ()
-endmacro()
+endfunction()
 
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Set CMAKE_EXECUTABLE_SUFFIX to ".html" to let emscripten also produce an .html file.
-macro(tcm__module_emscripten)
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
-endmacro()
 
 
 # ------------------------------------------------------------------------------
@@ -1150,17 +1202,20 @@ function(tcm_setup_docs)
     set(multi_value_args)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
 
-    tcm_check_start("Setup Documentation")
+    tcm_section("Documentation")
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
     tcm__default_value(arg_DOXYGEN_AWESOME_VERSION      "v2.3.4")
     tcm__default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
     tcm__default_value(DOXYGEN_OUTPUT_DIRECTORY         "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
+    tcm__default_value(DOXYGEN_HTML_HEADER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html")
+    tcm__default_value(DOXYGEN_HTML_FOOTER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html")
+    tcm__default_value(DOXYGEN_LAYOUT_FILE              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
 
-    if(NOT DEFINED DOXYGEN_HTML_HEADER)
-        tcm_log("Generating default html header")
-        set(TMP_DOXYGEN_HTML_HEADER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html.temp")
+    if(NOT EXISTS ${DOXYGEN_HTML_HEADER})
+        tcm_info("Generating default html header")
+        set(TMP_DOXYGEN_HTML_HEADER "${DOXYGEN_HTML_HEADER}.in")
         file(WRITE ${TMP_DOXYGEN_HTML_HEADER} [=[<!-- HTML header for doxygen 1.9.7-->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="$langISO">
@@ -1264,13 +1319,12 @@ function(tcm_setup_docs)
             <!--END TITLEAREA-->
             <!-- end header part -->
 ]=])
-        set(DOXYGEN_HTML_HEADER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html")
         configure_file(${TMP_DOXYGEN_HTML_HEADER} ${DOXYGEN_HTML_HEADER})
     endif ()
 
-    if(NOT DEFINED DOXYGEN_HTML_FOOTER)
-        tcm_log("Generating default html footer")
-        set(TMP_DOXYGEN_HTML_FOOTER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html.temp")
+    if(NOT EXISTS ${DOXYGEN_HTML_FOOTER})
+        tcm_info("Generating default html footer")
+        set(TMP_DOXYGEN_HTML_FOOTER "${DOXYGEN_HTML_FOOTER}.in")
         file(WRITE ${TMP_DOXYGEN_HTML_FOOTER} [=[<!-- HTML footer for doxygen 1.9.8-->
 <!-- start footer part -->
 <!--BEGIN GENERATE_TREEVIEW-->
@@ -1292,13 +1346,11 @@ $generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="foote
 </body>
 </html>
 ]=])
-        set(DOXYGEN_HTML_FOOTER "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html")
         configure_file(${TMP_DOXYGEN_HTML_FOOTER} ${DOXYGEN_HTML_FOOTER})
     endif ()
 
-    if(NOT DEFINED DOXYGEN_LAYOUT_FILE)
-        tcm_log("Generating default layout file")
-        set(DOXYGEN_LAYOUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
+    if(NOT EXISTS ${DOXYGEN_LAYOUT_FILE})
+        tcm_info("Generating default layout file")
         file(WRITE ${DOXYGEN_LAYOUT_FILE} [=[<?xml version="1.0" encoding="UTF-8"?>
 <doxygenlayout version="1.0">
   <!-- Generated by doxygen 1.9.8 -->
@@ -1581,18 +1633,20 @@ $generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="foote
     # Doxygen is a documentation generator and static analysis tool for software source trees.
     find_package(Doxygen REQUIRED dot QUIET)
     if(NOT Doxygen_FOUND)
-        tcm_check_fail("failed. Doxygen not found -> Skipping docs.")
+        tcm_warn("Doxygen not found -> Skipping docs.")
         return()
     endif()
 
     # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
+    tcm_silence_cpm_package(DOXYGEN_AWESOME_CSS)
     CPMAddPackage(
             NAME DOXYGEN_AWESOME_CSS
             GIT_TAG ${arg_DOXYGEN_AWESOME_VERSION}
             GITHUB_REPOSITORY jothepro/doxygen-awesome-css
     )
+    tcm_restore_message_log_level()
     if(NOT DOXYGEN_AWESOME_CSS_ADDED)
-        tcm_check_fail("failed. Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
+        tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
         return()
     endif()
 
@@ -1735,13 +1789,13 @@ html.light-mode #projectlogo img {
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION
     # ------------------------------------------------------------------------------
+    tcm_log("Configuring tcm_Documentation.")
     doxygen_add_docs(tcm_Documentation)
 
     # Utility target to open docs
     add_custom_target(tcm_Open_docs COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
     set_target_properties(${target_name} PROPERTIES FOLDER "Utility")
     add_dependencies(tcm_Open_docs tcm_Documentation)
-    tcm_check_pass("done.")
 
 endfunction()
 
@@ -1749,24 +1803,15 @@ endfunction()
 # ------------------------------------------------------------------------------
 # --- CLOSURE
 # ------------------------------------------------------------------------------
-# Each `tcm__module` setup and configure cmake to enable modules' functionalities.
-set(TCM_VERSION 0.5.0)
 tcm__module_logging()
-tcm__setup_variables()
 
-tcm_check_start("Setup TCM")
-    tcm_info("Version: ${TCM_VERSION}")
+set(TCM_FILE "${CMAKE_CURRENT_LIST_FILE}" CACHE INTERNAL "")
+if(NOT DEFINED TCM_VERSION)
+    set(TCM_VERSION 0.5.0 CACHE INTERNAL "")
+    tcm_info("TCM Version: ${TCM_VERSION}")
+endif ()
 
-    tcm__default_value(TCM_TOOLS "CPM;CCACHE")
+tcm__module_variables()
+tcm__module_tools()
 
-    if(CPM IN_LIST TCM_TOOLS)
-        tcm__setup_cpm()
-    endif ()
-
-    if(CCACHE IN_LIST TCM_TOOLS)
-        tcm__setup_cache()
-    endif ()
-
-    tcm__module_emscripten()
-tcm_check_pass("done.")
 

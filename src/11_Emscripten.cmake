@@ -20,11 +20,10 @@ function(tcm_target_setup_for_emscripten)
     cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
     tcm__ensure_target()
 
-    if(NOT arg_SHELL_FILE)
-        tcm__emscripten_generate_default_shell_file()
-        tcm__default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
-    endif ()
+    tcm__default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
+    tcm__emscripten_generate_default_shell_file()
 
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
     target_link_options(${arg_TARGET} PRIVATE --shell-file ${arg_SHELL_FILE})
     target_link_options(${arg_TARGET} PRIVATE -sMAX_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1 -sSTACK_SIZE=1mb)
     target_link_options(${arg_TARGET} PRIVATE -sEXPORTED_RUNTIME_METHODS=cwrap --no-heap-copy)
@@ -52,7 +51,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   For internal usage.
 #   Generate a default html shell file for emscripten.
-macro(tcm__emscripten_generate_default_shell_file)
+function(tcm__emscripten_generate_default_shell_file)
     if(EMSCRIPTEN)
         set(embed_shell_file "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
         if(NOT EXISTS ${embed_shell_file})
@@ -61,11 +60,5 @@ macro(tcm__emscripten_generate_default_shell_file)
         endif ()
         configure_file("${embed_shell_file}.in" ${embed_shell_file} @ONLY)
     endif ()
-endmacro()
+endfunction()
 
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Set CMAKE_EXECUTABLE_SUFFIX to ".html" to let emscripten also produce an .html file.
-macro(tcm__module_emscripten)
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
-endmacro()

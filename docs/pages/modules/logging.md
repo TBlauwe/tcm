@@ -2,8 +2,6 @@
 
 This module provides logging functions.
 
-__SETUP:__ Automatically during `include(cmake/tcm.cmake)` or `include(cmake/get_tcm.cmake)`.
-
 
 ## Description
 

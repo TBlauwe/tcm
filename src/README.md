@@ -24,7 +24,8 @@ Overall, __TCM__ strives for simplicity while keeping side effects to a minimum.
 * Default should be good enough.
 * Allow composition and customization, when possible.
 * Favor opt-in mentality; don't impose something to the user.
-* Keep performance impact low.
+* Keep performance impact low
+  * Cache heavy operations, like `try_compile`.
 * Don't alter already defined CMake behaviour/variables
   * Most variables' setting should be guarded by `if(NOT DEFINED ...)`
 * Use target.
@@ -61,6 +62,24 @@ e.g. if using `cmake_parse_arguments` don't prefix by `arg_` but by `arg_macro_n
   * But it is not to hide "dependencies" from some function calls in other modules.
 * When relevant, most module should provide a default target prefixed by `TCM_`, e.g. `TCM_TESTS`, `TCM_DOCS`, etc.
 * Each module setup function should consider that it could be included more than once (from subprojects).
+ 
+
+## Logging
+
+I like having nice, concise and readable cmake output. 
+But sometimes I get carried away and spam with too much information.
+Ideally, I think that a cmake output should only inform me of things that have changed since last run.
+I don't care to see for the n-th times that I'm using this tool with this version, etc.
+It is fine for a first run without cache, but afterward I don't want to see this kind of information.
+
+So now I try to follow these guidelines:
+
+* A consumed project should the strict minimum, if nothing, at the default level, unless there is a problem
+* Prefer `tcm_info` for changes for this run !
+  * Sometimes, some results / modifications like files generation are cached. 
+    An info message is displayed only the first time they are built.
+* If nothing out of the ordinary happened, don't say anything (especially empty sections / check sections).
+* It is fine to see what is configured, but only if it is the top project.
 
 
 ## Tests

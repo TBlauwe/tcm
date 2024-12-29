@@ -6,7 +6,7 @@
 #   For internal usage.
 #   Set some useful CMake variables.
 #
-macro(tcm__setup_variables)
+macro(tcm__module_variables)
     tcm__default_value(TCM_EXE_DIR "${PROJECT_BINARY_DIR}/bin")
 
     #-------------------------------------------------------------------------------
@@ -59,8 +59,13 @@ macro(tcm__setup_variables)
     #-------------------------------------------------------------------------------
     #   Computed Gotos
     #
-    try_compile(TCM_SUPPORT_COMPUTED_GOTOS SOURCE_FROM_CONTENT computed_goto_test.c "int main() { static void* labels[] = {&&label1, &&label2}; int i = 0; goto *labels[i]; label1: return 0; label2: return 1; } ")
-    tcm_debug("Feature support - computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
+    if(NOT DEFINED TCM_SUPPORT_COMPUTED_GOTOS)
+        try_compile(TCM_SUPPORT_COMPUTED_GOTOS SOURCE_FROM_CONTENT computed_goto_test.c "int main() { static void* labels[] = {&&label1, &&label2}; int i = 0; goto *labels[i]; label1: return 0; label2: return 1; } ")
+        set(TCM_SUPPORT_COMPUTED_GOTOS "${TCM_SUPPORT_COMPUTED_GOTOS}" CACHE INTERNAL "Does compiler support computed gotos ?")
+        tcm_info("Has computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
+    else ()
+        tcm_debug("Has computed gotos : ${TCM_SUPPORT_COMPUTED_GOTOS}")
+    endif ()
 
     #-------------------------------------------------------------------------------
     #   Warning Guard
