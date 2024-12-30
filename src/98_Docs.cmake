@@ -135,8 +135,8 @@ function(tcm_setup_docs)
     doxygen_add_docs(tcm_Documentation)
 
     # Utility target to open docs
-    add_custom_target(tcm_Open_docs COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
+    add_custom_target(tcm_Documentation_Open COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
     set_target_properties(${target_name} PROPERTIES FOLDER "Utility")
-    add_dependencies(tcm_Open_docs tcm_Documentation)
+    add_dependencies(tcm_Documentation_Open tcm_Documentation)
 
 endfunction()

@@ -50,6 +50,12 @@ See [documentation](TODO) for a closer look.
     Also, overtime, template will update, fix bugs, bring new functionalities and so on.
     There are ways to sync changes, but there are still some friction, notably with generated code.
     With CMake modules, you can easily combine them and use them with a template.
+* __De-cluttered logs__
+  * On subsequent runs, changes from previous run are prefixed by `(!)` (blue-colored if possible).
+
+| Before | After modifying some examples |
+| --- | --- |
+| ![log_before.png](../../assets/log_before.png)| ![log_after.png](../../assets/log_after.png)|
  
 > [!NOTE]
 > __There is no "TCM over cmake-init" or any other templates, modules, etc.__
