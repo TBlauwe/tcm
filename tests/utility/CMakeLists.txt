@@ -25,3 +25,9 @@ tcm_target_copy_assets(test_utility
 add_test(NAME Copy_Assets
         COMMAND ${CMAKE_COMMAND} -D SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -D DEST_DIR=$<TARGET_FILE_DIR:test_utility> -P ${CMAKE_CURRENT_SOURCE_DIR}/test_tcm_target_copy_assets.cmake
 )
+
+#-------------------------------------------------------------------------------
+#   TEST : Assets copy
+#
+#tcm_has_changed(FILE ${PROJECT_SOURCE_DIR}/README.md OUTPUT_VAR has_changed)
+#message("")

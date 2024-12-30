@@ -225,6 +225,18 @@ endmacro()
 
 #-------------------------------------------------------------------------------
 #   For internal usage.
+#   Ensure arguments is set.
+#   Should only be used inside a function.
+#   Assume arguments are prefixed by arg_
+#
+macro(tcm__required arg_ARG arg_DESC)
+    if(NOT DEFINED ${arg_${arg_ARG}})
+        tcm_author_warn("Missing arguments ${arg_ARG}. ${arg_DESC}")
+    endif ()
+endmacro()
+
+#-------------------------------------------------------------------------------
+#   For internal usage.
 #   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
 #
 macro(tcm__ensure_target)
@@ -441,6 +453,30 @@ macro(tcm_restore_message_log_level)
         set(CMAKE_MESSAGE_LOG_LEVEL ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
     endif ()
 endmacro()
+
+#-------------------------------------------------------------------------------
+#   Check if <FILE> has changed and outputs result to <OUTPUT_VAR>
+#
+function(tcm_has_changed)
+    set(one_value_args FILE OUTPUT_VAR)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+
+    set(timestamp_file "${CMAKE_CURRENT_BINARY_DIR}/timestamps/${arg_FILE}.stamp")
+    if(NOT EXISTS ${timestamp_file})
+        file(TOUCH ${timestamp_file})
+        set(${arg_OUTPUT_VAR} "TRUE" PARENT_SCOPE)
+        return()
+    else ()
+        if(${arg_FILE} IS_NEWER_THAN ${timestamp_file})
+            file(TOUCH ${timestamp_file})
+            set(${arg_OUTPUT_VAR} "TRUE" PARENT_SCOPE)
+            return()
+        else ()
+            set(${arg_OUTPUT_VAR} "FALSE" PARENT_SCOPE)
+            return()
+        endif ()
+    endif ()
+endfunction()
 
 
 
@@ -913,7 +949,7 @@ endfunction()
 
 
 # ------------------------------------------------------------------------------
-# --- ADD EXAMPLES
+# --- EXAMPLES
 # ------------------------------------------------------------------------------
 # Description:
 #   Convenience function to produce examples or a target for each source file (recursive).
@@ -947,11 +983,11 @@ function(tcm_examples)
         tcm_setup_benchmark()
         target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
     endif ()
+
     tcm_section("Examples")
 
     cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
     file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
-
     foreach (example IN LISTS examples)
         cmake_path(REMOVE_EXTENSION example OUTPUT_VARIABLE target_name)
 
@@ -974,20 +1010,25 @@ function(tcm_examples)
             continue()
         endif ()
 
-        file(READ "${arg_FOLDER}/${example}" file_content)
+        set(benchmark_file ${CMAKE_CURRENT_BINARY_DIR}/benchmarks/${target_name}.cpp)
+        if(${arg_FOLDER}/${example} IS_NEWER_THAN ${benchmark_file})
 
-        string(REGEX MATCH " main[(][)]" can_benchmark "${file_content}")
+            file(READ "${arg_FOLDER}/${example}" file_content)
 
-        if(NOT can_benchmark)
-            tcm_warn("Example \"${example}\" cannot be integrated in a benchmark.")
-            tcm_warn("Reason:  only empty `main()`signature is supported (and with a return value).")
-            continue()
-        endif ()
+            string(REGEX MATCH " main[(][)]" can_benchmark "${file_content}")
 
-        string(REGEX REPLACE " main[(]" " ${target_name}_main(" file_content "${file_content}")
+            if(NOT can_benchmark)
+                tcm_warn("Example \"${example}\" cannot be integrated in a benchmark.")
+                tcm_warn("Reason:  only empty `main()`signature is supported (and with a return value).")
+                continue()
+            endif ()
 
-        # TODO I could check if a replaced happened and if yes, then we could generate one
-        list(APPEND file_content "
+            string(REGEX REPLACE " main[(]" " ${target_name}_main(" file_content "${file_content}")
+
+            # TODO I could check if a replaced happened and if yes, then we could generate one
+            # TODO Utility function : tcm_timestamp(<FILE> <var>)
+            # TODO Utility function : if(<var> <=> FILE_CHANGED)
+            list(APPEND file_content "
 #include <benchmark/benchmark.h>
 
 static void BM_example_${target_name}(benchmark::State& state)
@@ -1000,9 +1041,10 @@ for (auto _: state)
 
 BENCHMARK(BM_example_${target_name});
 "
-        )
-        set(benchmark_file ${CMAKE_CURRENT_BINARY_DIR}/benchmarks/${target_name}.cpp)
-        file(WRITE ${benchmark_file} "${file_content}")
+            )
+            tcm_info("Generating benchmark source file for ${target_name}: ${benchmark_file}")
+            file(WRITE ${benchmark_file} "${file_content}")
+        endif ()
         tcm_benchmarks(FILES ${benchmark_file})
 
         tcm_log("Configuring example \"${target_name}\" (w/ benchmark)")

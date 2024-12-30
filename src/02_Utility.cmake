@@ -4,6 +4,18 @@
 
 #-------------------------------------------------------------------------------
 #   For internal usage.
+#   Ensure arguments is set.
+#   Should only be used inside a function.
+#   Assume arguments are prefixed by arg_
+#
+macro(tcm__required arg_ARG arg_DESC)
+    if(NOT DEFINED ${arg_${arg_ARG}})
+        tcm_author_warn("Missing arguments ${arg_ARG}. ${arg_DESC}")
+    endif ()
+endmacro()
+
+#-------------------------------------------------------------------------------
+#   For internal usage.
 #   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
 #
 macro(tcm__ensure_target)
@@ -220,4 +232,28 @@ macro(tcm_restore_message_log_level)
         set(CMAKE_MESSAGE_LOG_LEVEL ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
     endif ()
 endmacro()
+
+#-------------------------------------------------------------------------------
+#   Check if <FILE> has changed and outputs result to <OUTPUT_VAR>
+#
+function(tcm_has_changed)
+    set(one_value_args FILE OUTPUT_VAR)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+
+    set(timestamp_file "${CMAKE_CURRENT_BINARY_DIR}/timestamps/${arg_FILE}.stamp")
+    if(NOT EXISTS ${timestamp_file})
+        file(TOUCH ${timestamp_file})
+        set(${arg_OUTPUT_VAR} "TRUE" PARENT_SCOPE)
+        return()
+    else ()
+        if(${arg_FILE} IS_NEWER_THAN ${timestamp_file})
+            file(TOUCH ${timestamp_file})
+            set(${arg_OUTPUT_VAR} "TRUE" PARENT_SCOPE)
+            return()
+        else ()
+            set(${arg_OUTPUT_VAR} "FALSE" PARENT_SCOPE)
+            return()
+        endif ()
+    endif ()
+endfunction()
 
