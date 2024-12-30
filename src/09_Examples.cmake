@@ -75,9 +75,6 @@ function(tcm_examples)
 
             string(REGEX REPLACE " main[(]" " ${target_name}_main(" file_content "${file_content}")
 
-            # TODO I could check if a replaced happened and if yes, then we could generate one
-            # TODO Utility function : tcm_timestamp(<FILE> <var>)
-            # TODO Utility function : if(<var> <=> FILE_CHANGED)
             list(APPEND file_content "
 #include <benchmark/benchmark.h>
 

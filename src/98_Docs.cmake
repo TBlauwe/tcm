@@ -60,6 +60,11 @@ function(tcm_setup_docs)
         file(WRITE ${DOXYGEN_LAYOUT_FILE} [=[@TCM_DOXYGEN_LAYOUT_FILE_DEFAULT@]=])
     endif ()
 
+    if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css")
+        tcm_info("Generating custom css.")
+        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css" [=[@TCM_DOXYGEN_HTML_EXTRA_STYLESHEET_DEFAULT@]=])
+    endif()
+
     # ------------------------------------------------------------------------------
     # --- Dependencies
     # ------------------------------------------------------------------------------
@@ -100,23 +105,28 @@ function(tcm_setup_docs)
     #set(DOT_TRANSPARENT YES) # Doxygen 1.9.8 report this line as obsolete
 
     # NOTE : As specified by docs, list will be properly handled by doxygen_add_docs : https://cmake.org/cmake/help/latest/module/FindDoxygen.html
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js")
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js")
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-paragraph-link.js")
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-interactive-toc.js")
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-tabs.js")
+    list(APPEND DOXYGEN_HTML_EXTRA_FILES
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-paragraph-link.js"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-interactive-toc.js"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-tabs.js"
+    )
 
-    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome.css)
-    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only.css)
-    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only-darkmode-toggle.css)
-    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css" [=[@TCM_DOXYGEN_HTML_EXTRA_STYLESHEET_DEFAULT@]=])
+    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome.css"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only.css"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only-darkmode-toggle.css"
+            "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css"
+    )
 
-    list(APPEND DOXYGEN_ALIASES [[html_frame{1}="@htmlonly<iframe src=\"\1\"></iframe>@endhtmlonly"]])
-    list(APPEND DOXYGEN_ALIASES [[html_frame{3}="@htmlonly<iframe src=\"\1\" width=\"\2\" height=\"\3\"></iframe>@endhtmlonly"]])
-    list(APPEND DOXYGEN_ALIASES [[widget{2}="@htmlonly<div class=\"\1\" id=\"\2\"></div>@endhtmlonly"]])
-    list(APPEND DOXYGEN_ALIASES [[Doxygen="[Doxygen](https://www.doxygen.nl/index.html)"]])
-    list(APPEND DOXYGEN_ALIASES [[Doxygen-awesome="[Doxygen Awesome CSS](https://jothepro.github.io/doxygen-awesome-css/)"]])
+    list(APPEND DOXYGEN_ALIASES
+            [[html_frame{1}="@htmlonly<iframe src=\"\1\"></iframe>@endhtmlonly"]]
+            [[html_frame{3}="@htmlonly<iframe src=\"\1\" width=\"\2\" height=\"\3\"></iframe>@endhtmlonly"]]
+            [[widget{2}="@htmlonly<div class=\"\1\" id=\"\2\"></div>@endhtmlonly"]]
+            [[Doxygen="[Doxygen](https://www.doxygen.nl/index.html)"]]
+            [[Doxygen-awesome="[Doxygen Awesome CSS](https://jothepro.github.io/doxygen-awesome-css/)"]]
+    )
 
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION

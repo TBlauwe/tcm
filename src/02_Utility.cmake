@@ -14,6 +14,7 @@ macro(tcm__required arg_ARG arg_DESC)
     endif ()
 endmacro()
 
+
 #-------------------------------------------------------------------------------
 #   For internal usage.
 #   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
@@ -72,8 +73,9 @@ function(tcm_target_options)
     endforeach ()
 endfunction()
 
+
 #-------------------------------------------------------------------------------
-#   Post-build, copy files and folder to an asset/ folder inside target's output directory.
+#   Post-build, copy files and folders to an asset/ folder inside target's output directory.
 #
 function(tcm_target_copy_assets)
     set(one_value_args
@@ -94,8 +96,7 @@ function(tcm_target_copy_assets)
             list(APPEND files ${path})
         endforeach ()
 
-        # copy_if_different requires destination folder to exists.
-        add_custom_command(
+        add_custom_command( # copy_if_different requires destination folder to exists.
                 TARGET ${arg_TARGET}
                 POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E make_directory "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
@@ -128,6 +129,7 @@ function(tcm_target_copy_assets)
     endif ()
 endfunction()
 
+
 #-------------------------------------------------------------------------------
 #   Disallow in-source builds
 #   Not recommended. You should do it manually and early.
@@ -138,6 +140,7 @@ function(tcm_prevent_in_source_build)
         tcm_fatal_error("In-source builds are not allowed. Please create a separate build directory and run cmake from there")
     endif()
 endfunction()
+
 
 #-------------------------------------------------------------------------------
 #   Enable optimisation flags on release builds for arg_TARGET
@@ -216,6 +219,7 @@ function(tcm_target_enable_warning_flags)
     endif ()
 endfunction()
 
+
 #-------------------------------------------------------------------------------
 #   Prevents messages below NOTICE.
 #
@@ -223,6 +227,7 @@ macro(tcm_silence_message)
     cmake_language(GET_MESSAGE_LOG_LEVEL PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL)
     set(CMAKE_MESSAGE_LOG_LEVEL NOTICE)
 endmacro()
+
 
 #-------------------------------------------------------------------------------
 #   Restore previous message log level.
@@ -232,6 +237,7 @@ macro(tcm_restore_message_log_level)
         set(CMAKE_MESSAGE_LOG_LEVEL ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
     endif ()
 endmacro()
+
 
 #-------------------------------------------------------------------------------
 #   Check if <FILE> has changed and outputs result to <OUTPUT_VAR>
@@ -256,4 +262,3 @@ function(tcm_has_changed)
         endif ()
     endif ()
 endfunction()
-

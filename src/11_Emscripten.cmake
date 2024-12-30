@@ -10,14 +10,13 @@ function(tcm_target_setup_for_emscripten)
         return()
     endif ()
 
-    set(options)
-    set(oneValueArgs
+    set(one_value_args
             TARGET
-            SHELL_FILE  # Override default shell file.
-            ASSETS_DIR  # Specify a directory if you want to copy it alongside output.
+            SHELL_FILE      # Override default shell file.
+            PRELOAD_DIR     # Preload files inside directory.
+            EMBED_DIR       # Embed files inside directory.
     )
-    set(multiValueArgs)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
     tcm__default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
@@ -32,18 +31,13 @@ function(tcm_target_setup_for_emscripten)
     add_custom_target(${arg_TARGET}_open_html COMMAND emrun $<TARGET_FILE:${arg_TARGET}>)
     add_dependencies(${arg_TARGET}_open_html ${arg_TARGET})
 
-    # TODO Reuse utility functions
-    if(arg_ASSETS_DIR)
-        target_link_options(${arg_TARGET} PRIVATE --preload-file ${arg_ASSETS_DIR}@$<TARGET_FILE_DIR:${arg_TARGET}>/assets)
-        add_custom_command(TARGET ${arg_TARGET} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${arg_TARGET}>/assets
-                COMMENT "Making directory $<TARGET_FILE_DIR:${arg_TARGET}>/assets/"
-        )
-        add_custom_command(TARGET ${arg_TARGET} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${arg_ASSETS_DIR}/assets $<TARGET_FILE_DIR:${arg_TARGET}>/assets
-                COMMENT "Copying assets directory ${arg_ASSETS_DIR} to $<TARGET_FILE_DIR:${arg_TARGET}>/assets"
-        )
+    # TODO Needs testing
+    if(arg_PRELOAD_DIR)
+        target_link_options(${arg_TARGET} PRIVATE --preload-file ${arg_PRELOAD_DIR})
+    endif ()
+
+    if(arg_EMBED_DIR)
+        target_link_options(${arg_TARGET} PRIVATE --embed-file ${arg_PRELOAD_DIR})
     endif ()
 
 endfunction()
@@ -51,6 +45,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   For internal usage.
 #   Generate a default html shell file for emscripten.
+#
 function(tcm__emscripten_generate_default_shell_file)
     if(EMSCRIPTEN)
         set(embed_shell_file "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")

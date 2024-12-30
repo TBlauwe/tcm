@@ -235,6 +235,7 @@ macro(tcm__required arg_ARG arg_DESC)
     endif ()
 endmacro()
 
+
 #-------------------------------------------------------------------------------
 #   For internal usage.
 #   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
@@ -293,8 +294,9 @@ function(tcm_target_options)
     endforeach ()
 endfunction()
 
+
 #-------------------------------------------------------------------------------
-#   Post-build, copy files and folder to an asset/ folder inside target's output directory.
+#   Post-build, copy files and folders to an asset/ folder inside target's output directory.
 #
 function(tcm_target_copy_assets)
     set(one_value_args
@@ -315,8 +317,7 @@ function(tcm_target_copy_assets)
             list(APPEND files ${path})
         endforeach ()
 
-        # copy_if_different requires destination folder to exists.
-        add_custom_command(
+        add_custom_command( # copy_if_different requires destination folder to exists.
                 TARGET ${arg_TARGET}
                 POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E make_directory "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
@@ -349,6 +350,7 @@ function(tcm_target_copy_assets)
     endif ()
 endfunction()
 
+
 #-------------------------------------------------------------------------------
 #   Disallow in-source builds
 #   Not recommended. You should do it manually and early.
@@ -359,6 +361,7 @@ function(tcm_prevent_in_source_build)
         tcm_fatal_error("In-source builds are not allowed. Please create a separate build directory and run cmake from there")
     endif()
 endfunction()
+
 
 #-------------------------------------------------------------------------------
 #   Enable optimisation flags on release builds for arg_TARGET
@@ -437,6 +440,7 @@ function(tcm_target_enable_warning_flags)
     endif ()
 endfunction()
 
+
 #-------------------------------------------------------------------------------
 #   Prevents messages below NOTICE.
 #
@@ -444,6 +448,7 @@ macro(tcm_silence_message)
     cmake_language(GET_MESSAGE_LOG_LEVEL PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL)
     set(CMAKE_MESSAGE_LOG_LEVEL NOTICE)
 endmacro()
+
 
 #-------------------------------------------------------------------------------
 #   Restore previous message log level.
@@ -453,6 +458,7 @@ macro(tcm_restore_message_log_level)
         set(CMAKE_MESSAGE_LOG_LEVEL ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
     endif ()
 endmacro()
+
 
 #-------------------------------------------------------------------------------
 #   Check if <FILE> has changed and outputs result to <OUTPUT_VAR>
@@ -477,7 +483,6 @@ function(tcm_has_changed)
         endif ()
     endif ()
 endfunction()
-
 
 
 # ------------------------------------------------------------------------------
@@ -1025,9 +1030,6 @@ function(tcm_examples)
 
             string(REGEX REPLACE " main[(]" " ${target_name}_main(" file_content "${file_content}")
 
-            # TODO I could check if a replaced happened and if yes, then we could generate one
-            # TODO Utility function : tcm_timestamp(<FILE> <var>)
-            # TODO Utility function : if(<var> <=> FILE_CHANGED)
             list(APPEND file_content "
 #include <benchmark/benchmark.h>
 
@@ -1093,14 +1095,13 @@ function(tcm_target_setup_for_emscripten)
         return()
     endif ()
 
-    set(options)
-    set(oneValueArgs
+    set(one_value_args
             TARGET
-            SHELL_FILE  # Override default shell file.
-            ASSETS_DIR  # Specify a directory if you want to copy it alongside output.
+            SHELL_FILE      # Override default shell file.
+            PRELOAD_DIR     # Preload files inside directory.
+            EMBED_DIR       # Embed files inside directory.
     )
-    set(multiValueArgs)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
     tcm__default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
@@ -1115,18 +1116,13 @@ function(tcm_target_setup_for_emscripten)
     add_custom_target(${arg_TARGET}_open_html COMMAND emrun $<TARGET_FILE:${arg_TARGET}>)
     add_dependencies(${arg_TARGET}_open_html ${arg_TARGET})
 
-    # TODO Reuse utility functions
-    if(arg_ASSETS_DIR)
-        target_link_options(${arg_TARGET} PRIVATE --preload-file ${arg_ASSETS_DIR}@$<TARGET_FILE_DIR:${arg_TARGET}>/assets)
-        add_custom_command(TARGET ${arg_TARGET} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${arg_TARGET}>/assets
-                COMMENT "Making directory $<TARGET_FILE_DIR:${arg_TARGET}>/assets/"
-        )
-        add_custom_command(TARGET ${arg_TARGET} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${arg_ASSETS_DIR}/assets $<TARGET_FILE_DIR:${arg_TARGET}>/assets
-                COMMENT "Copying assets directory ${arg_ASSETS_DIR} to $<TARGET_FILE_DIR:${arg_TARGET}>/assets"
-        )
+    # TODO Needs testing
+    if(arg_PRELOAD_DIR)
+        target_link_options(${arg_TARGET} PRIVATE --preload-file ${arg_PRELOAD_DIR})
+    endif ()
+
+    if(arg_EMBED_DIR)
+        target_link_options(${arg_TARGET} PRIVATE --embed-file ${arg_PRELOAD_DIR})
     endif ()
 
 endfunction()
@@ -1134,6 +1130,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   For internal usage.
 #   Generate a default html shell file for emscripten.
+#
 function(tcm__emscripten_generate_default_shell_file)
     if(EMSCRIPTEN)
         set(embed_shell_file "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
@@ -1669,57 +1666,9 @@ $generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="foote
 ]=])
     endif ()
 
-    # ------------------------------------------------------------------------------
-    # --- Dependencies
-    # ------------------------------------------------------------------------------
-    # Doxygen is a documentation generator and static analysis tool for software source trees.
-    find_package(Doxygen REQUIRED dot QUIET)
-    if(NOT Doxygen_FOUND)
-        tcm_warn("Doxygen not found -> Skipping docs.")
-        return()
-    endif()
-
-    # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
-    tcm_silence_cpm_package(DOXYGEN_AWESOME_CSS)
-    CPMAddPackage(
-            NAME DOXYGEN_AWESOME_CSS
-            GIT_TAG ${arg_DOXYGEN_AWESOME_VERSION}
-            GITHUB_REPOSITORY jothepro/doxygen-awesome-css
-    )
-    tcm_restore_message_log_level()
-    if(NOT DOXYGEN_AWESOME_CSS_ADDED)
-        tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
-        return()
-    endif()
-
-
-    # ------------------------------------------------------------------------------
-    # --- Mandatory Doxyfile.in settings
-    # ------------------------------------------------------------------------------
-    # --- Required by doxygen-awesome-css
-    set(DOXYGEN_GENERATE_TREEVIEW YES)
-    set(DOXYGEN_DISABLE_INDEX NO)
-    set(DOXYGEN_FULL_SIDEBAR NO)
-    set(DOXYGEN_HTML_COLORSTYLE	LIGHT) # required with Doxygen >= 1.9.5
-
-    # --- DOT Graphs
-    # Reference : https://jothepro.github.io/doxygen-awesome-css/md_docs_2tricks.html
-    #(set DOXYGEN_HAVE_DOT YES) # Set to YES if the dot component was requested and found during FindPackage call.
-    set(DOXYGEN_DOT_IMAGE_FORMAT svg)
-    #set(DOT_TRANSPARENT YES) # Doxygen 1.9.8 report this line as obsolete
-
-    # NOTE : As specified by docs, list will be properly handled by doxygen_add_docs : https://cmake.org/cmake/help/latest/module/FindDoxygen.html
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js")
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js")
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-paragraph-link.js")
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-interactive-toc.js")
-    list(APPEND DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-tabs.js")
-
-    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome.css)
-    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only.css)
-    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET ${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only-darkmode-toggle.css)
-    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css" [=[/* See references :
+    if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css")
+        tcm_info("Generating custom css.")
+        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css" [=[/* See references :
     * https://jothepro.github.io/doxygen-awesome-css/md_docs_2customization.html 
     * https://github.com/jothepro/doxygen-awesome-css/blob/main/doxygen-custom/custom.css
 */
@@ -1821,12 +1770,70 @@ html.light-mode #projectlogo img {
     content: url(logo_small.png);
 }
 ]=])
+    endif()
 
-    list(APPEND DOXYGEN_ALIASES [[html_frame{1}="@htmlonly<iframe src=\"\1\"></iframe>@endhtmlonly"]])
-    list(APPEND DOXYGEN_ALIASES [[html_frame{3}="@htmlonly<iframe src=\"\1\" width=\"\2\" height=\"\3\"></iframe>@endhtmlonly"]])
-    list(APPEND DOXYGEN_ALIASES [[widget{2}="@htmlonly<div class=\"\1\" id=\"\2\"></div>@endhtmlonly"]])
-    list(APPEND DOXYGEN_ALIASES [[Doxygen="[Doxygen](https://www.doxygen.nl/index.html)"]])
-    list(APPEND DOXYGEN_ALIASES [[Doxygen-awesome="[Doxygen Awesome CSS](https://jothepro.github.io/doxygen-awesome-css/)"]])
+    # ------------------------------------------------------------------------------
+    # --- Dependencies
+    # ------------------------------------------------------------------------------
+    # Doxygen is a documentation generator and static analysis tool for software source trees.
+    find_package(Doxygen REQUIRED dot QUIET)
+    if(NOT Doxygen_FOUND)
+        tcm_warn("Doxygen not found -> Skipping docs.")
+        return()
+    endif()
+
+    # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
+    tcm_silence_cpm_package(DOXYGEN_AWESOME_CSS)
+    CPMAddPackage(
+            NAME DOXYGEN_AWESOME_CSS
+            GIT_TAG ${arg_DOXYGEN_AWESOME_VERSION}
+            GITHUB_REPOSITORY jothepro/doxygen-awesome-css
+    )
+    tcm_restore_message_log_level()
+    if(NOT DOXYGEN_AWESOME_CSS_ADDED)
+        tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
+        return()
+    endif()
+
+
+    # ------------------------------------------------------------------------------
+    # --- Mandatory Doxyfile.in settings
+    # ------------------------------------------------------------------------------
+    # --- Required by doxygen-awesome-css
+    set(DOXYGEN_GENERATE_TREEVIEW YES)
+    set(DOXYGEN_DISABLE_INDEX NO)
+    set(DOXYGEN_FULL_SIDEBAR NO)
+    set(DOXYGEN_HTML_COLORSTYLE	LIGHT) # required with Doxygen >= 1.9.5
+
+    # --- DOT Graphs
+    # Reference : https://jothepro.github.io/doxygen-awesome-css/md_docs_2tricks.html
+    #(set DOXYGEN_HAVE_DOT YES) # Set to YES if the dot component was requested and found during FindPackage call.
+    set(DOXYGEN_DOT_IMAGE_FORMAT svg)
+    #set(DOT_TRANSPARENT YES) # Doxygen 1.9.8 report this line as obsolete
+
+    # NOTE : As specified by docs, list will be properly handled by doxygen_add_docs : https://cmake.org/cmake/help/latest/module/FindDoxygen.html
+    list(APPEND DOXYGEN_HTML_EXTRA_FILES
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-paragraph-link.js"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-interactive-toc.js"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-tabs.js"
+    )
+
+    list(APPEND DOXYGEN_HTML_EXTRA_STYLESHEET
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome.css"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only.css"
+            "${DOXYGEN_AWESOME_CSS_SOURCE_DIR}/doxygen-awesome-sidebar-only-darkmode-toggle.css"
+            "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css"
+    )
+
+    list(APPEND DOXYGEN_ALIASES
+            [[html_frame{1}="@htmlonly<iframe src=\"\1\"></iframe>@endhtmlonly"]]
+            [[html_frame{3}="@htmlonly<iframe src=\"\1\" width=\"\2\" height=\"\3\"></iframe>@endhtmlonly"]]
+            [[widget{2}="@htmlonly<div class=\"\1\" id=\"\2\"></div>@endhtmlonly"]]
+            [[Doxygen="[Doxygen](https://www.doxygen.nl/index.html)"]]
+            [[Doxygen-awesome="[Doxygen Awesome CSS](https://jothepro.github.io/doxygen-awesome-css/)"]]
+    )
 
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION
