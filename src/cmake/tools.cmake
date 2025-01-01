@@ -7,9 +7,9 @@
 # Download and install CPM if not already present.
 #
 macro(tcm__setup_cpm)
-    tcm__default_value(CPM_INDENT "(CPM)")
-    tcm__default_value(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
-    tcm__default_value(CPM_DOWNLOAD_VERSION 0.40.2)
+    tcm_default_value(CPM_INDENT "(CPM)")
+    tcm_default_value(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
+    tcm_default_value(CPM_DOWNLOAD_VERSION 0.40.2)
 
     if(NOT EXISTS ${CPM_FILE})
         if(CPM_SOURCE_CACHE)
@@ -87,7 +87,7 @@ endfunction()
 # Description:  Setup various tools depending on cache variable `TCM_TOOLS`.
 #
 macro(tcm__module_tools)
-    tcm__default_value(TCM_TOOLS "CPM;CCACHE")
+    tcm_default_value(TCM_TOOLS "CPM;CCACHE")
 
     if(CPM IN_LIST TCM_TOOLS)
         tcm__setup_cpm()

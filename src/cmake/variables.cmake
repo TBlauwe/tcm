@@ -7,7 +7,7 @@
 #   Set some useful CMake variables.
 #
 macro(tcm__module_variables)
-    tcm__default_value(TCM_EXE_DIR "${PROJECT_BINARY_DIR}/bin")
+    tcm_default_value(TCM_EXE_DIR "${PROJECT_BINARY_DIR}/bin")
 
     #-------------------------------------------------------------------------------
     # Set host machine

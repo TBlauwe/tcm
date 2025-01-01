@@ -12,8 +12,8 @@ function(tcm_target_setup_ispc target)
     set(multiValueArgs)
     cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
-    tcm__default_value(arg_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/ispc/")
-    tcm__default_value(arg_HEADER_SUFFIX ".h")
+    tcm_default_value(arg_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/ispc/")
+    tcm_default_value(arg_HEADER_SUFFIX ".h")
 
     set_target_properties(ispc_lib PROPERTIES ISPC_HEADER_DIRECTORY ${arg_HEADER_DIR})
     set_target_properties(ispc_lib PROPERTIES ISPC_HEADER_SUFFIX ${arg_HEADER_SUFFIX})

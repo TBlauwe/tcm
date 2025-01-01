@@ -8,7 +8,7 @@ set(BUILD_SHARED_LIBS ON)
 
 add_library(my_lib my_lib/my_lib.c)
 target_include_directories(my_lib PUBLIC my_lib)
-tcm_generate_export_header(my_lib)
+tcm_target_export_header(my_lib)
 
 add_executable(test_shared main.cpp)
 target_link_libraries(test_shared PRIVATE my_lib)

@@ -7,14 +7,13 @@ include(GenerateExportHeader)
 #   Generate export header for a target.
 #   Export header directory will be included in a private scope.
 #
-function(tcm_generate_export_header)
+function(tcm_target_export_header arg_TARGET)
     set(one_value_args
-            TARGET
             EXPORT_FILE_NAME
     )
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
-    tcm__default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${arg_TARGET}/export.h")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "" "")
+    tcm_default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${arg_TARGET}/export.h")
 
     generate_export_header(
             ${arg_TARGET}

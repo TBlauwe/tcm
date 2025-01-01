@@ -14,6 +14,89 @@ option(TCM_VERBOSE "Verbose messages during CMake runs"         ${PROJECT_IS_TOP
 
 
 # ------------------------------------------------------------------------------
+# --- MODULE: Arguments
+#
+#   This module defines functions to improve UX by checking appropriate API usage.
+# ------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------
+#   FOR INTERNAL USAGE: Make some assumptions (use `arg_TARGET`)
+#   Ensure target is set either as first argument or with `TARGET` keyword.
+#
+macro(tcm__ensure_target)
+endmacro()
+
+
+#-------------------------------------------------------------------------------
+#   FOR INTERNAL USAGE : It should only be used by `tcm_function_parse_args(...)`.
+#
+#   Print argument correct usage.
+#   set(api_misuse TRUE) if one misuse is detected.
+#
+function(tcm__check_var arg_PREFIX arg_ARGUMENT arg_REQUIRED_LIST arg_SUFFIX)
+    string(APPEND usage_message "\n\t")
+    if("${arg_ARGUMENT}" IN_LIST arg_REQUIRED_LIST)
+        string(APPEND usage_message "${argument} ${arg_SUFFIX}")
+        if("${arg_ARGUMENT}" IN_LIST ${arg_PREFIX}_KEYWORDS_MISSING_VALUES)
+            set(TCM_API_MISUSE TRUE PARENT_SCOPE)
+            string(APPEND usage_message " <-- Missing value(s)")
+        elseif(NOT DEFINED ${arg_PREFIX}_${arg_ARGUMENT})
+            set(TCM_API_MISUSE TRUE PARENT_SCOPE)
+            string(APPEND usage_message " <-- Missing required argument")
+        endif()
+    else()
+        string(APPEND usage_message "[${argument} ${arg_SUFFIX}" "]")
+        if("${arg_ARGUMENT}" IN_LIST ${arg_PREFIX}_KEYWORDS_MISSING_VALUES)
+            set(TCM_API_MISUSE TRUE PARENT_SCOPE)
+            string(APPEND usage_message " <-- Missing value(s)")
+        endif()
+    endif ()
+    set(usage_message ${usage_message} PARENT_SCOPE)
+endfunction()
+
+
+#-------------------------------------------------------------------------------
+#   Ensure proper usage of function API.
+#   If not, then it stop cmake execution and print correct usage.
+#
+function(tcm_check_proper_usage arg_FUNCTION_NAME arg_PREFIX arg_OPTIONS arg_ONE_VALUE_ARGS arg_MULTI_VALUE_ARGS arg_REQUIRED_ARGS)
+    if(DEFINED ${arg_PREFIX}_TARGET AND NOT TARGET ${${arg_PREFIX}_TARGET})
+        string(APPEND usage_message "\n\t${${arg_PREFIX}_TARGET} <-- Not a target.")
+        set(TCM_API_MISUSE TRUE)
+    endif()
+
+    foreach (argument IN LISTS arg_OPTIONS)
+        tcm__check_var(${arg_PREFIX} ${argument} "${arg_REQUIRED_ARGS}" "")
+    endforeach ()
+    foreach (argument IN LISTS one_value_args)
+        tcm__check_var(${arg_PREFIX} ${argument} "${arg_REQUIRED_ARGS}" "<item>")
+    endforeach ()
+    foreach (argument IN LISTS multi_value_args)
+        tcm__check_var(${arg_PREFIX} ${argument} "${arg_REQUIRED_ARGS}" "<item> ...")
+    endforeach ()
+
+    if(DEFINED TCM_API_MISUSE)
+        message(FATAL_ERROR "Improper API usage: "
+                "${arg_FUNCTION_NAME}("
+                ${usage_message}
+                "\n)"
+        )
+    endif ()
+endfunction()
+
+
+#-------------------------------------------------------------------------------
+#   Set VAR to VALUE if not already defined.
+#
+macro(tcm_default_value arg_VAR arg_VALUE)
+    if(NOT DEFINED ${arg_VAR})
+        set(${arg_VAR} ${arg_VALUE})
+    endif ()
+endmacro()
+
+
+# ------------------------------------------------------------------------------
 # --- LOGGING
 # ------------------------------------------------------------------------------
 # This module defines functions/macros for logging purposes in CMake.
@@ -219,54 +302,29 @@ macro(tcm__module_logging)
 endmacro()
 
 
+# ------------------------------------------------------------------------------
+# --- MODULE: Assertions
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+#
+macro(tcm_test_section)
+    if(${ARGV})
+        set(TCM_TEST_SECTION_NAME ${ARGV})
+    else ()
+        set(TCM_TEST_SECTION_NAME ${CMAKE_CURRENT_LIST_FILE})
+    endif ()
+endmacro()
+
+# ------------------------------------------------------------------------------
+#
+macro(tcm_test_section_end)
+endmacro()
 
 
 # ------------------------------------------------------------------------------
 # --- UTILITY
 # ------------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
-# --- Asserts
-# ------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Ensure arguments is set.
-#   Should only be used inside a function.
-#   Assume arguments are prefixed by arg_
-#
-macro(tcm__required arg_ARG arg_DESC)
-    if(NOT DEFINED ${arg_${arg_ARG}})
-        tcm_author_warn("Missing arguments ${arg_ARG}. ${arg_DESC}")
-    endif ()
-endmacro()
-
-
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
-#
-macro(tcm__ensure_target)
-    if((NOT arg_TARGET) AND (NOT ARGV0))    # A target must be specified
-        tcm_author_warn("Missing target. Needs to be either first argument or specified with keyword `TARGET`.")
-    elseif(NOT arg_TARGET AND ARGV0)        # If not using TARGET, then put ARGV0 as target
-        if(NOT TARGET ${ARGV0})             # Make sur that ARGV0 is a target
-            tcm_author_warn("Missing target. Keyword TARGET is missing and first argument \"${ARGV0}\" is not a target.")
-        endif()
-        set(arg_TARGET ${ARGV0})
-    endif ()
-endmacro()
-
-
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Set a default _value to a _var if not defined.
-#
-macro(tcm__default_value arg_VAR arg_VALUE)
-    if(NOT DEFINED ${arg_VAR})
-        set(${arg_VAR} ${arg_VALUE})
-    endif ()
-endmacro()
 
 
 #-------------------------------------------------------------------------------
@@ -275,11 +333,7 @@ endmacro()
 #   TODO Seems to work in some cases but not all.
 #   TODO Isn't it dangerous ? Should we not append rather than setting ?
 #
-function(tcm_target_suppress_warnings)
-    set(one_value_args TARGET)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
-
+function(tcm_target_suppress_warnings arg_TARGET)
     set_target_properties(${arg_TARGET} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${arg_TARGET},INTERFACE_INCLUDE_DIRECTORIES>)
 endfunction()
 
@@ -287,11 +341,15 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Define "-D${OPTION}" for TARGET for each option that is ON.
 #
-function(tcm_target_options)
-    set(one_value_args TARGET)
-    set(multi_value_args OPTIONS)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
+function(tcm_target_options arg_TARGET)
+    set(multi_value_args
+            OPTIONS
+    )
+    set(required_args
+            OPTIONS
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "" "${multi_value_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "" "${multi_value_args}" "${required_args}")
 
     foreach (item IN LISTS arg_OPTIONS)
         if (${item})
@@ -304,16 +362,18 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Post-build, copy files and folders to an asset/ folder inside target's output directory.
 #
-function(tcm_target_copy_assets)
+function(tcm_target_copy_assets arg_TARGET)
     set(one_value_args
-            TARGET
             OUTPUT_DIR
     )
     set(multi_value_args
             FILES
     )
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
+    set(required_args
+            FILES
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "${multi_value_args}" "${required_args}")
 
     foreach (item IN LISTS arg_FILES)
         file(REAL_PATH ${item} path)
@@ -368,10 +428,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Enable optimisation flags on release builds for arg_TARGET
 #
-function(tcm_target_enable_optimisation_flags)
-    set(one_value_args TARGET)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
+function(tcm_target_enable_optimisation_flags arg_TARGET)
 
     if(TCM_EMSCRIPTEN)
         target_compile_options(${arg_TARGET} PUBLIC "-Os")
@@ -399,10 +456,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Enable warnings flags for arg_TARGET
 #
-function(tcm_target_enable_warning_flags)
-    set(one_value_args TARGET)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
+function(tcm_target_enable_warning_flags arg_TARGET)
 
     if (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC OR TCM_EMSCRIPTEN)
         target_compile_options(${arg_TARGET} PRIVATE
@@ -466,8 +520,16 @@ endmacro()
 #   Check if <FILE> has changed and outputs result to <OUTPUT_VAR>
 #
 function(tcm_has_changed)
-    set(one_value_args FILE OUTPUT_VAR)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    set(one_value_args
+            FILE
+            OUTPUT_VAR
+    )
+    set(required_args
+            FILE
+            OUTPUT_VAR
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "" "${required_args}")
 
     set(timestamp_file "${CMAKE_CURRENT_BINARY_DIR}/timestamps/${arg_FILE}.stamp")
     if(NOT EXISTS ${timestamp_file})
@@ -496,7 +558,7 @@ endfunction()
 #   Set some useful CMake variables.
 #
 macro(tcm__module_variables)
-    tcm__default_value(TCM_EXE_DIR "${PROJECT_BINARY_DIR}/bin")
+    tcm_default_value(TCM_EXE_DIR "${PROJECT_BINARY_DIR}/bin")
 
     #-------------------------------------------------------------------------------
     # Set host machine
@@ -585,14 +647,13 @@ include(GenerateExportHeader)
 #   Generate export header for a target.
 #   Export header directory will be included in a private scope.
 #
-function(tcm_generate_export_header)
+function(tcm_target_export_header arg_TARGET)
     set(one_value_args
-            TARGET
             EXPORT_FILE_NAME
     )
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
-    tcm__default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${arg_TARGET}/export.h")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "" "")
+    tcm_default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${arg_TARGET}/export.h")
 
     generate_export_header(
             ${arg_TARGET}
@@ -627,9 +688,9 @@ endfunction()
 # Download and install CPM if not already present.
 #
 macro(tcm__setup_cpm)
-    tcm__default_value(CPM_INDENT "(CPM)")
-    tcm__default_value(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
-    tcm__default_value(CPM_DOWNLOAD_VERSION 0.40.2)
+    tcm_default_value(CPM_INDENT "(CPM)")
+    tcm_default_value(CPM_USE_NAMED_CACHE_DIRECTORIES ON)  # See https://github.com/cpm-cmake/CPM.cmake?tab=readme-ov-file#cpm_use_named_cache_directories
+    tcm_default_value(CPM_DOWNLOAD_VERSION 0.40.2)
 
     if(NOT EXISTS ${CPM_FILE})
         if(CPM_SOURCE_CACHE)
@@ -707,7 +768,7 @@ endfunction()
 # Description:  Setup various tools depending on cache variable `TCM_TOOLS`.
 #
 macro(tcm__module_tools)
-    tcm__default_value(TCM_TOOLS "CPM;CCACHE")
+    tcm_default_value(TCM_TOOLS "CPM;CCACHE")
 
     if(CPM IN_LIST TCM_TOOLS)
         tcm__setup_cpm()
@@ -823,13 +884,10 @@ endfunction()
 # Description:
 #   Setup benchmarks using google benchmark (with provided main).
 #
-# Usage :
-#   tcm_setup_benchmark([GOOGLE_BENCHMARK_VERSION vX.X.X])
-#
 function(tcm_setup_benchmark)
     set(oneValueArgs GOOGLE_BENCHMARK_VERSION)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
+    tcm_default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
     tcm_section("Benchmarks")
 
     find_package(benchmark QUIET)
@@ -858,14 +916,19 @@ endfunction()
 # Description:
 #   Add benchmarks using google benchmark (with provided main).
 #
-# Usage :
-#   tcm_benchmarks(TARGET your_target FILES your_source.cpp ...)
-#
 function(tcm_benchmarks)
-    set(one_value_args NAME)
-    set(multi_value_args FILES)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__default_value(arg_NAME "tcm_Benchmarks")
+    set(one_value_args
+            NAME
+    )
+    set(multi_value_args
+            FILES
+    )
+    set(required_args
+            FILES
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "${multi_value_args}" "${required_args}")
+    tcm_default_value(arg_NAME "tcm_Benchmarks")
 
     tcm_setup_benchmark()
     tcm_section("Benchmarks")
@@ -903,7 +966,7 @@ endfunction()
 function(tcm_setup_test)
     set(oneValueArgs CATCH2_VERSION)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm__default_value(arg_CATCH2_VERSION "v3.7.1")
+    tcm_default_value(arg_CATCH2_VERSION "v3.7.1")
     tcm_section("Tests")
 
     find_package(Catch2 3 QUIET)
@@ -936,7 +999,7 @@ function(tcm_tests)
     set(one_value_args NAME)
     set(multi_value_args FILES)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__default_value(arg_NAME "tcm_Tests")
+    tcm_default_value(arg_NAME "tcm_Tests")
 
     tcm_setup_test()
     tcm_section("Tests")
@@ -958,6 +1021,78 @@ endfunction()
 # ------------------------------------------------------------------------------
 # --- EXAMPLES
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+#   FOR INTERNAL USAGE: used by `tcm_examples`
+#
+function(tcm__add_example arg_FILE arg_NAME)
+    cmake_path(REMOVE_EXTENSION arg_NAME OUTPUT_VARIABLE target_name)
+
+    # Replace the slashes and dots with underscores to get a valid target name
+    # (e.g. 'foo_bar_cpp' from 'foo/bar.cpp')
+    string(REPLACE "/" "_" target_name ${target_name})
+
+    add_executable(${target_name} ${arg_FILE})
+    if(arg_INTERFACE)
+        target_link_libraries(${target_name} PUBLIC ${arg_INTERFACE})
+    endif ()
+    set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/examples")
+    set_target_properties(${target_name} PROPERTIES FOLDER "Examples")
+    add_test(NAME ${target_name} COMMAND ${target_name})
+
+    list(APPEND TARGETS ${target_name})
+    set(TARGETS ${TARGETS} PARENT_SCOPE)
+
+    if(NOT arg_WITH_BENCHMARK)
+        tcm_log("Configuring example \"${target_name}\"")
+        return()
+    endif ()
+
+    set(benchmark_file ${CMAKE_CURRENT_BINARY_DIR}/benchmarks/${target_name}.cpp)
+    if(${arg_FILE} IS_NEWER_THAN ${benchmark_file})
+
+        file(READ "${arg_FILE}" file_content)
+
+        if(NOT file_content)
+            tcm_warn("Example \"${arg_NAME}\" cannot be integrated in a benchmark.")
+            tcm_warn("Reason:  could not read file ${arg_FILE}.")
+            return()
+        endif ()
+
+        string(REGEX MATCH " main[(][)]" can_benchmark "${file_content}")
+
+        if(NOT can_benchmark)
+            tcm_warn("Example \"${arg_NAME}\" cannot be integrated in a benchmark.")
+            tcm_warn("Reason:  only empty `main()`signature is supported (and with a return value).")
+            return()
+        endif ()
+
+        string(REGEX REPLACE " main[(]" " ${target_name}_main(" file_content "${file_content}")
+
+        list(APPEND file_content "
+#include <benchmark/benchmark.h>
+
+static void BM_example_${target_name}(benchmark::State& state)
+{
+for (auto _: state)
+    {
+        ${target_name}_main();
+    }
+}
+
+BENCHMARK(BM_example_${target_name});
+"
+        )
+        tcm_info("Generating benchmark source file for ${target_name}: ${benchmark_file}")
+        file(WRITE ${benchmark_file} "${file_content}")
+    endif ()
+    tcm_benchmarks(FILES ${benchmark_file})
+
+    tcm_log("Configuring example \"${target_name}\" (w/ benchmark)")
+endfunction()
+
+
+# ------------------------------------------------------------------------------
 # Description:
 #   Convenience function to produce examples or a target for each source file (recursive).
 #   You shouldn't use it for "complex" examples, where some .cpp files do not provide a main entry point.
@@ -973,17 +1108,19 @@ endfunction()
 # Outputs:
 #   ${TCM_EXAMPLE_TARGETS} - List of all examples target __configured during this call !__
 #
-# Usage :
-#   tcm_examples(FOLDER examples/)
-#
 function(tcm_examples)
-    set(options WITH_BENCHMARK)
+    set(options
+            WITH_BENCHMARK
+    )
     set(one_value_args
-            FOLDER
+            FILES
             INTERFACE
     )
-    set(multi_value_args)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    set(required_args
+            FILES
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "${options}" "${one_value_args}" "" "${required_args}")
 
     tcm_setup_test()
     if(arg_WITH_BENCHMARK)
@@ -993,66 +1130,27 @@ function(tcm_examples)
 
     tcm_section("Examples")
 
-    cmake_path(ABSOLUTE_PATH arg_FOLDER OUTPUT_VARIABLE arg_FOLDER NORMALIZE)
-    file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${arg_FOLDER} "${arg_FOLDER}/*.cpp" )
-    foreach (example IN LISTS examples)
-        cmake_path(REMOVE_EXTENSION example OUTPUT_VARIABLE target_name)
-
-        # Replace the slashes and dots with underscores to get a valid target name
-        # (e.g. 'foo_bar_cpp' from 'foo/bar.cpp')
-        string(REPLACE "/" "_" target_name ${target_name})
-
-        add_executable(${target_name} ${arg_FOLDER}/${example})
-        if(arg_INTERFACE)
-            target_link_libraries(${target_name} PUBLIC ${arg_INTERFACE})
+    foreach (item IN LISTS arg_FILES)
+        file(REAL_PATH ${item} path)
+        if(IS_DIRECTORY ${path})
+            list(APPEND folders ${path})
+        else ()
+            list(APPEND ${item})
         endif ()
-        set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/examples")
-        set_target_properties(${target_name} PROPERTIES FOLDER "Examples")
-        add_test(NAME ${target_name} COMMAND ${target_name})
-
-        list(APPEND TARGETS ${target_name})
-
-        if(NOT arg_WITH_BENCHMARK)
-            tcm_log("Configuring example \"${target_name}\"")
-            continue()
-        endif ()
-
-        set(benchmark_file ${CMAKE_CURRENT_BINARY_DIR}/benchmarks/${target_name}.cpp)
-        if(${arg_FOLDER}/${example} IS_NEWER_THAN ${benchmark_file})
-
-            file(READ "${arg_FOLDER}/${example}" file_content)
-
-            string(REGEX MATCH " main[(][)]" can_benchmark "${file_content}")
-
-            if(NOT can_benchmark)
-                tcm_warn("Example \"${example}\" cannot be integrated in a benchmark.")
-                tcm_warn("Reason:  only empty `main()`signature is supported (and with a return value).")
-                continue()
-            endif ()
-
-            string(REGEX REPLACE " main[(]" " ${target_name}_main(" file_content "${file_content}")
-
-            list(APPEND file_content "
-#include <benchmark/benchmark.h>
-
-static void BM_example_${target_name}(benchmark::State& state)
-{
-for (auto _: state)
-    {
-        ${target_name}_main();
-    }
-}
-
-BENCHMARK(BM_example_${target_name});
-"
-            )
-            tcm_info("Generating benchmark source file for ${target_name}: ${benchmark_file}")
-            file(WRITE ${benchmark_file} "${file_content}")
-        endif ()
-        tcm_benchmarks(FILES ${benchmark_file})
-
-        tcm_log("Configuring example \"${target_name}\" (w/ benchmark)")
     endforeach ()
+
+    foreach (folder IN LISTS folders)
+        file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${folder} "${folder}/*.cpp" )
+        foreach (example IN LISTS examples)
+            tcm__add_example(${folder}/${example} ${example})
+        endforeach ()
+    endforeach ()
+
+    foreach (example IN LISTS files)
+        file(REAL_PATH ${example} path)
+        tcm__add_example(${path} ${example})
+    endforeach ()
+
     set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
 endfunction()
 
@@ -1071,8 +1169,8 @@ function(tcm_target_setup_ispc target)
     set(multiValueArgs)
     cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
-    tcm__default_value(arg_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/ispc/")
-    tcm__default_value(arg_HEADER_SUFFIX ".h")
+    tcm_default_value(arg_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/ispc/")
+    tcm_default_value(arg_HEADER_SUFFIX ".h")
 
     set_target_properties(ispc_lib PROPERTIES ISPC_HEADER_DIRECTORY ${arg_HEADER_DIR})
     set_target_properties(ispc_lib PROPERTIES ISPC_HEADER_SUFFIX ${arg_HEADER_SUFFIX})
@@ -1106,7 +1204,7 @@ function(tcm_target_setup_for_emscripten)
     cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
-    tcm__default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
+    tcm_default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
     tcm__emscripten_generate_default_shell_file()
 
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
@@ -1218,24 +1316,26 @@ endfunction()
 #   Setup documentation using doxygen and doxygen-awesome.
 
 function(tcm_setup_docs)
-    set(options)
     set(one_value_args
             ASSETS
             DOXYGEN_AWESOME_VERSION
     )
-    set(multi_value_args FILES)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    set(multi_value_args
+            FILES
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "$" "${one_value_args}" "${multi_value_args}" "")
 
     tcm_section("Documentation")
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
-    tcm__default_value(arg_DOXYGEN_AWESOME_VERSION      "v2.3.4")
-    tcm__default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
-    tcm__default_value(DOXYGEN_OUTPUT_DIRECTORY         "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
-    tcm__default_value(DOXYGEN_HTML_HEADER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html")
-    tcm__default_value(DOXYGEN_HTML_FOOTER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html")
-    tcm__default_value(DOXYGEN_LAYOUT_FILE              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
+    tcm_default_value(arg_DOXYGEN_AWESOME_VERSION      "v2.3.4")
+    tcm_default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
+    tcm_default_value(DOXYGEN_OUTPUT_DIRECTORY         "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
+    tcm_default_value(DOXYGEN_HTML_HEADER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html")
+    tcm_default_value(DOXYGEN_HTML_FOOTER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html")
+    tcm_default_value(DOXYGEN_LAYOUT_FILE              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
     if(DOXYGEN_USE_MDFILE_AS_MAINPAGE)
         list(APPEND arg_FILES ${PROJECT_SOURCE_DIR}/README.md)
     endif ()
@@ -1831,9 +1931,9 @@ html.light-mode #projectlogo img {
     tcm_log("Configuring tcm_Documentation.")
     doxygen_add_docs(tcm_Documentation ${arg_FILES})
 
+    #TODO Maybe use DOXYGEN_IMAGE_PATH to let doxygen handle copying ? But what about others assets (is there) ?
     if(arg_ASSETS)
-        tcm_target_copy_assets(
-                TARGET tcm_Documentation
+        tcm_target_copy_assets(tcm_Documentation
                 FILES ${arg_ASSETS}
                 OUTPUT_DIR "${DOXYGEN_OUTPUT_DIRECTORY}/html/assets"
         )

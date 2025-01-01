@@ -2,49 +2,6 @@
 # --- UTILITY
 # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# --- Asserts
-# ------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Ensure arguments is set.
-#   Should only be used inside a function.
-#   Assume arguments are prefixed by arg_
-#
-macro(tcm__required arg_ARG arg_DESC)
-    if(NOT DEFINED ${arg_${arg_ARG}})
-        tcm_author_warn("Missing arguments ${arg_ARG}. ${arg_DESC}")
-    endif ()
-endmacro()
-
-
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
-#
-macro(tcm__ensure_target)
-    if((NOT arg_TARGET) AND (NOT ARGV0))    # A target must be specified
-        tcm_author_warn("Missing target. Needs to be either first argument or specified with keyword `TARGET`.")
-    elseif(NOT arg_TARGET AND ARGV0)        # If not using TARGET, then put ARGV0 as target
-        if(NOT TARGET ${ARGV0})             # Make sur that ARGV0 is a target
-            tcm_author_warn("Missing target. Keyword TARGET is missing and first argument \"${ARGV0}\" is not a target.")
-        endif()
-        set(arg_TARGET ${ARGV0})
-    endif ()
-endmacro()
-
-
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Set a default _value to a _var if not defined.
-#
-macro(tcm__default_value arg_VAR arg_VALUE)
-    if(NOT DEFINED ${arg_VAR})
-        set(${arg_VAR} ${arg_VALUE})
-    endif ()
-endmacro()
-
 
 #-------------------------------------------------------------------------------
 #   Prevent warnings from displaying when building target
@@ -52,11 +9,7 @@ endmacro()
 #   TODO Seems to work in some cases but not all.
 #   TODO Isn't it dangerous ? Should we not append rather than setting ?
 #
-function(tcm_target_suppress_warnings)
-    set(one_value_args TARGET)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
-
+function(tcm_target_suppress_warnings arg_TARGET)
     set_target_properties(${arg_TARGET} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${arg_TARGET},INTERFACE_INCLUDE_DIRECTORIES>)
 endfunction()
 
@@ -64,11 +17,15 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Define "-D${OPTION}" for TARGET for each option that is ON.
 #
-function(tcm_target_options)
-    set(one_value_args TARGET)
-    set(multi_value_args OPTIONS)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
+function(tcm_target_options arg_TARGET)
+    set(multi_value_args
+            OPTIONS
+    )
+    set(required_args
+            OPTIONS
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "" "${multi_value_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "" "${multi_value_args}" "${required_args}")
 
     foreach (item IN LISTS arg_OPTIONS)
         if (${item})
@@ -81,16 +38,18 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Post-build, copy files and folders to an asset/ folder inside target's output directory.
 #
-function(tcm_target_copy_assets)
+function(tcm_target_copy_assets arg_TARGET)
     set(one_value_args
-            TARGET
             OUTPUT_DIR
     )
     set(multi_value_args
             FILES
     )
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
+    set(required_args
+            FILES
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "${multi_value_args}" "${required_args}")
 
     foreach (item IN LISTS arg_FILES)
         file(REAL_PATH ${item} path)
@@ -145,10 +104,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Enable optimisation flags on release builds for arg_TARGET
 #
-function(tcm_target_enable_optimisation_flags)
-    set(one_value_args TARGET)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
+function(tcm_target_enable_optimisation_flags arg_TARGET)
 
     if(TCM_EMSCRIPTEN)
         target_compile_options(${arg_TARGET} PUBLIC "-Os")
@@ -176,10 +132,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 #   Enable warnings flags for arg_TARGET
 #
-function(tcm_target_enable_warning_flags)
-    set(one_value_args TARGET)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
+function(tcm_target_enable_warning_flags arg_TARGET)
 
     if (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC OR TCM_EMSCRIPTEN)
         target_compile_options(${arg_TARGET} PRIVATE
@@ -243,8 +196,16 @@ endmacro()
 #   Check if <FILE> has changed and outputs result to <OUTPUT_VAR>
 #
 function(tcm_has_changed)
-    set(one_value_args FILE OUTPUT_VAR)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    set(one_value_args
+            FILE
+            OUTPUT_VAR
+    )
+    set(required_args
+            FILE
+            OUTPUT_VAR
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "" "${required_args}")
 
     set(timestamp_file "${CMAKE_CURRENT_BINARY_DIR}/timestamps/${arg_FILE}.stamp")
     if(NOT EXISTS ${timestamp_file})

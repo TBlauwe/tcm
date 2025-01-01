@@ -12,4 +12,4 @@ target_include_directories(MyLib PUBLIC my_lib)
 add_library(ExampleInterface INTERFACE)
 target_link_libraries(ExampleInterface INTERFACE MyLib)
 
-tcm_examples(FOLDER examples WITH_BENCHMARK INTERFACE ExampleInterface)
+tcm_examples(FILES examples WITH_BENCHMARK INTERFACE ExampleInterface)

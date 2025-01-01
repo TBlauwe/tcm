@@ -5,24 +5,26 @@
 #   Setup documentation using doxygen and doxygen-awesome.
 
 function(tcm_setup_docs)
-    set(options)
     set(one_value_args
             ASSETS
             DOXYGEN_AWESOME_VERSION
     )
-    set(multi_value_args FILES)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
+    set(multi_value_args
+            FILES
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "$" "${one_value_args}" "${multi_value_args}" "")
 
     tcm_section("Documentation")
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
-    tcm__default_value(arg_DOXYGEN_AWESOME_VERSION      "v2.3.4")
-    tcm__default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
-    tcm__default_value(DOXYGEN_OUTPUT_DIRECTORY         "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
-    tcm__default_value(DOXYGEN_HTML_HEADER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html")
-    tcm__default_value(DOXYGEN_HTML_FOOTER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html")
-    tcm__default_value(DOXYGEN_LAYOUT_FILE              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
+    tcm_default_value(arg_DOXYGEN_AWESOME_VERSION      "v2.3.4")
+    tcm_default_value(DOXYGEN_USE_MDFILE_AS_MAINPAGE   "${PROJECT_SOURCE_DIR}/README.md")
+    tcm_default_value(DOXYGEN_OUTPUT_DIRECTORY         "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
+    tcm_default_value(DOXYGEN_HTML_HEADER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html")
+    tcm_default_value(DOXYGEN_HTML_FOOTER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html")
+    tcm_default_value(DOXYGEN_LAYOUT_FILE              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
     if(DOXYGEN_USE_MDFILE_AS_MAINPAGE)
         list(APPEND arg_FILES ${PROJECT_SOURCE_DIR}/README.md)
     endif ()
@@ -122,9 +124,9 @@ function(tcm_setup_docs)
     tcm_log("Configuring tcm_Documentation.")
     doxygen_add_docs(tcm_Documentation ${arg_FILES})
 
+    #TODO Maybe use DOXYGEN_IMAGE_PATH to let doxygen handle copying ? But what about others assets (is there) ?
     if(arg_ASSETS)
-        tcm_target_copy_assets(
-                TARGET tcm_Documentation
+        tcm_target_copy_assets(tcm_Documentation
                 FILES ${arg_ASSETS}
                 OUTPUT_DIR "${DOXYGEN_OUTPUT_DIRECTORY}/html/assets"
         )

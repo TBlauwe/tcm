@@ -7,13 +7,10 @@
 # Description:
 #   Setup benchmarks using google benchmark (with provided main).
 #
-# Usage :
-#   tcm_setup_benchmark([GOOGLE_BENCHMARK_VERSION vX.X.X])
-#
 function(tcm_setup_benchmark)
     set(oneValueArgs GOOGLE_BENCHMARK_VERSION)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
+    tcm_default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
     tcm_section("Benchmarks")
 
     find_package(benchmark QUIET)
@@ -42,14 +39,19 @@ endfunction()
 # Description:
 #   Add benchmarks using google benchmark (with provided main).
 #
-# Usage :
-#   tcm_benchmarks(TARGET your_target FILES your_source.cpp ...)
-#
 function(tcm_benchmarks)
-    set(one_value_args NAME)
-    set(multi_value_args FILES)
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__default_value(arg_NAME "tcm_Benchmarks")
+    set(one_value_args
+            NAME
+    )
+    set(multi_value_args
+            FILES
+    )
+    set(required_args
+            FILES
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "${multi_value_args}" "${required_args}")
+    tcm_default_value(arg_NAME "tcm_Benchmarks")
 
     tcm_setup_benchmark()
     tcm_section("Benchmarks")
