@@ -305,18 +305,20 @@ function(tcm_target_copy_assets)
     )
     set(multi_value_args
             FILES
-            FOLDERS
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
-    if(arg_FILES)
-        # Convert files to absolute path.
-        foreach (item IN LISTS arg_FILES)
-            file(REAL_PATH ${item} path)
+    foreach (item IN LISTS arg_FILES)
+        file(REAL_PATH ${item} path)
+        if(IS_DIRECTORY ${path})
+            list(APPEND folders ${path})
+        else ()
             list(APPEND files ${path})
-        endforeach ()
+        endif ()
+    endforeach ()
 
+    if(files)
         add_custom_command( # copy_if_different requires destination folder to exists.
                 TARGET ${arg_TARGET}
                 POST_BUILD
@@ -333,13 +335,7 @@ function(tcm_target_copy_assets)
         )
     endif ()
 
-    if(arg_FOLDERS)
-        # Convert folders to absolute path.
-        foreach (item IN LISTS arg_FOLDERS)
-            file(REAL_PATH ${item} path)
-            list(APPEND folders ${path})
-        endforeach ()
-
+    if(folders)
         add_custom_command(
                 TARGET ${arg_TARGET}
                 POST_BUILD
@@ -1214,31 +1210,14 @@ endfunction()
 # ------------------------------------------------------------------------------
 # Description:
 #   Setup documentation using doxygen and doxygen-awesome.
-#   Use doxygen_add_docs() under the hood.
-#   Any Doxygen config option can be override by setting relevant variables before calling `tcm_setup_docs()`.
-#   For more information : https://cmake.org/cmake/help/latest/module/FindDoxygen.html
-#
-#   However, following parameters cannot not be overridden, since tcm_setup_docs() is setting them:
-# * DOXYGEN_GENERATE_TREEVIEW YES
-# * DOXYGEN_DISABLE_INDEX NO
-# * DOXYGEN_FULL_SIDEBAR NO
-# * DOXYGEN_HTML_COLORSTYLE	LIGHT # required with Doxygen >= 1.9.5
-# * DOXYGEN_DOT_IMAGE_FORMAT svg
-#
-#   By default, DOXYGEN_USE_MDFILE_AS_MAINPAGE is set to "${PROJECT_SOURCE_DIR}/README.md".
-#
-#   Also, TCM provides a default header, footer, stylesheet, extra files (js script).
-#   You can override them, but as they are tightly linked together, you are better off not calling tcm_setup_docs().
-#
-# Usage :
-#   tcm_setup_docs()
-#
+
 function(tcm_setup_docs)
     set(options)
     set(one_value_args
+            ASSETS
             DOXYGEN_AWESOME_VERSION
     )
-    set(multi_value_args)
+    set(multi_value_args FILES)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
 
     tcm_section("Documentation")
@@ -1251,6 +1230,9 @@ function(tcm_setup_docs)
     tcm__default_value(DOXYGEN_HTML_HEADER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html")
     tcm__default_value(DOXYGEN_HTML_FOOTER              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/footer.html")
     tcm__default_value(DOXYGEN_LAYOUT_FILE              "${CMAKE_CURRENT_BINARY_DIR}/doxygen/layout.xml")
+    if(DOXYGEN_USE_MDFILE_AS_MAINPAGE)
+        list(APPEND arg_FILES ${PROJECT_SOURCE_DIR}/README.md)
+    endif ()
 
     if(NOT EXISTS ${DOXYGEN_HTML_HEADER})
         tcm_info("Generating default html header")
@@ -1665,6 +1647,7 @@ $generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="foote
 </doxygenlayout>
 ]=])
     endif ()
+    set(DOXYGEN_LAYOUT_FILE "")
 
     if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css")
         tcm_info("Generating custom css.")
@@ -1834,12 +1817,22 @@ html.light-mode #projectlogo img {
             [[Doxygen="[Doxygen](https://www.doxygen.nl/index.html)"]]
             [[Doxygen-awesome="[Doxygen Awesome CSS](https://jothepro.github.io/doxygen-awesome-css/)"]]
     )
+    list(APPEND DOXYGEN_VERBATIM_VARS DOXYGEN_ALIASES)
 
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION
     # ------------------------------------------------------------------------------
     tcm_log("Configuring tcm_Documentation.")
-    doxygen_add_docs(tcm_Documentation)
+    doxygen_add_docs(tcm_Documentation ${arg_FILES})
+
+    if(arg_ASSETS)
+        tcm_target_copy_assets(
+                TARGET tcm_Documentation
+                FILES ${arg_ASSETS}
+                OUTPUT_DIR "${DOXYGEN_OUTPUT_DIRECTORY}/html/assets"
+        )
+
+    endif ()
 
     # Utility target to open docs
     add_custom_target(tcm_Documentation_Open COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")

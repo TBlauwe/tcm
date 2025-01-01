@@ -28,7 +28,10 @@ add_subdirectory(src)
 # --- Some maintenance
 # ------------------------------------------------------------------------------
 include(cmake/tcm.cmake)
-tcm_setup_docs()
+tcm_setup_docs(
+        FILES docs/pages
+        ASSETS assets
+)
 #todo add examples path to doxygen ?
 
 # ------------------------------------------------------------------------------

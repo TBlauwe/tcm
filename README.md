@@ -55,7 +55,7 @@ See [documentation](TODO) for a closer look.
 
 | Before | After modifying some examples |
 | --- | --- |
-| ![log_before.png](../../assets/log_before.png)| ![log_after.png](../../assets/log_after.png)|
+| ![log_before.png](assets/log_before.png)| ![log_after.png](assets/log_after.png)|
  
 > [!NOTE]
 > __There is no "TCM over cmake-init" or any other templates, modules, etc.__

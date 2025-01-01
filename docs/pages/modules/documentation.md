@@ -4,6 +4,7 @@ This module provides a single function to generate a documentation using __[Doxy
 
 ```cmake
 tcm_setup_docs (
+        [FILES file1 directory ...]
         [DOXYGEN_AWESOME_VERSION "vX.X.X"]
 )
 ```
@@ -22,3 +23,5 @@ By default, `DOXYGEN_USE_MDFILE_AS_MAINPAGE` is set to `"${PROJECT_SOURCE_DIR}/R
 
 Also, TCM provides a default header, footer, stylesheet, extra files (js script).
 You can override them, but since they are tightly linked together, you are better off not calling tcm_setup_docs().
+
+Parameter `FILES` specify input files and directories. `${PROJECT_SOURCE_DIR}/README.md` is always added to the input.

@@ -84,18 +84,20 @@ function(tcm_target_copy_assets)
     )
     set(multi_value_args
             FILES
-            FOLDERS
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
-    if(arg_FILES)
-        # Convert files to absolute path.
-        foreach (item IN LISTS arg_FILES)
-            file(REAL_PATH ${item} path)
+    foreach (item IN LISTS arg_FILES)
+        file(REAL_PATH ${item} path)
+        if(IS_DIRECTORY ${path})
+            list(APPEND folders ${path})
+        else ()
             list(APPEND files ${path})
-        endforeach ()
+        endif ()
+    endforeach ()
 
+    if(files)
         add_custom_command( # copy_if_different requires destination folder to exists.
                 TARGET ${arg_TARGET}
                 POST_BUILD
@@ -112,13 +114,7 @@ function(tcm_target_copy_assets)
         )
     endif ()
 
-    if(arg_FOLDERS)
-        # Convert folders to absolute path.
-        foreach (item IN LISTS arg_FOLDERS)
-            file(REAL_PATH ${item} path)
-            list(APPEND folders ${path})
-        endforeach ()
-
+    if(folders)
         add_custom_command(
                 TARGET ${arg_TARGET}
                 POST_BUILD

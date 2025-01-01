@@ -18,10 +18,7 @@ add_test(NAME Target_Options COMMAND $<TARGET_FILE:test_utility>)   # program re
 #-------------------------------------------------------------------------------
 #   TEST : Assets copy
 #
-tcm_target_copy_assets(test_utility
-        FILES copy_me_2.txt copy_me_3.txt
-        FOLDERS assets/sub assets/sub_1 assets
-)
+tcm_target_copy_assets(test_utility FILES copy_me_2.txt copy_me_3.txt assets/sub assets/sub_1 assets)
 add_test(NAME Copy_Assets
         COMMAND ${CMAKE_COMMAND} -D SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -D DEST_DIR=$<TARGET_FILE_DIR:test_utility> -P ${CMAKE_CURRENT_SOURCE_DIR}/test_tcm_target_copy_assets.cmake
 )
