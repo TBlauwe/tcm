@@ -14,7 +14,7 @@ function(tcm_generate_export_header)
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
-    tcm__default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${arg_TARGET}/export.h")
+    tcm_default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${arg_TARGET}/export.h")
 
     generate_export_header(
             ${arg_TARGET}

@@ -19,7 +19,7 @@ function(tcm_target_setup_for_emscripten)
     cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm__ensure_target()
 
-    tcm__default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
+    tcm_default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
     tcm__emscripten_generate_default_shell_file()
 
     set(CMAKE_EXECUTABLE_SUFFIX ".html")

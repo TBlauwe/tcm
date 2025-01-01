@@ -39,6 +39,7 @@ function(generate_mixin arg_FILE)
     set(TCM_${arg_FILE}_MIXIN ${content} PARENT_SCOPE)
 endfunction()
 
+generate_mixin(cmake/arguments.cmake)
 generate_mixin(cmake/asserts.cmake)
 generate_mixin(cmake/benchmarks.cmake)
 generate_mixin(cmake/closure.cmake)

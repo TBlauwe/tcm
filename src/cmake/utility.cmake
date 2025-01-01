@@ -2,48 +2,6 @@
 # --- UTILITY
 # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# --- Asserts
-# ------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Ensure arguments is set.
-#   Should only be used inside a function.
-#   Assume arguments are prefixed by arg_
-#
-macro(tcm__required arg_ARG arg_DESC)
-    if(NOT DEFINED ${arg_${arg_ARG}})
-        tcm_author_warn("Missing arguments ${arg_ARG}. ${arg_DESC}")
-    endif ()
-endmacro()
-
-
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Convenience macro to ensure target is set either as first argument or with `TARGET` keyword.
-#
-macro(tcm__ensure_target)
-    if((NOT arg_TARGET) AND (NOT ARGV0))    # A target must be specified
-        tcm_author_warn("Missing target. Needs to be either first argument or specified with keyword `TARGET`.")
-    elseif(NOT arg_TARGET AND ARGV0)        # If not using TARGET, then put ARGV0 as target
-        if(NOT TARGET ${ARGV0})             # Make sur that ARGV0 is a target
-            tcm_author_warn("Missing target. Keyword TARGET is missing and first argument \"${ARGV0}\" is not a target.")
-        endif()
-        set(arg_TARGET ${ARGV0})
-    endif ()
-endmacro()
-
-
-#-------------------------------------------------------------------------------
-#   For internal usage.
-#   Set a default _value to a _var if not defined.
-#
-macro(tcm__default_value arg_VAR arg_VALUE)
-    if(NOT DEFINED ${arg_VAR})
-        set(${arg_VAR} ${arg_VALUE})
-    endif ()
-endmacro()
 
 
 #-------------------------------------------------------------------------------

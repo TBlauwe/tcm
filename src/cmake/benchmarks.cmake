@@ -13,7 +13,7 @@
 function(tcm_setup_benchmark)
     set(oneValueArgs GOOGLE_BENCHMARK_VERSION)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}" "${multiValueArgs}")
-    tcm__default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
+    tcm_default_value(arg_GOOGLE_BENCHMARK_VERSION "v1.9.1")
     tcm_section("Benchmarks")
 
     find_package(benchmark QUIET)
@@ -49,7 +49,7 @@ function(tcm_benchmarks)
     set(one_value_args NAME)
     set(multi_value_args FILES)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__default_value(arg_NAME "tcm_Benchmarks")
+    tcm_default_value(arg_NAME "tcm_Benchmarks")
 
     tcm_setup_benchmark()
     tcm_section("Benchmarks")
