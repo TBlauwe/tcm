@@ -7,11 +7,9 @@
 
 # ------------------------------------------------------------------------------
 # --- Embedding
+#
 #   Some files are embedded in `tcm.cmake` to facilitate publication.
-# ------------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
-#   Embed any file inside a variable, to re-generate it from CMake.
+#   This function embed any file inside a variable, to re-generate it from CMake.
 #   ```cmake
 #   file(WRITE my_file [=[@_output_var@]=]
 #   ```
@@ -31,32 +29,32 @@ embed_file(${PROJECT_SOURCE_DIR}/assets/shell_minimal.html      TCM_EMSCRIPTEN_S
 
 # ------------------------------------------------------------------------------
 # --- Generation
-# ------------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
-#   Produce a variable with the contents of a CMake file.
-#
-function(generate_mixin arg_MIXIN arg_VAR)
-    set(mixin_file ${CMAKE_CURRENT_BINARY_DIR}/cmake/${arg_MIXIN}.cmake)
-    configure_file(${arg_MIXIN}.cmake ${mixin_file} @ONLY)
+function(generate_mixin arg_FILE)
+    cmake_path(REMOVE_EXTENSION arg_FILE OUTPUT_VARIABLE arg_FILE)
+    cmake_path(GET arg_FILE FILENAME arg_FILE)
+    set(mixin_file ${CMAKE_CURRENT_BINARY_DIR}/cmake/${arg_FILE}.cmake)
+    configure_file(cmake/${arg_FILE}.cmake ${mixin_file} @ONLY)
     file(READ ${mixin_file} content)
-    set(${arg_VAR} ${content} PARENT_SCOPE)
+    string(TOUPPER ${arg_FILE} arg_FILE)
+    set(TCM_${arg_FILE}_MIXIN ${content} PARENT_SCOPE)
 endfunction()
 
-generate_mixin(00_Options               TCM_OPTIONS_MIXIN)
-generate_mixin(01_Logging               TCM_LOGGING_MIXIN)
-generate_mixin(02_Utility               TCM_UTILITY_MIXIN)
-generate_mixin(03_Variables             TCM_VARIABLES_MIXIN)
-generate_mixin(04_Shared                TCM_SHARED_MIXIN)
-generate_mixin(05_Tools                 TCM_TOOLS_MIXIN)
-generate_mixin(06_Version               TCM_VERSION_MIXIN)
-generate_mixin(07_Benchmarks            TCM_BENCHMARKS_MIXIN)
-generate_mixin(08_Tests                 TCM_TESTS_MIXIN)
-generate_mixin(09_Examples              TCM_EXAMPLES_MIXIN)
-generate_mixin(10_ISPC                  TCM_ISPC_MIXIN)
-generate_mixin(11_Emscripten            TCM_EMSCRIPTEN_MIXIN)
-generate_mixin(98_Docs                  TCM_DOCS_MIXIN)
-generate_mixin(99_Closure               TCM_CLOSURE_MIXIN)
+generate_mixin(cmake/asserts.cmake)
+generate_mixin(cmake/benchmarks.cmake)
+generate_mixin(cmake/closure.cmake)
+generate_mixin(cmake/documentation.cmake)
+generate_mixin(cmake/emscripten.cmake)
+generate_mixin(cmake/examples.cmake)
+generate_mixin(cmake/ispc.cmake)
+generate_mixin(cmake/logging.cmake)
+generate_mixin(cmake/options.cmake)
+generate_mixin(cmake/shared_library.cmake)
+generate_mixin(cmake/swig.cmake)
+generate_mixin(cmake/tests.cmake)
+generate_mixin(cmake/tools.cmake)
+generate_mixin(cmake/utility.cmake)
+generate_mixin(cmake/variables.cmake)
+generate_mixin(cmake/version.cmake)
 
 message(STATUS "Generating `cmake/tcm.cmake`")
 configure_file(in/tcm.cmake.in ${PROJECT_SOURCE_DIR}/cmake/tcm.cmake @ONLY)

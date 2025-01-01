@@ -104,6 +104,9 @@ wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.5
 - [ ] Maybe propose a single function to parametrize target according to current settings (optimization, warnings, emscripten)
 - [ ] Add automated credits / header for readme ?
 - [ ] Setup version from project rather than git (way less friction).
+- [ ] Improve UX
+  - Add warning for incorrect usage (required parameters, etc.)
+  - Normalize as much as possible (e.g. handle files and folders like for tcm_target_copy_assets)
 
 
 ## Credits

@@ -24,19 +24,11 @@ endif()
 # Generate script
 add_subdirectory(src)
 
-# ------------------------------------------------------------------------------
-# --- Some maintenance
-# ------------------------------------------------------------------------------
-include(cmake/tcm.cmake)
-tcm_setup_docs(
-        FILES docs/pages
-        ASSETS assets
-)
-#todo add examples path to doxygen ?
 
 # ------------------------------------------------------------------------------
 # --- TESTS
 # ------------------------------------------------------------------------------
+include(cmake/tcm.cmake)
 
 enable_testing()
 if(NOT EMSCRIPTEN)
@@ -51,3 +43,9 @@ if(NOT EMSCRIPTEN)
 else()
     add_subdirectory(tests/emscripten)
 endif ()
+
+tcm_setup_docs(
+        FILES docs/pages
+        ASSETS assets
+)
+#todo add examples path to doxygen ?

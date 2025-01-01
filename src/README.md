@@ -1,7 +1,7 @@
 # Development
 
 __TCM__ is packed into a single CMake script called : `cmake/tcm.cmake`.
-This file is configured from the various modules `*.cmake` in this folder.
+This file is configured from the various cmake files in `cmake/` folder.
 
 Some other files are also embedded like:
 * `docs/header.html`, 
@@ -21,6 +21,7 @@ Some are not standard and just a matter of preferences.
 
 Overall, __TCM__ strives for simplicity while keeping side effects to a minimum.
 
+* Easy to use API, hard to misuse.
 * Default should be good enough.
 * Allow composition and customization, when possible.
 * Favor opt-in mentality; don't impose something to the user.
