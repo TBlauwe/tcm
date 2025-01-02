@@ -1,6 +1,6 @@
-# Module : Version
+# Version
 
-This module provides a single function to set project version from Git version.
+__TCM__ provides a single function to set project version from Git version.
 
 ```cmake
 tcm_setup_project_version ()

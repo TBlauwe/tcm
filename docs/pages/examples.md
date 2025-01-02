@@ -1,18 +1,18 @@
-# Module : Examples
+# Examples
 
-This module provides a single function for defining standalone examples.
-This module requires to have called `tcm_setup_cpm` and relies on module tests & benchmarks.
+__TCM__ provides a single function for defining standalone examples.
 
 ```cmake
 tcm_examples (
-        FOLDER <folder>
+        FILES <file_or_folder> ... 
         [WITH_BENCHMARK]
         [INTERFACE <a_target>]
 )
 ```
+
 All source files will be compiled as a target
 You shouldn't use it for "complex" examples, where some .cpp files do not provide a main entry point.
-- Each example defines a new target, named : <relative_path_to_examples_folder>_filename
+- Each example defines a new target, named : `<relative_path_to_examples_folder>_filename`
 - Each example is added to CTest
 - Each example executable is outputted to ${TCM_EXE_DIR}/examples.
 
@@ -30,5 +30,5 @@ You can iterate through it and manually set properties.
 Full example available at `tests/examples`.
 
 ```cmake
-tcm_examples(FOLDER examples WITH_BENCHMARK)
+tcm_examples(FILES examples WITH_BENCHMARK)
 ```

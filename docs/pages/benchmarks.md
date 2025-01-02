@@ -1,6 +1,6 @@
-# Module : Benchmarking
+# Benchmarks
 
-This module provides a single function for benchmarking using __[Google Benchmarks](https://github.com/google/benchmark)__.
+__TCM__ provides a single function to benchmark using __[Google Benchmarks](https://github.com/google/benchmark)__.
 
 ```cmake
 tcm_benchmarks (

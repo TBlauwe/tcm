@@ -1,17 +1,17 @@
-# Module : Logging
+# Logging
 
-This module provides logging functions.
-
-
-## Description
-
-You can use the logging module as soon as `tcm.cmake` is included.
+__TCM__ provides some logging functions.
 Following variables will alter its behaviours:
 
 ```cmake
 set(TCM_VERBOSE ON) # Toggleable verbosity
 set(CMAKE_COLOR_DIAGNOSTICS  OFF) # Disable colors
 ```
+
+> [!note]
+> 
+> Tools like IDE should normally set `CMAKE_COLOR_DIAGNOSTICS` automatically.
+ 
 During setup:
 
 * If `CMAKE_MESSAGE_CONTEXT_SHOW` is not already set by the user, it defaults to `TRUE`.
@@ -51,6 +51,6 @@ tcm_section("SECTION")
 #    tcm_section_end() #OPTIONAL - Scoping rule will take care of this.
 # tcm_section_end() # OPTIONAL - Scoping rule will take care of this.
 ```
-![sample_documentation.png](/assets/sample_documentation.png)
+![sample_documentation.png](assets/sample_documentation.png)
 
 You can also use `tcm_indent()` and `tcm_outdent()` for indenting/outdenting messages.

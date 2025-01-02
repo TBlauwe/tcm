@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.26)
 project(TCM
         DESCRIPTION "A CMake module to share several functionalities used across C / C++ projects."
         HOMEPAGE_URL "https://github.com/TBlauwe/tcm"
-        VERSION 0.5.0
+        VERSION 1.0.0
 )
 
 # Guard against consumption.

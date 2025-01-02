@@ -1,4 +1,4 @@
-# Module : Tools
+# Tools
 
 __TCM__ ease the setup of some tools.
 
@@ -9,6 +9,7 @@ By default, the following are set up on include:
 You can override this behaviour by setting `TCM_TOOLS`
 
 >[!WARNING]
+> 
 > If __[CPM](https://github.com/cpm-cmake/CPM.cmake)__ is not set up, most functionality will be disabled !
 > (Unless, necessary libraries are already included, but you are on your own.)
 

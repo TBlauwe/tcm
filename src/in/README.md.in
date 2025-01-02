@@ -15,7 +15,7 @@ __TCM__ is a CMake module to reduce boilerplate and ease setup of some functiona
 * Configure examples with automated test and benchmarks.
 * and some other handy functions.
 
-See [documentation](TODO) for a closer look.
+See [documentation](https://tblauwe.github.io/tcm/) for a closer look.
 
 > [!NOTE]
 >
@@ -59,8 +59,8 @@ See [documentation](TODO) for a closer look.
  
 > [!NOTE]
 > __There is no "TCM over cmake-init" or any other templates, modules, etc.__
-> __TCM__ is an opinionated CMake module. Use functionalities you like and discard others without cluttering your code.
 > You can perfectly start a project with __[cmake-init](https://github.com/friendlyanon/cmake-init)__ and use some functionalities provided by __TCM__.
+> __TCM__ is an opinionated CMake module. Use functionalities you like and discard others without cluttering your code.
 
 
 ## Getting Started

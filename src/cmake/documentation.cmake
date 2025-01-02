@@ -47,7 +47,6 @@ function(tcm_setup_docs)
         tcm_info("Generating default layout file")
         file(WRITE ${DOXYGEN_LAYOUT_FILE} [=[@TCM_DOXYGEN_LAYOUT_FILE_DEFAULT@]=])
     endif ()
-    set(DOXYGEN_LAYOUT_FILE "")
 
     if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css")
         tcm_info("Generating custom css.")

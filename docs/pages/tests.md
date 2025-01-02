@@ -1,6 +1,6 @@
-# Module : Tests 
+# Tests 
 
-This module provides a single function for tests using __[Catch2](https://github.com/catchorg/Catch2)__.
+__TCM__ provides a single function for testing using __[Catch2](https://github.com/catchorg/Catch2)__.
 
 ```cmake
 tcm_tests (
@@ -25,5 +25,3 @@ If you wish to override __[Catch2](https://github.com/catchorg/Catch2)__, do the
 ```cmake
 tcm_setup_test(CATCH2_VERSION "vX.X.X")
 ```
-
-

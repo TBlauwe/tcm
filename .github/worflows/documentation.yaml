@@ -1,0 +1,98 @@
+# Simple workflow for deploying static content to GitHub Pages
+name:  Documentation build & deploy
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["master"]
+    paths:
+      - '**.c'
+      - '**.cpp'
+      - '**.h'
+      - '**.hpp'
+      - '**.cmake'
+      - '**/CMakeLists.txt'
+      - '.github/workflows/documentation.yaml'
+      - '**.md'
+
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  CPM_SOURCE_CACHE: ${{github.workspace}}/.cpm_cache
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Check file existence
+        id: check_files
+        uses: andstor/file-existence-action@v2
+        with:
+          files: 'CMakeLists.txt'
+
+      - name: "Cache CPM dependencies" 
+        if: steps.check_files.outputs.files_exists == 'true'
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CPM_SOURCE_CACHE }}
+          key: cpm-${{ hashFiles('**/*.cmake', '**/CMakeLists.txt') }}
+          enableCrossOsArchive: true
+
+      - name: Update
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: |
+          sudo apt-add-repository universe
+          sudo apt-get update
+
+      - uses: ssciwr/doxygen-install@v1
+        if: steps.check_files.outputs.files_exists == 'true'
+        with:
+          version: "1.12.0"
+
+      - name: Install dependencies
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: |
+          sudo apt-get install graphviz
+          pip3 install jinja2 Pygments
+
+      - name: Build
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: |
+          cmake -S . -B build
+          cmake --build build --target docs
+
+      - name: Setup Pages
+        if: steps.check_files.outputs.files_exists == 'true'
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        if: steps.check_files.outputs.files_exists == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './build/doxygen/html'
+
+      - name: Deploy to GitHub Pages
+        if: steps.check_files.outputs.files_exists == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4

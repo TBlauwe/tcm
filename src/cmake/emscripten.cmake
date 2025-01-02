@@ -5,19 +5,19 @@
 #-------------------------------------------------------------------------------
 #   Set default flags for a minimal emscripten setup with some overridable options.
 #
-function(tcm_target_setup_for_emscripten)
+function(tcm_target_setup_for_emscripten arg_TARGET)
     if(NOT EMSCRIPTEN)
         return()
     endif ()
 
     set(one_value_args
-            TARGET
             SHELL_FILE      # Override default shell file.
             PRELOAD_DIR     # Preload files inside directory.
             EMBED_DIR       # Embed files inside directory.
     )
-    cmake_parse_arguments(PARSE_ARGV 1 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm__ensure_target()
+
+    cmake_parse_arguments(PARSE_ARGV 1 arg "" "${one_value_args}" "")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "")
 
     tcm_default_value(arg_SHELL_FILE "${PROJECT_BINARY_DIR}/emscripten/shell_minimal.html")
     tcm__emscripten_generate_default_shell_file()

@@ -1,16 +1,8 @@
-# Module : Utility functions
+# Variables
 
 This module provides some useful variables.
+
 Credits : __[FIPS](https://github.com/floooh/fips)__
-
-## Setup
-
-No setup.
-
-
-## Side-effects
-
-Following variables are set :
 
 | Name                         | Description                                                                                                                                                          |
 |------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
