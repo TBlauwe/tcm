@@ -57,7 +57,7 @@ function(tcm_setup_docs)
     # --- Dependencies
     # ------------------------------------------------------------------------------
     # Doxygen is a documentation generator and static analysis tool for software source trees.
-    find_package(Doxygen REQUIRED dot QUIET)
+    find_package(Doxygen COMPONENTS dot QUIET)
     if(NOT Doxygen_FOUND)
         tcm_warn("Doxygen not found -> Skipping docs.")
         return()

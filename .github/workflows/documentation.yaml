@@ -39,20 +39,15 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+      preset: x64-clang-release
+      build_directory: ./out/build/${{env.preset}}
 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Check file existence
-        id: check_files
-        uses: andstor/file-existence-action@v2
-        with:
-          files: 'CMakeLists.txt'
-
-      - name: "Cache CPM dependencies" 
-        if: steps.check_files.outputs.files_exists == 'true'
+      - name: "Cache CPM dependencies"
         uses: actions/cache@v3
         with:
           path: ${{ env.CPM_SOURCE_CACHE }}
@@ -60,39 +55,32 @@ jobs:
           enableCrossOsArchive: true
 
       - name: Update
-        if: steps.check_files.outputs.files_exists == 'true'
         run: |
           sudo apt-add-repository universe
           sudo apt-get update
 
       - uses: ssciwr/doxygen-install@v1
-        if: steps.check_files.outputs.files_exists == 'true'
         with:
           version: "1.12.0"
 
       - name: Install dependencies
-        if: steps.check_files.outputs.files_exists == 'true'
         run: |
           sudo apt-get install graphviz
           pip3 install jinja2 Pygments
 
       - name: Build
-        if: steps.check_files.outputs.files_exists == 'true'
         run: |
-          cmake -S . -B build
-          cmake --build build --target docs
+          cmake --preset ${{env.preset}}
+          cmake --build ${{env.build_directory}} --target TCM_Documentation
 
       - name: Setup Pages
-        if: steps.check_files.outputs.files_exists == 'true'
         uses: actions/configure-pages@v4
 
       - name: Upload artifact
-        if: steps.check_files.outputs.files_exists == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './build/doxygen/html'
+          path: ${{env.build_directory}}/doxygen/html
 
       - name: Deploy to GitHub Pages
-        if: steps.check_files.outputs.files_exists == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
