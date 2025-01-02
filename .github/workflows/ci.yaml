@@ -30,23 +30,23 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        architecture: [x64]
         configuration: [release]
         toolchain: [clang, gnu]
-        include:
-          - os: windows-latest
-            toolchain: clang-cl
-          - os: windows-latest
-            toolchain: msvc
         exclude:
           - os: windows-latest
             toolchain: clang
           - os: windows-latest
             toolchain: gnu
+        include:
+          - os: windows-latest
+            toolchain: clang-cl
+          - os: windows-latest
+            toolchain: msvc
+          - architecture: x64
 
     env:
-      preset_name: ${{matrix.architecture}}-${{matrix.configuration}}-${{matrix.toolchain}}
-      build_directory: ./out/build/${{matrix.architecture}}-${{matrix.configuration}}-${{matrix.toolchain}}
+      preset_name: ${{matrix.architecture}}-${{matrix.toolchain}}-${{matrix.configuration}}
+      build_directory: ./out/build/${{matrix.architecture}}-${{matrix.toolchain}}-${{matrix.configuration}}
       CPM_SOURCE_CACHE: ${{github.workspace}}/.cpm_cache
 
     steps:
@@ -74,6 +74,4 @@ jobs:
           cmake --build ${{ env.build_directory }}
 
       - name: Run tests
-        working-directory: ${{ env.build_directory }}
-        run: |
-          ctest
+        run: ctest ${{ env.build_directory }}
