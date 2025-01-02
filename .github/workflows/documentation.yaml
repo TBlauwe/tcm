@@ -61,7 +61,7 @@ jobs:
           pip3 install jinja2 Pygments
 
       - id: build
-        uses: './github/workflows/build.yaml'
+        uses: './.github/actions/build'
         with:
           os: $${{ matrix.os }}
           configuration: $${{ matrix.configuration }}
