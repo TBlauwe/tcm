@@ -9,6 +9,9 @@
 extern "C" {
 #endif
 
+/**
+* A dummy function to return an int.
+*/
 int my_lib_value();
 
 #ifdef __cplusplus

@@ -5,6 +5,9 @@
 # ------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.26)
 
+get_property( TCM_INITIALIZED GLOBAL "" PROPERTY TPM_INITIALIZED SET)
+
+#If tcm is already initialized, just update logging module to set message context
 if(TCM_INITIALIZED)
     tcm__module_logging()
     return()
@@ -1039,9 +1042,6 @@ function(tcm__add_example arg_FILE arg_NAME)
     list(APPEND TARGETS ${target_name})
     set(TARGETS ${TARGETS} PARENT_SCOPE)
 
-    list(APPEND DOXYGEN_EXAMPLE_PATH ${arg_FILE})
-    set(DOXYGEN_EXAMPLE_PATH ${DOXYGEN_EXAMPLE_PATH} PARENT_SCOPE)
-
     if(NOT arg_WITH_BENCHMARK)
         tcm_log("Configuring example \"${target_name}\"")
         return()
@@ -1140,6 +1140,7 @@ function(tcm_examples)
 
     foreach (folder IN LISTS folders)
         file (GLOB_RECURSE examples CONFIGURE_DEPENDS RELATIVE ${folder} "${folder}/*.cpp" )
+        list(APPEND DOXYGEN_EXAMPLE_PATH ${folder})
         foreach (example IN LISTS examples)
             tcm__add_example(${folder}/${example} ${example})
         endforeach ()
@@ -1147,6 +1148,7 @@ function(tcm_examples)
 
     foreach (example IN LISTS files)
         file(REAL_PATH ${example} path)
+        list(APPEND DOXYGEN_EXAMPLE_PATH ${path})
         tcm__add_example(${path} ${example})
     endforeach ()
 
@@ -1950,7 +1952,7 @@ endfunction()
 # ------------------------------------------------------------------------------
 tcm__module_logging()
 
-set(TCM_INITIALIZED TRUE)
+set_property(GLOBAL PROPERTY TCM_INITIALIZED true)
 set(TCM_FILE "${CMAKE_CURRENT_LIST_FILE}" CACHE INTERNAL "")
 if(NOT DEFINED TCM_VERSION)
     set(TCM_VERSION 1.0.0 CACHE INTERNAL "")

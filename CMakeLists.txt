@@ -49,4 +49,3 @@ tcm_setup_docs(
         FILES docs/pages
         ASSETS assets
 )
-#todo add examples path to doxygen ?

@@ -56,6 +56,12 @@ See [documentation](https://tblauwe.github.io/tcm/) for a closer look.
 | Before | After modifying some examples |
 | --- | --- |
 | ![log_before.png](assets/log_before.png)| ![log_after.png](assets/log_after.png)|
+
+* On API misuse, error logs explain how to use it, e.g. with `test_func(A test B test ARGS)`
+ 
+| Before                                      |
+|---------------------------------------------|
+| ![log_before.png](assets/log_api_error.png) |
  
 > [!NOTE]
 > __There is no "TCM over cmake-init" or any other templates, modules, etc.__
@@ -95,7 +101,7 @@ wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/@PR
 
 ## TODO
 
-- [ ] Check if in some places, properties/var should be added to a target. are better suited 
+- [ ] Check if in some places, properties/var should be added to a target
 - [ ] Check user install and warn for missing tools
 - [ ] Install
 - [ ] Packing
