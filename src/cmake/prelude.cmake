@@ -1,4 +1,4 @@
-get_property( TCM_INITIALIZED GLOBAL "" PROPERTY TPM_INITIALIZED SET)
+get_property(TCM_INITIALIZED GLOBAL PROPERTY TCM_INITIALIZED SET)
 
 #If tcm is already initialized, just update logging module to set message context
 if(TCM_INITIALIZED)

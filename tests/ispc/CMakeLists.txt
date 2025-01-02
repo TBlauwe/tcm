@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.25)
 
+include(CheckLanguage)
+check_language(ISPC)
+if(NOT CMAKE_ISPC_COMPILER)
+    tcm_warn("CMake compiler not supported --> Skipping.")
+    return()
+endif ()
+
 project(TEST_ISPC LANGUAGES C CXX ISPC)
 
 include(../../cmake/tcm.cmake)
