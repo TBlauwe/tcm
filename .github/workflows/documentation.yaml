@@ -32,10 +32,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CPM_SOURCE_CACHE: ${{github.workspace}}/.cpm_cache
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm_cache
   preset: x64-clang-release
-  build_directory: ./out/build/${{env.preset}}
-  html_directory: ./out/build/${{env.preset}}/doxygen/html
+  build_directory: ./out/build/${{ env.preset }}
+  html_directory: ${{ env.build_directory }}/doxygen/html
 
 jobs:
   deploy:
@@ -71,8 +71,8 @@ jobs:
 
       - name: Build
         run: |
-          cmake --preset ${{env.preset}}
-          cmake --build ${{env.build_directory}} --target TCM_Documentation
+          cmake --preset ${{ env.preset }}
+          cmake --build ${{ env.build_directory }} --target TCM_Documentation
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -80,7 +80,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{env.html_directory}}
+          path: ${{ env.html_directory }}
 
       - name: Deploy to GitHub Pages
         id: deployment
