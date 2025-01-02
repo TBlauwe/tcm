@@ -3,9 +3,9 @@
 #      Author: TBlauwe
 # Description: @PROJECT_DESCRIPTION@
 # ------------------------------------------------------------------------------
-include_guard()
-
 cmake_minimum_required(VERSION @CMAKE_MINIMUM_REQUIRED_VERSION@)
+
+@TCM_PRELUDE_MIXIN@
 
 @TCM_OPTIONS_MIXIN@
 

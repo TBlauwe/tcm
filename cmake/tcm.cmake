@@ -3,9 +3,13 @@
 #      Author: TBlauwe
 # Description: A CMake module to share several functionalities used across C / C++ projects.
 # ------------------------------------------------------------------------------
-include_guard()
-
 cmake_minimum_required(VERSION 3.26)
+
+if(TCM_INITIALIZED)
+    tcm__module_logging()
+    return()
+endif ()
+
 
 # ------------------------------------------------------------------------------
 # --- OPTIONS
@@ -18,14 +22,6 @@ option(TCM_VERBOSE "Verbose messages during CMake runs"         ${PROJECT_IS_TOP
 #
 #   This module defines functions to improve UX by checking appropriate API usage.
 # ------------------------------------------------------------------------------
-
-
-#-------------------------------------------------------------------------------
-#   FOR INTERNAL USAGE: Make some assumptions (use `arg_TARGET`)
-#   Ensure target is set either as first argument or with `TARGET` keyword.
-#
-macro(tcm__ensure_target)
-endmacro()
 
 
 #-------------------------------------------------------------------------------
@@ -1954,6 +1950,7 @@ endfunction()
 # ------------------------------------------------------------------------------
 tcm__module_logging()
 
+set(TCM_INITIALIZED TRUE)
 set(TCM_FILE "${CMAKE_CURRENT_LIST_FILE}" CACHE INTERNAL "")
 if(NOT DEFINED TCM_VERSION)
     set(TCM_VERSION 1.0.0 CACHE INTERNAL "")
