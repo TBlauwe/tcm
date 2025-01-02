@@ -1,0 +1,46 @@
+name: "CI"
+
+on:
+  push:
+    branches: ["master"]
+    paths:
+      - '**.c'
+      - '**.cpp'
+      - '**.h'
+      - '**.hpp'
+      - '**.cmake'
+      - '**/CMakeLists.txt'
+      - '.github/workflows/ci.yaml'
+  pull_request:
+    paths:
+      - '**.c'
+      - '**.cpp'
+      - '**.h'
+      - '**.hpp'
+      - '**.cmake'
+      - '**/CMakeLists.txt'
+      - '.github/workflows/ci.yaml'
+
+jobs:
+  build:
+    name: "[${{matrix.os}}] : ${{matrix.architecture}}-${{matrix.toolchain}}-${{matrix.configuration}}"
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        configuration: [release]
+        architecture: [x64]
+        toolchain: [clang-cl, msvc]
+
+  steps:
+    - id: build
+      uses: './github/workflows/build.yaml'
+      with:
+        os: $${{ matrix.os }}
+        configuration: $${{ matrix.configuration }}
+        architecture: $${{ matrix.architecture }}
+        toolchain: $${{ matrix.toolchain }}
+    - name: 'Run tests'
+      run: ctest --test-dir ${{ steps.build.outputs.build_directory }}

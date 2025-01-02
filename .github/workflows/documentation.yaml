@@ -43,16 +43,6 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: "Cache CPM dependencies"
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.CPM_SOURCE_CACHE }}
-          key: cpm-${{ hashFiles('**/*.cmake', '**/CMakeLists.txt') }}
-          enableCrossOsArchive: true
-
       - name: Update
         run: |
           sudo apt-add-repository universe
@@ -67,13 +57,15 @@ jobs:
           sudo apt-get install graphviz
           pip3 install jinja2 Pygments
 
-      - name: "Install CMake and Ninja"
-        uses: lukka/get-cmake@latest
-
-      - name: Build
-        run: |
-          cmake --preset ${{ env.preset }}
-          cmake --build ./out/build/${{ env.preset }} --target TCM_Documentation
+      - id: build
+        uses: './github/workflows/build.yaml'
+        with:
+          os: $${{ matrix.os }}
+          configuration: $${{ matrix.configuration }}
+          architecture: $${{ matrix.architecture }}
+          toolchain: $${{ matrix.toolchain }}
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -81,7 +73,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out/build/${{ env.preset }}/doxygen/html
+          path: ${{ steps.build.outputs.build_directory }}/doxygen/html
 
       - name: Deploy to GitHub Pages
         id: deployment
