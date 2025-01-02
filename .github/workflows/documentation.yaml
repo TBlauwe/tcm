@@ -33,16 +33,15 @@ concurrency:
 
 env:
   CPM_SOURCE_CACHE: ${{github.workspace}}/.cpm_cache
+  preset: x64-clang-release
+  build_directory: ./out/build/${{env.preset}}
+  html_directory: ./out/build/${{env.preset}}/doxygen/html
 
 jobs:
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
-    env:
-      preset: x64-clang-release
-      build_directory: ./out/build/${{env.preset}}
 
     runs-on: ubuntu-latest
     steps:
@@ -81,7 +80,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{env.build_directory}}/doxygen/html
+          path: ${{env.html_directory}}
 
       - name: Deploy to GitHub Pages
         id: deployment
