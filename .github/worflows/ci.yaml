@@ -38,37 +38,42 @@ jobs:
             toolchain: clang-cl
           - os: windows-latest
             toolchain: msvc
+        exclude:
+          - os: windows-latest
+            toolchain: clang
+          - os: windows-latest
+            toolchain: gnu
 
     env:
-        preset_name: ${{matrix.architecture}}-${{matrix.configuration}}-${{matrix.toolchain}} 
-        build_directory: ./out/build/${{matrix.architecture}}-${{matrix.configuration}}-${{matrix.toolchain}} 
-        CPM_SOURCE_CACHE: ${{github.workspace}}/.cpm_cache
+      preset_name: ${{matrix.architecture}}-${{matrix.configuration}}-${{matrix.toolchain}}
+      build_directory: ./out/build/${{matrix.architecture}}-${{matrix.configuration}}-${{matrix.toolchain}}
+      CPM_SOURCE_CACHE: ${{github.workspace}}/.cpm_cache
 
     steps:
-    - name: "Checkout"
-      uses: actions/checkout@v3
+      - name: "Checkout"
+        uses: actions/checkout@v3
 
-    - name: "Cache CPM dependencies"
-      uses: actions/cache@v3
-      with:
-        path: ${{ env.CPM_SOURCE_CACHE }}
-        key: cpm-${{ hashFiles('**/*.cmake', '**/CMakeLists.txt') }}
-        enableCrossOsArchive: true
+      - name: "Cache CPM dependencies"
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CPM_SOURCE_CACHE }}
+          key: cpm-${{ hashFiles('**/*.cmake', '**/CMakeLists.txt') }}
+          enableCrossOsArchive: true
 
-    - name: "Install msvc"
-      if: ${{matrix.toolchain}} == msvc
-      uses: ilammy/msvc-dev-cmd@v1
+      - name: "Install msvc"
+        if: ${{matrix.toolchain}} == msvc
+        uses: ilammy/msvc-dev-cmd@v1
 
-    # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
-    - name: "Install CMake and Ninja"
-      uses: lukka/get-cmake@latest
+      # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
+      - name: "Install CMake and Ninja"
+        uses: lukka/get-cmake@latest
 
-    - name: Build
-      run: |
+      - name: Build
+        run: |
           cmake --preset ${{ env.preset_name }}
           cmake --build ${{ env.build_directory }}
 
-    - name: Run tests
-      working-directory: ${{ env.build_directory }}
-      run: |
+      - name: Run tests
+        working-directory: ${{ env.build_directory }}
+        run: |
           ctest
