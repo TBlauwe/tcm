@@ -120,12 +120,12 @@ function(tcm_setup_docs)
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION
     # ------------------------------------------------------------------------------
-    tcm_log("Configuring tcm_Documentation.")
-    doxygen_add_docs(tcm_Documentation ${arg_FILES})
+    tcm_log("Configuring ${PROJECT_NAME}_Documentation.")
+    doxygen_add_docs(${PROJECT_NAME}_Documentation ${arg_FILES})
 
     #TODO Maybe use DOXYGEN_IMAGE_PATH to let doxygen handle copying ? But what about others assets (is there) ?
     if(arg_ASSETS)
-        tcm_target_copy_assets(tcm_Documentation
+        tcm_target_copy_assets(${PROJECT_NAME}_Documentation
                 FILES ${arg_ASSETS}
                 OUTPUT_DIR "${DOXYGEN_OUTPUT_DIRECTORY}/html/assets"
         )
@@ -133,8 +133,8 @@ function(tcm_setup_docs)
     endif ()
 
     # Utility target to open docs
-    add_custom_target(tcm_Documentation_Open COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
+    add_custom_target(${PROJECT_NAME}_Documentation_Open COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
     set_target_properties(${target_name} PROPERTIES FOLDER "Utility")
-    add_dependencies(tcm_Documentation_Open tcm_Documentation)
+    add_dependencies(${PROJECT_NAME}_Documentation_Open ${PROJECT_NAME}_Documentation)
 
 endfunction()

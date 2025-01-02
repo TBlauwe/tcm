@@ -6,14 +6,6 @@
 
 
 #-------------------------------------------------------------------------------
-#   FOR INTERNAL USAGE: Make some assumptions (use `arg_TARGET`)
-#   Ensure target is set either as first argument or with `TARGET` keyword.
-#
-macro(tcm__ensure_target)
-endmacro()
-
-
-#-------------------------------------------------------------------------------
 #   FOR INTERNAL USAGE : It should only be used by `tcm_function_parse_args(...)`.
 #
 #   Print argument correct usage.

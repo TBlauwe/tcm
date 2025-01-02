@@ -16,7 +16,7 @@ You shouldn't use it for "complex" examples, where some .cpp files do not provid
 - Each example is added to CTest
 - Each example executable is outputted to ${TCM_EXE_DIR}/examples.
 
-If `WITH_BENCHMARK` is passed, then each example will be added to default target `tcm_Benchmarks`.
+If `WITH_BENCHMARK` is passed, then each example will be added to default target `${PROJECT_NAME}_Benchmarks`.
 For this to work, some source manipulation is done.
 A new source file is created, where the entry point, `main()`, (must take no arguments !) is replaced to a standalone function.
 The new source file call the newly function inside a benchmarkable boilerplate.

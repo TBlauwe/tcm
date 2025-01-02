@@ -23,6 +23,9 @@ function(tcm__add_example arg_FILE arg_NAME)
     list(APPEND TARGETS ${target_name})
     set(TARGETS ${TARGETS} PARENT_SCOPE)
 
+    list(APPEND DOXYGEN_EXAMPLE_PATH ${arg_FILE})
+    set(DOXYGEN_EXAMPLE_PATH ${DOXYGEN_EXAMPLE_PATH} PARENT_SCOPE)
+
     if(NOT arg_WITH_BENCHMARK)
         tcm_log("Configuring example \"${target_name}\"")
         return()
@@ -67,6 +70,7 @@ BENCHMARK(BM_example_${target_name});
         file(WRITE ${benchmark_file} "${file_content}")
     endif ()
     tcm_benchmarks(FILES ${benchmark_file})
+    target_link_libraries(${PROJECT_NAME}_Benchmarks PUBLIC ${arg_INTERFACE})
 
     tcm_log("Configuring example \"${target_name}\" (w/ benchmark)")
 endfunction()
@@ -105,7 +109,6 @@ function(tcm_examples)
     tcm_setup_test()
     if(arg_WITH_BENCHMARK)
         tcm_setup_benchmark()
-        target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
     endif ()
 
     tcm_section("Examples")
@@ -132,4 +135,5 @@ function(tcm_examples)
     endforeach ()
 
     set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
+    set(DOXYGEN_EXAMPLE_PATH ${DOXYGEN_EXAMPLE_PATH} PARENT_SCOPE)
 endfunction()

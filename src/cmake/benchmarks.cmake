@@ -51,7 +51,7 @@ function(tcm_benchmarks)
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
     tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "${multi_value_args}" "${required_args}")
-    tcm_default_value(arg_NAME "tcm_Benchmarks")
+    tcm_default_value(arg_NAME "${PROJECT_NAME}_Benchmarks")
 
     tcm_setup_benchmark()
     tcm_section("Benchmarks")

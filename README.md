@@ -75,7 +75,7 @@ You can either:
 * download or copy `get_tcm.cmake`, a script to easily download and update `tcm.cmake` through cmake.
  
 ```cmake
-set(TCM_DOWNLOAD_VERSION 0.5.0)
+set(TCM_DOWNLOAD_VERSION 1.0.0)
 include(cmake/get_tcm.cmake)
 ```
 
@@ -88,8 +88,8 @@ include(cmake/tcm.cmake)
 These two files are also available at these URLS :
 
 ```
-wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.5.0/tcm.cmake
-wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/0.5.0/get_tcm.cmake
+wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/1.0.0/tcm.cmake
+wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/1.0.0/get_tcm.cmake
 ```
 
 

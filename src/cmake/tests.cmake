@@ -46,7 +46,7 @@ function(tcm_tests)
     set(one_value_args NAME)
     set(multi_value_args FILES)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm_default_value(arg_NAME "tcm_Tests")
+    tcm_default_value(arg_NAME "${PROJECT_NAME}_Tests")
 
     tcm_setup_test()
     tcm_section("Tests")

@@ -928,7 +928,7 @@ function(tcm_benchmarks)
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
     tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "${multi_value_args}" "${required_args}")
-    tcm_default_value(arg_NAME "tcm_Benchmarks")
+    tcm_default_value(arg_NAME "${PROJECT_NAME}_Benchmarks")
 
     tcm_setup_benchmark()
     tcm_section("Benchmarks")
@@ -999,7 +999,7 @@ function(tcm_tests)
     set(one_value_args NAME)
     set(multi_value_args FILES)
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm_default_value(arg_NAME "tcm_Tests")
+    tcm_default_value(arg_NAME "${PROJECT_NAME}_Tests")
 
     tcm_setup_test()
     tcm_section("Tests")
@@ -1042,6 +1042,9 @@ function(tcm__add_example arg_FILE arg_NAME)
 
     list(APPEND TARGETS ${target_name})
     set(TARGETS ${TARGETS} PARENT_SCOPE)
+
+    list(APPEND DOXYGEN_EXAMPLE_PATH ${arg_FILE})
+    set(DOXYGEN_EXAMPLE_PATH ${DOXYGEN_EXAMPLE_PATH} PARENT_SCOPE)
 
     if(NOT arg_WITH_BENCHMARK)
         tcm_log("Configuring example \"${target_name}\"")
@@ -1087,6 +1090,7 @@ BENCHMARK(BM_example_${target_name});
         file(WRITE ${benchmark_file} "${file_content}")
     endif ()
     tcm_benchmarks(FILES ${benchmark_file})
+    target_link_libraries(${PROJECT_NAME}_Benchmarks PUBLIC ${arg_INTERFACE})
 
     tcm_log("Configuring example \"${target_name}\" (w/ benchmark)")
 endfunction()
@@ -1125,7 +1129,6 @@ function(tcm_examples)
     tcm_setup_test()
     if(arg_WITH_BENCHMARK)
         tcm_setup_benchmark()
-        target_link_libraries(tcm_Benchmarks PUBLIC ${arg_INTERFACE})
     endif ()
 
     tcm_section("Examples")
@@ -1152,6 +1155,7 @@ function(tcm_examples)
     endforeach ()
 
     set(TCM_EXAMPLE_TARGETS ${TARGETS} PARENT_SCOPE)
+    set(DOXYGEN_EXAMPLE_PATH ${DOXYGEN_EXAMPLE_PATH} PARENT_SCOPE)
 endfunction()
 
 
@@ -1751,7 +1755,6 @@ $generatedby&#160;<a href="https://www.doxygen.org/index.html"><img class="foote
 </doxygenlayout>
 ]=])
     endif ()
-    set(DOXYGEN_LAYOUT_FILE "")
 
     if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/doxygen/custom.css")
         tcm_info("Generating custom css.")
@@ -1926,12 +1929,12 @@ html.light-mode #projectlogo img {
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION
     # ------------------------------------------------------------------------------
-    tcm_log("Configuring tcm_Documentation.")
-    doxygen_add_docs(tcm_Documentation ${arg_FILES})
+    tcm_log("Configuring ${PROJECT_NAME}_Documentation.")
+    doxygen_add_docs(${PROJECT_NAME}_Documentation ${arg_FILES})
 
     #TODO Maybe use DOXYGEN_IMAGE_PATH to let doxygen handle copying ? But what about others assets (is there) ?
     if(arg_ASSETS)
-        tcm_target_copy_assets(tcm_Documentation
+        tcm_target_copy_assets(${PROJECT_NAME}_Documentation
                 FILES ${arg_ASSETS}
                 OUTPUT_DIR "${DOXYGEN_OUTPUT_DIRECTORY}/html/assets"
         )
@@ -1939,9 +1942,9 @@ html.light-mode #projectlogo img {
     endif ()
 
     # Utility target to open docs
-    add_custom_target(tcm_Documentation_Open COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
+    add_custom_target(${PROJECT_NAME}_Documentation_Open COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")
     set_target_properties(${target_name} PROPERTIES FOLDER "Utility")
-    add_dependencies(tcm_Documentation_Open tcm_Documentation)
+    add_dependencies(${PROJECT_NAME}_Documentation_Open ${PROJECT_NAME}_Documentation)
 
 endfunction()
 
@@ -1953,7 +1956,7 @@ tcm__module_logging()
 
 set(TCM_FILE "${CMAKE_CURRENT_LIST_FILE}" CACHE INTERNAL "")
 if(NOT DEFINED TCM_VERSION)
-    set(TCM_VERSION 0.5.0 CACHE INTERNAL "")
+    set(TCM_VERSION 1.0.0 CACHE INTERNAL "")
     tcm_info("TCM Version: ${TCM_VERSION}")
 endif ()
 

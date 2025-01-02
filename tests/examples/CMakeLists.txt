@@ -13,3 +13,4 @@ add_library(ExampleInterface INTERFACE)
 target_link_libraries(ExampleInterface INTERFACE MyLib)
 
 tcm_examples(FILES examples WITH_BENCHMARK INTERFACE ExampleInterface)
+tcm_setup_docs()
