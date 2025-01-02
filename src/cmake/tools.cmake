@@ -29,15 +29,15 @@ macro(tcm__setup_cpm)
                     ${CPM_DOWNLOAD_LOCATION}
                     STATUS DOWNLOAD_STATUS
             )
-        endif()
-        list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-        list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
-        if(NOT ${STATUS_CODE} EQUAL 0) # Check if download was successful.
-            # Exit CMake if the download failed, printing the error message.
-            tcm_error("Failed to download ${CPM.cmake}. Error ${STATUS_CODE}: ${ERROR_MESSAGE}")
-            file(REMOVE ${CPM_DOWNLOAD_LOCATION}) # Prevent empty file if download failed.
-        else ()
-            tcm_info("CPM: ${CPM_DOWNLOAD_LOCATION}")
+            list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+            list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
+            if(NOT ${STATUS_CODE} EQUAL 0) # Check if download was successful.
+                # Exit CMake if the download failed, printing the error message.
+                tcm_error("Failed to download CPM.cmake with error ${STATUS_CODE}: ${ERROR_MESSAGE}")
+                file(REMOVE ${CPM_DOWNLOAD_LOCATION}) # Prevent empty file if download failed.
+            else ()
+                tcm_info("CPM: ${CPM_DOWNLOAD_LOCATION}")
+            endif()
         endif()
         include(${CPM_DOWNLOAD_LOCATION})
     else ()
