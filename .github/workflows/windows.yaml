@@ -10,7 +10,7 @@ on:
       - '**.hpp'
       - '**.cmake'
       - '**/CMakeLists.txt'
-      - '.github/workflows/ci.yaml'
+      - '.github/workflows/windows.yaml'
   pull_request:
     paths:
       - '**.c'
@@ -19,7 +19,7 @@ on:
       - '**.hpp'
       - '**.cmake'
       - '**/CMakeLists.txt'
-      - '.github/workflows/ci.yaml'
+      - '.github/workflows/windows.yaml'
 
 jobs:
   build:
@@ -34,17 +34,17 @@ jobs:
         architecture: [x64]
         toolchain: [clang-cl, msvc]
 
-  steps:
-    - name: 'Checkout'
-      uses: actions/checkout@v4
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
 
-    - id: build
-      uses: './.github/actions/build'
-      with:
-        os: $${{ matrix.os }}
-        configuration: $${{ matrix.configuration }}
-        architecture: $${{ matrix.architecture }}
-        toolchain: $${{ matrix.toolchain }}
+      - id: build
+        uses: './.github/actions/build'
+        with:
+          os: $${{ matrix.os }}
+          configuration: $${{ matrix.configuration }}
+          architecture: $${{ matrix.architecture }}
+          toolchain: $${{ matrix.toolchain }}
 
-    - name: 'Run tests'
-      run: ctest --test-dir ${{ steps.build.outputs.build_directory }}
+      - name: 'Run tests'
+        run: ctest --test-dir ${{ steps.build.outputs.build_directory }}
