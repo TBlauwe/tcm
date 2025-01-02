@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 #        File: tcm.cmake
 #      Author: TBlauwe
-# Description: A CMake module to share several functionalities used across C / C++ projects.
+# Description: A CMake module to reduce boilerplate
 # ------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.26)
 
@@ -709,15 +709,15 @@ macro(tcm__setup_cpm)
                     ${CPM_DOWNLOAD_LOCATION}
                     STATUS DOWNLOAD_STATUS
             )
-        endif()
-        list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-        list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
-        if(NOT ${STATUS_CODE} EQUAL 0) # Check if download was successful.
-            # Exit CMake if the download failed, printing the error message.
-            tcm_error("Failed to download ${CPM.cmake}. Error ${STATUS_CODE}: ${ERROR_MESSAGE}")
-            file(REMOVE ${CPM_DOWNLOAD_LOCATION}) # Prevent empty file if download failed.
-        else ()
-            tcm_info("CPM: ${CPM_DOWNLOAD_LOCATION}")
+            list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+            list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
+            if(NOT ${STATUS_CODE} EQUAL 0) # Check if download was successful.
+                # Exit CMake if the download failed, printing the error message.
+                tcm_error("Failed to download CPM.cmake with error ${STATUS_CODE}: ${ERROR_MESSAGE}")
+                file(REMOVE ${CPM_DOWNLOAD_LOCATION}) # Prevent empty file if download failed.
+            else ()
+                tcm_info("CPM: ${CPM_DOWNLOAD_LOCATION}")
+            endif()
         endif()
         include(${CPM_DOWNLOAD_LOCATION})
     else ()
@@ -1339,7 +1339,19 @@ function(tcm_setup_docs)
     cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
     tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "$" "${one_value_args}" "${multi_value_args}" "")
 
+    # ------------------------------------------------------------------------------
+    # --- Fail fast if doxygen is not here
+    # ------------------------------------------------------------------------------
     tcm_section("Documentation")
+
+    # Doxygen is a documentation generator and static analysis tool for software source trees.
+    find_package(Doxygen COMPONENTS dot QUIET)
+    if(NOT Doxygen_FOUND)
+        tcm_warn("Doxygen not found -> Skipping docs.")
+        return()
+    endif()
+
+
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
@@ -1874,12 +1886,7 @@ html.light-mode #projectlogo img {
     # ------------------------------------------------------------------------------
     # --- Dependencies
     # ------------------------------------------------------------------------------
-    # Doxygen is a documentation generator and static analysis tool for software source trees.
-    find_package(Doxygen COMPONENTS dot QUIET)
-    if(NOT Doxygen_FOUND)
-        tcm_warn("Doxygen not found -> Skipping docs.")
-        return()
-    endif()
+
 
     # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
     tcm_silence_cpm_package(DOXYGEN_AWESOME_CSS)

@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 3.26)
 
 project(TCM
-        DESCRIPTION "A CMake module to share several functionalities used across C / C++ projects."
+        DESCRIPTION "A CMake module to reduce boilerplate"
         HOMEPAGE_URL "https://github.com/TBlauwe/tcm"
         VERSION 1.0.0
 )
@@ -45,6 +45,7 @@ else()
     add_subdirectory(tests/emscripten)
 endif ()
 
+set(DOXYGEN_PROJECT_LOGO ${PROJECT_SOURCE_DIR}/assets/logo_small_dark.png)
 tcm_setup_docs(
         FILES docs/pages
         ASSETS assets

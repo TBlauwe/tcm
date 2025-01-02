@@ -1,6 +1,11 @@
 # TCM - A CMake Module
 
 ![CMake](https://img.shields.io/badge/CMake%20%3E%3D%203.26-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
+[![Version](https://img.shields.io/github/v/release/TBlauwe/tcm?include_prereleases&style=for-the-badge)](https://github.com/TBlauwe/tcm/releases)
+[![MIT](https://img.shields.io/badge/license-The%20Unlicense-blue.svg?style=for-the-badge)](https://github.com/TBlauwe/tcm/blob/master/LICENSE)
+[![Documentation link](https://img.shields.io/badge/Docs-blue?logo=readthedocs&logoColor=white&style=for-the-badge)](https://TBlauwe.github.io/tcm/)
+
+![CI](https://img.shields.io/github/actions/workflow/status/TBlauwe/tcm/ci.yaml?style=flat-square&logo=windows10&label=CI)
 
 __TCM__ is a CMake module to reduce boilerplate and ease setup of some functionalities.
 
