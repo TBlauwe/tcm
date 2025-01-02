@@ -67,6 +67,9 @@ jobs:
           sudo apt-get install graphviz
           pip3 install jinja2 Pygments
 
+      - name: "Install CMake and Ninja"
+        uses: lukka/get-cmake@latest
+
       - name: Build
         run: |
           cmake --preset ${{ env.preset }}
