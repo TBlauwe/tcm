@@ -39,6 +39,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+      preset: x64-clang-release
+      build_directory: ./out/build/${{env.preset}}
 
     env:
       preset: x64-clang-release
