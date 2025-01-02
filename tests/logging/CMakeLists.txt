@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 
 project(TEST_Logging)
 
-set(TCM_DOWNLOAD_VERSION 1.0.0)
+set(TCM_DOWNLOAD_VERSION "master")
 include(../../cmake/get_tcm.cmake)
 
 #tcm_fatal_error("Error message")

@@ -25,9 +25,20 @@ macro(tcm__setup_cpm)
 
         if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
             tcm_info("Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
-            file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake ${CPM_DOWNLOAD_LOCATION})
+            file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake
+                    ${CPM_DOWNLOAD_LOCATION}
+                    STATUS DOWNLOAD_STATUS
+            )
         endif()
-        tcm_info("CPM: ${CPM_DOWNLOAD_LOCATION}")
+        list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+        list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
+        if(NOT ${STATUS_CODE} EQUAL 0) # Check if download was successful.
+            # Exit CMake if the download failed, printing the error message.
+            tcm_error("Failed to download ${CPM.cmake}. Error ${STATUS_CODE}: ${ERROR_MESSAGE}")
+            file(REMOVE ${CPM_DOWNLOAD_LOCATION}) # Prevent empty file if download failed.
+        else ()
+            tcm_info("CPM: ${CPM_DOWNLOAD_LOCATION}")
+        endif()
         include(${CPM_DOWNLOAD_LOCATION})
     else ()
         tcm_debug("CPM: ${CPM_FILE}")
