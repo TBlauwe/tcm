@@ -35,6 +35,9 @@ jobs:
         toolchain: [clang-cl, msvc]
 
   steps:
+    - name: 'Checkout'
+      uses: actions/checkout@v4
+
     - id: build
       uses: './github/workflows/build.yaml'
       with:

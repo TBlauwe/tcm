@@ -28,9 +28,6 @@ env:
 runs:
   using: "composite"
   steps:
-    - name: "Checkout"
-      uses: actions/checkout@v4
-
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
