@@ -186,7 +186,7 @@ endmacro()
 #   Restore previous message log level.
 #
 macro(tcm_restore_message_log_level)
-    if(DEFINED ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
+    if(DEFINED PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL)
         set(CMAKE_MESSAGE_LOG_LEVEL ${PREVIOUS_CMAKE_MESSAGE_LOG_LEVEL})
     endif ()
 endmacro()

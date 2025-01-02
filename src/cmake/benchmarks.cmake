@@ -27,7 +27,7 @@ function(tcm_setup_benchmark)
                 "BENCHMARK_INSTALL_DOCS OFF"
         )
         tcm_restore_message_log_level()
-        if(NOT benchmark_ADDED)
+        if(NOT benchmark_SOURCE_DIR)
             tcm_warn("Couldn't find and install google benchmark (using CPM) --> Skipping benchmark.")
             return()
         endif ()

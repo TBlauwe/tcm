@@ -71,7 +71,7 @@ function(tcm_setup_docs)
             GITHUB_REPOSITORY jothepro/doxygen-awesome-css
     )
     tcm_restore_message_log_level()
-    if(NOT DOXYGEN_AWESOME_CSS_ADDED)
+    if(NOT DOXYGEN_AWESOME_CSS_SOURCE_DIR)
         tcm_warn("Could not add DOXYGEN_AWESOME_CSS -> Skipping docs.")
         return()
     endif()

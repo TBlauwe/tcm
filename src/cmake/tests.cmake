@@ -25,7 +25,7 @@ function(tcm_setup_test)
                 GITHUB_REPOSITORY catchorg/Catch2
         )
         tcm_restore_message_log_level()
-        if(NOT Catch2_ADDED)
+        if(NOT Catch2_SOURCE_DIR)
             tcm_warn("failed. Couldn't find and install Catch2 (using CPM) --> Skipping tests.")
             return()
         endif ()
