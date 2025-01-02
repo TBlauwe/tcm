@@ -15,7 +15,19 @@ function(tcm_setup_docs)
     cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
     tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "$" "${one_value_args}" "${multi_value_args}" "")
 
+    # ------------------------------------------------------------------------------
+    # --- Fail fast if doxygen is not here
+    # ------------------------------------------------------------------------------
     tcm_section("Documentation")
+
+    # Doxygen is a documentation generator and static analysis tool for software source trees.
+    find_package(Doxygen COMPONENTS dot QUIET)
+    if(NOT Doxygen_FOUND)
+        tcm_warn("Doxygen not found -> Skipping docs.")
+        return()
+    endif()
+
+
     # ------------------------------------------------------------------------------
     # --- Default values
     # ------------------------------------------------------------------------------
@@ -56,12 +68,7 @@ function(tcm_setup_docs)
     # ------------------------------------------------------------------------------
     # --- Dependencies
     # ------------------------------------------------------------------------------
-    # Doxygen is a documentation generator and static analysis tool for software source trees.
-    find_package(Doxygen COMPONENTS dot QUIET)
-    if(NOT Doxygen_FOUND)
-        tcm_warn("Doxygen not found -> Skipping docs.")
-        return()
-    endif()
+
 
     # Doxygen awesome CSS is a custom CSS theme for doxygen html-documentation with lots of customization parameters.
     tcm_silence_cpm_package(DOXYGEN_AWESOME_CSS)
