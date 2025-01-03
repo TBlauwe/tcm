@@ -31,12 +31,10 @@ runs:
   steps:
     - name: "Set variables"
       id: vars
-      env:
-        INPUT_PRESET_NAME: ${{ inputs.architecture }}-${{ inputs.configuration }}-${{ inputs.toolchain }}
       shell: bash
       run: |
-          echo "preset_name=$INPUT_PRESET_NAME" >> "${GITHUB_OUTPUT}"
-          echo "build_directory=./out/build/$INPUT_PRESET_NAME" >> "${GITHUB_OUTPUT}"
+          echo "preset_name=${{inputs.architecture }}-${{ inputs.configuration }}-${{ inputs.toolchain }}" >> "${GITHUB_OUTPUT}"
+          echo "build_directory=./out/build/${{inputs.architecture }}-${{ inputs.configuration }}-${{ inputs.toolchain }}" >> "${GITHUB_OUTPUT}"
 
     - name: "CCache"
       uses: hendrikmuhs/ccache-action@v1.2
