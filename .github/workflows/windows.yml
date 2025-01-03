@@ -41,7 +41,9 @@ jobs:
 
     steps:
         - uses: actions/checkout@v4
-        - id: build
+
+        - name: Build
+          id: build
           uses: './.github/actions/build'
           with:
             cpm_source_cache: ${{ env.CPM_SOURCE_CACHE }}
@@ -49,6 +51,7 @@ jobs:
             configuration: $${{ matrix.configuration }}
             architecture: $${{ matrix.architecture }}
             toolchain: $${{ matrix.toolchain }}
+
         - name: CTest
           working-directory: ${{steps.build.outputs.build_directory}}
           run: ctest

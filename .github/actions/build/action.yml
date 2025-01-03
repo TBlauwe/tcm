@@ -40,7 +40,7 @@ runs:
           echo "preset_name=${{inputs.architecture}}-${{inputs.toolchain}}-${{inputs.configuration}}" >> "${GITHUB_OUTPUT}"
           echo "build_directory=./out/build/${{inputs.architecture}}-${{inputs.toolchain}}-${{inputs.configuration}}" >> "${GITHUB_OUTPUT}"
 
-    - name: ccache
+    - name: "CCache"
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{ steps.vars.outputs.preset_name }}
@@ -59,7 +59,8 @@ runs:
     - name: "Install CMake and Ninja"
       uses: lukka/get-cmake@latest
 
-    - name: Build
+    - name: "Build"
+      shell: bash
       run: |
         cmake --preset ${{ steps.vars.outputs.preset_name }}
         cmake --build ${{ steps.vars.outputs.build_directory }}
