@@ -50,5 +50,5 @@ jobs:
             architecture: $${{ matrix.architecture }}
             toolchain: $${{ matrix.toolchain }}
         - name: CTest
-          working-directory: ${{build.outputs.build_directory}}
+          working-directory: ${{steps.build.outputs.build_directory}}
           run: ctest
