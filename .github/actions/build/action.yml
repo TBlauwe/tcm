@@ -1,9 +1,6 @@
 name: 'Build'
 description: 'Composite action to build this cmake project'
 inputs:
-  cpm_source_cache:
-    required: true
-    type: string
   architecture:
     description: 'System architecture'
     required: true
@@ -45,7 +42,7 @@ runs:
     - name: "Cache CPM dependencies"
       uses: actions/cache@v4
       with:
-        path: ${{ inputs.cpm_source_cache }}
+        path: ${{ env.CPM_SOURCE_CACHE }}
         key: cpm-${{ hashFiles('**/*.cmake', '**/CMakeLists.txt') }}
         enableCrossOsArchive: true
 
