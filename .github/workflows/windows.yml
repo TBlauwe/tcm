@@ -21,9 +21,12 @@ on:
       - '**/CMakeLists.txt'
       - '.github/workflows/windows.yaml'
 
+env:
+  CPM_SOURCE_PACKAGE:'./.cpm_cache'
+
 jobs:
   build:
-    name: "[${{matrix.os}}] : ${{matrix.architecture}}-${{matrix.toolchain}}-${{matrix.configuration}}"
+    name: 'Build and Test ${{matrix.architecture}}-${{matrix.toolchain}}-${{matrix.configuration}}'
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -35,16 +38,15 @@ jobs:
         toolchain: [clang-cl, msvc]
 
     steps:
-      - name: 'Checkout'
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - id: build
         uses: './.github/actions/build'
         with:
+          cpm_source_cache: ${{ env.CPM_SOURCE_CACHE }}
           os: $${{ matrix.os }}
           configuration: $${{ matrix.configuration }}
           architecture: $${{ matrix.architecture }}
           toolchain: $${{ matrix.toolchain }}
-
-      - name: 'Run tests'
-        run: ctest --test-dir ${{ steps.build.outputs.build_directory }}
+      - name: CTest
+        working-directory: ${{build.outputs.build_directory}}
+        run: ctest

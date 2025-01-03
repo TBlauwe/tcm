@@ -1,6 +1,10 @@
 name: 'Build'
 description: 'Composite action to build this cmake project'
 inputs:
+  cpm_source_cache:
+    description: 'Where to store cpm downloads.'
+    required: true
+    type: string
   os:
     description: 'Operating system'
     required: true
@@ -22,24 +26,29 @@ inputs:
     type: string
 outputs:
   build_directory:
-    value: './out/build/${{inputs.architecture}}-${{inputs.toolchain}}-${{inputs.configuration}}'
+    value: ${{steps.vars.outputs.build_directory}}
+  preset_name:
+    value: ${{steps.vars.outputs.preset_name}}
 
 runs:
   using: "composite"
-  env:
-    preset_name: '${{inputs.architecture}}-${{inputs.toolchain}}-${{inputs.configuration}}'
-    build_directory: './out/build/${{inputs.architecture}}-${{inputs.toolchain}}-${{inputs.configuration}}'
-    CPM_SOURCE_CACHE: './.cpm_cache'
   steps:
+    - name: "Set variables"
+      id: vars
+      shell: bash
+      run: |
+          echo "preset_name=${{inputs.architecture}}-${{inputs.toolchain}}-${{inputs.configuration}}" >> "${GITHUB_OUTPUT}"
+          echo "build_directory=./out/build/${{inputs.architecture}}-${{inputs.toolchain}}-${{inputs.configuration}}" >> "${GITHUB_OUTPUT}"
+
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
-        key: ${{ env.preset_name }}
+        key: ${{ steps.vars.outputs.preset_name }}
 
     - name: "Cache CPM dependencies"
       uses: actions/cache@v4
       with:
-        path: ${{ env.CPM_SOURCE_CACHE }}
+        path: ${{ inputs.cpm_source_cache }}
         key: cpm-${{ hashFiles('**/*.cmake', '**/CMakeLists.txt') }}
         enableCrossOsArchive: true
 
@@ -52,5 +61,5 @@ runs:
 
     - name: Build
       run: |
-        cmake --preset ${{ env.preset_name }}
-        cmake --build ${{ env.build_directory }}
+        cmake --preset ${{ steps.vars.outputs.preset_name }}
+        cmake --build ${{ steps.vars.outputs.build_directory }}
