@@ -41,17 +41,17 @@ jobs:
       CPM_SOURCE_CACHE: './.cpm_cache'
 
     steps:
-        - name: "Checkout"
-          uses: actions/checkout@v4
+      - name: "Checkout"
+        uses: actions/checkout@v4
 
-        - name: Build
-          id: build
-          uses: './.github/actions/build'
-          with:
-            configuration: ${{ matrix.configuration }}
-            architecture: ${{ matrix.architecture }}
-            toolchain: ${{ matrix.toolchain }}
+      - name: Build
+        id: build
+        uses: './.github/actions/build'
+        with:
+          configuration: ${{ matrix.configuration }}
+          architecture: ${{ matrix.architecture }}
+          toolchain: ${{ matrix.toolchain }}
 
-        - name: CTest
-          working-directory: ${{steps.build.outputs.build_directory}}
-          run: ctest
+      - name: CTest
+        working-directory: ${{steps.build.outputs.build_directory}}
+        run: ctest

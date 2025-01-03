@@ -16,24 +16,25 @@ inputs:
     required: true
     type: string
 outputs:
-  build_directory: ${{ steps.variables.outputs.build_directory }}
+  build_directory:
+    value: ${{ steps.variables.outputs.build_directory }}
 
 runs:
   using: "composite"
   steps:
-    - name: "Set variables"
+    - name: "Set up variables"
       id: variables
       shell: bash
       run: |
         echo "preset_name=${{ inputs.architecture }}-${{ inputs.toolchain }}-${{ inputs.configuration }}" >> $GITHUB_OUTPUT
         echo "build_directory=./out/build/${{ inputs.architecture }}-${{ inputs.toolchain }}-${{ inputs.configuration }}" >> $GITHUB_OUTPUT
 
-    - name: "CCache"
+    - name: "Set up CCache"
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{ steps.variables.outputs.preset_name }}
 
-    - name: "Cache CPM dependencies"
+    - name: "Set up CPM's dependencies cache"
       uses: actions/cache@v4
       with:
         path: ${{ env.CPM_SOURCE_CACHE }}
