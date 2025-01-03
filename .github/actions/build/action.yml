@@ -4,10 +4,6 @@ inputs:
   cpm_source_cache:
     required: true
     type: string
-  preset:
-    description: 'Cmake preset'
-    required: true
-    type: string
   architecture:
     description: 'System architecture'
     required: true
@@ -22,20 +18,22 @@ inputs:
     description: 'Compiler toolchain'
     required: true
     type: string
-outputs:
-  preset_name:
-    value: ${{ inputs.architecture }}-${{ inputs.toolchain }}-${{ inputs.configuration }}
-  build_directory:
-    value: ./out/build/${{ inputs.architecture }}-${{ inputs.toolchain }}-${{ inputs.configuration }}
 
 
 runs:
   using: "composite"
   steps:
+    - name: "Set variables"
+      id: variables
+      shell: bash
+      run: |
+        echo "preset_name=${{ inputs.architecture }}-${{ inputs.toolchain }}-${{ inputs.configuration }}" >> $GITHUB_OUTPUT
+        echo "build_directory=./out/build/${{ inputs.architecture }}-${{ inputs.toolchain }}-${{ inputs.configuration }}" >> $GITHUB_OUTPUT
+
     - name: "CCache"
       uses: hendrikmuhs/ccache-action@v1.2
       with:
-        key: ${{ outputs.preset_name }}
+        key: ${{ steps.variables.outputs.preset_name }}
 
     - name: "Cache CPM dependencies"
       uses: actions/cache@v4
@@ -54,5 +52,5 @@ runs:
     - name: "Build"
       shell: bash
       run: |
-        cmake --preset ${{ outputs.preset_name }}
-        cmake --build ${{ outputs.build_directory }}
+        cmake --preset ${{ steps.variables.outputs.preset_name }}
+        cmake --build ${{ steps.variables.outputs.build_directory }}
