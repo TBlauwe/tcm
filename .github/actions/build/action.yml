@@ -30,6 +30,13 @@ runs:
         echo "preset_name=${{ inputs.architecture }}-${{ inputs.toolchain }}-${{ inputs.configuration }}" >> $GITHUB_OUTPUT
         echo "build_directory=./out/build/${{ inputs.architecture }}-${{ inputs.toolchain }}-${{ inputs.configuration }}" >> $GITHUB_OUTPUT
 
+    - name: "Echo variables"
+      shell: bash
+      run: |
+        echo "preset_name: ${{ steps.variables.outputs.preset_name }}"
+        echo "build_directory: ${{ steps.variables.outputs.build_directory }}"
+        echo "cpm_source_cache: ${{ inputs.cpm_source_cache }}"
+
     - name: "CCache"
       uses: hendrikmuhs/ccache-action@v1.2
       with:
