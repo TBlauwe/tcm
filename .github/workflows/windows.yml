@@ -10,7 +10,8 @@ on:
       - '**.hpp'
       - '**.cmake'
       - '**/CMakeLists.txt'
-      - '.github/workflows/windows.yaml'
+      - '.github/actions/build/action.yml'
+      - '.github/workflows/windows.yml'
   pull_request:
     paths:
       - '**.c'
@@ -19,7 +20,8 @@ on:
       - '**.hpp'
       - '**.cmake'
       - '**/CMakeLists.txt'
-      - '.github/workflows/windows.yaml'
+      - '.github/actions/build/action.yml'
+      - '.github/workflows/windows.yml'
 
 env:
   CPM_SOURCE_PACKAGE:'./.cpm_cache'
