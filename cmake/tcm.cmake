@@ -436,7 +436,6 @@ function(tcm_target_enable_optimisation_flags arg_TARGET)
     elseif (TCM_CLANG OR TCM_APPLE_CLANG OR TCM_GCC)
         target_compile_options(${arg_TARGET} PRIVATE
                 $<$<CONFIG:RELEASE>:-O3>
-                $<$<CONFIG:RELEASE>:-flto>
                 $<$<CONFIG:RELEASE>:-march=native>
         )
         target_link_options(${arg_TARGET} PRIVATE $<$<CONFIG:RELEASE>:-O3>)
