@@ -23,13 +23,9 @@ on:
       - '.github/actions/build/action.yml'
       - '.github/workflows/windows.yml'
 
-env:
-  CPM_SOURCE_PACKAGE:'./.cpm_cache'
-
 jobs:
   build:
     name: 'Build and Test ${{matrix.architecture}}-${{matrix.toolchain}}-${{matrix.configuration}}'
-    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
@@ -39,16 +35,20 @@ jobs:
         architecture: [x64]
         toolchain: [clang-cl, msvc]
 
+    runs-on: ${{ matrix.os }}
+    env:
+      CPM_SOURCE_PACKAGE: './.cpm_cache'
+
     steps:
-      - uses: actions/checkout@v4
-      - id: build
-        uses: './.github/actions/build'
-        with:
-          cpm_source_cache: ${{ env.CPM_SOURCE_CACHE }}
-          os: $${{ matrix.os }}
-          configuration: $${{ matrix.configuration }}
-          architecture: $${{ matrix.architecture }}
-          toolchain: $${{ matrix.toolchain }}
-      - name: CTest
-        working-directory: ${{build.outputs.build_directory}}
-        run: ctest
+        - uses: actions/checkout@v4
+        - id: build
+          uses: './.github/actions/build'
+          with:
+            cpm_source_cache: ${{ env.CPM_SOURCE_CACHE }}
+            os: $${{ matrix.os }}
+            configuration: $${{ matrix.configuration }}
+            architecture: $${{ matrix.architecture }}
+            toolchain: $${{ matrix.toolchain }}
+        - name: CTest
+          working-directory: ${{build.outputs.build_directory}}
+          run: ctest
