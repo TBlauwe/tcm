@@ -1,23 +1,13 @@
 # Simple workflow for deploying static content to GitHub Pages
-name:  Documentation build & deploy
+name:  Build and deploy documentation
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["master"]
-    paths:
-      - '**.c'
-      - '**.cpp'
-      - '**.h'
-      - '**.hpp'
-      - '**.cmake'
-      - '**/CMakeLists.txt'
-      - '.github/workflows/documentation.yaml'
-      - '**.md'
+  workflow_run:
+    workflows: [ci_ubuntu_mac_os]
+    types: [completed]
 
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+# Allows you to run this workflow manually from the Actions tab
+workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -32,44 +22,32 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CPM_SOURCE_CACHE: ${{ github.workspace }}/.cpm_cache
+  CPM_SOURCE_CACHE: ./.cpm_cache
   preset: x64-clang-release
 
 jobs:
   deploy:
+    needs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v4
 
-      - name: Update
-        run: |
-          sudo apt-add-repository universe
-          sudo apt-get update
-
-      - uses: ssciwr/doxygen-install@v1
-        with:
-          version: "1.12.0"
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get install graphviz
-          pip3 install jinja2 Pygments
-
-      - id: build
+      - name: Build
+        id: build
         uses: './.github/actions/build'
         with:
-          os: $${{ matrix.os }}
-          configuration: $${{ matrix.configuration }}
-          architecture: $${{ matrix.architecture }}
-          toolchain: $${{ matrix.toolchain }}
+          configuration: ${{ matrix.configuration }}
+          architecture: ${{ matrix.architecture }}
+          toolchain: ${{ matrix.toolchain }}
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -1,0 +1,57 @@
+name: "CI Ubuntu & MacOS"
+
+on:
+  push:
+    branches: ["master"]
+    paths:
+      - '**.c'
+      - '**.cpp'
+      - '**.h'
+      - '**.hpp'
+      - '**.cmake'
+      - '**/CMakeLists.txt'
+      - '.github/actions/build/action.yml'
+      - '.github/workflows/ci_ubuntu_mac_os.yml'
+  pull_request:
+    paths:
+      - '**.c'
+      - '**.cpp'
+      - '**.h'
+      - '**.hpp'
+      - '**.cmake'
+      - '**/CMakeLists.txt'
+      - '.github/actions/build/action.yml'
+      - '.github/workflows/ci_ubuntu_mac_os.yml'
+
+jobs:
+  build:
+    name: 'Build and Test ${{matrix.architecture}}-${{matrix.toolchain}}-${{matrix.configuration}}'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        configuration: [release]
+        architecture: [x64]
+        toolchain: [clang, gnu]
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CPM_SOURCE_CACHE: './.cpm_cache'
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: Build
+        id: build
+        uses: './.github/actions/build'
+        with:
+          configuration: ${{ matrix.configuration }}
+          architecture: ${{ matrix.architecture }}
+          toolchain: ${{ matrix.toolchain }}
+
+      - name: CTest
+        working-directory: ${{steps.build.outputs.build_directory}}
+        run: ctest

@@ -1,4 +1,4 @@
-name: "CI"
+name: "CI Windows"
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - '**.cmake'
       - '**/CMakeLists.txt'
       - '.github/actions/build/action.yml'
-      - '.github/workflows/windows.yml'
+      - '.github/workflows/ci_windows.yml'
   pull_request:
     paths:
       - '**.c'
@@ -21,7 +21,7 @@ on:
       - '**.cmake'
       - '**/CMakeLists.txt'
       - '.github/actions/build/action.yml'
-      - '.github/workflows/windows.yml'
+      - '.github/workflows/ci_windows.yml'
 
 jobs:
   build:
