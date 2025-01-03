@@ -40,14 +40,14 @@ jobs:
       CPM_SOURCE_PACKAGE: './.cpm_cache'
 
     steps:
-        - uses: actions/checkout@v4
+        - name: "Checkout"
+          uses: actions/checkout@v4
 
         - name: Build
           id: build
           uses: './.github/actions/build'
           with:
             cpm_source_cache: ${{ env.CPM_SOURCE_CACHE }}
-            os: $${{ matrix.os }}
             configuration: $${{ matrix.configuration }}
             architecture: $${{ matrix.architecture }}
             toolchain: $${{ matrix.toolchain }}
