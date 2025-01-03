@@ -36,8 +36,9 @@ jobs:
         toolchain: [clang-cl, msvc]
 
     runs-on: ${{ matrix.os }}
+
     env:
-      CPM_SOURCE_PACKAGE: './.cpm_cache'
+      CPM_SOURCE_CACHE: './.cpm_cache'
 
     steps:
         - name: "Checkout"
