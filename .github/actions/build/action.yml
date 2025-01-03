@@ -32,7 +32,7 @@ runs:
       run: |
         echo "preset_name: ${{ steps.variables.outputs.preset_name }}"
         echo "build_directory: ${{ steps.variables.outputs.build_directory }}"
-        echo "cpm_source_cache: ${{ inputs.cpm_source_cache }}"
+        echo "cpm_source_cache: ${{ env.CPM_SOURCE_CACHE }}"
 
     - name: "CCache"
       uses: hendrikmuhs/ccache-action@v1.2
