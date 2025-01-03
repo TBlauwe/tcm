@@ -46,7 +46,6 @@ jobs:
           id: build
           uses: './.github/actions/build'
           with:
-            cpm_source_cache: ${{ env.CPM_SOURCE_CACHE }}
             os: $${{ matrix.os }}
             configuration: $${{ matrix.configuration }}
             architecture: $${{ matrix.architecture }}

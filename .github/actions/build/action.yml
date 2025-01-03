@@ -1,10 +1,6 @@
 name: 'Build'
 description: 'Composite action to build this cmake project'
 inputs:
-  cpm_source_cache:
-    description: 'Where to store cpm downloads.'
-    required: true
-    type: string
   os:
     description: 'Operating system'
     required: true
@@ -37,8 +33,8 @@ runs:
       id: vars
       shell: bash
       run: |
-          echo "preset_name=${{inputs.architecture}}-${{inputs.toolchain}}-${{inputs.configuration}}" >> "${GITHUB_OUTPUT}"
-          echo "build_directory=./out/build/${{inputs.architecture}}-${{inputs.toolchain}}-${{inputs.configuration}}" >> "${GITHUB_OUTPUT}"
+          echo "preset_name=$inputs.architecture-$inputs.toolchain-$inputs.configuration" >> "${GITHUB_OUTPUT}"
+          echo "build_directory=./out/build/$inputs.architecture-$inputs.toolchain-$inputs.configuration" >> "${GITHUB_OUTPUT}"
 
     - name: "CCache"
       uses: hendrikmuhs/ccache-action@v1.2
@@ -48,7 +44,7 @@ runs:
     - name: "Cache CPM dependencies"
       uses: actions/cache@v4
       with:
-        path: ${{ inputs.cpm_source_cache }}
+        path: ${{ env.CPM_SOURCE_CACHE }}
         key: cpm-${{ hashFiles('**/*.cmake', '**/CMakeLists.txt') }}
         enableCrossOsArchive: true
 
