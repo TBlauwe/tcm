@@ -4,7 +4,7 @@
 # Description:
 #   Setup documentation using doxygen and doxygen-awesome.
 
-function(tcm_setup_docs)
+function(tcm_documentation)
     set(one_value_args
             ASSETS
             DOXYGEN_AWESOME_VERSION

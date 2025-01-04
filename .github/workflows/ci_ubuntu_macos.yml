@@ -21,7 +21,7 @@ on:
       - '**.cmake'
       - '**/CMakeLists.txt'
       - '.github/actions/build/action.yml'
-      - '.github/workflows/ci_ubuntu_mac_os.yml'
+      - '.github/workflows/ci_ubuntu_macos.yml'
 
 jobs:
   build:

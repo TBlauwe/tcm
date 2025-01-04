@@ -46,7 +46,7 @@ else()
 endif ()
 
 set(DOXYGEN_PROJECT_LOGO ${PROJECT_SOURCE_DIR}/assets/logo_small_dark.png)
-tcm_setup_docs(
+tcm_documentation(
         FILES docs/pages
         ASSETS assets
 )

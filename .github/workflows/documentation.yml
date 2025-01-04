@@ -3,11 +3,8 @@ name:  Build and deploy documentation
 
 on:
   workflow_run:
-    workflows: [ci_ubuntu_mac_os]
+    workflows: [CI Ubuntu & MacOS]
     types: [completed]
-
-# Allows you to run this workflow manually from the Actions tab
-workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
