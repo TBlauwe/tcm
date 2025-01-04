@@ -56,6 +56,9 @@ jobs:
           toolchain: clang
           configuration: release
 
+      - name: Build
+        run: cmake --build ${{ steps.build.outputs.build_directory }} --target TCM_Documentation
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
