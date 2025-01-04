@@ -40,7 +40,7 @@ jobs:
         uses: './.github/actions/build'
         with:
           architecture: x64
-          toolchain: clang-cl
+          toolchain: clang
           configuration: release
 
       - name: Setup Pages
