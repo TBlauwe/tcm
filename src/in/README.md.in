@@ -6,7 +6,7 @@
 [![Documentation link](https://img.shields.io/badge/Docs-blue?logo=readthedocs&logoColor=white&style=for-the-badge)](https://TBlauwe.github.io/tcm/)
 
 ![CI Windows](https://img.shields.io/github/actions/workflow/status/TBlauwe/tcm/ci_windows.yml?style=flat-square&logo=windows10&label=CI%20Windows%20(msvc,%20clang-cl))
-![CI Ubuntu](https://img.shields.io/github/actions/workflow/status/TBlauwe/tcm/ci_ubuntu_macos.yaml?style=flat-square&logo=windows10&label=CI%20Ubuntu%20%20(clang,%20gcc))
+![CI Ubuntu](https://img.shields.io/github/actions/workflow/status/TBlauwe/tcm/ci_ubuntu_macos.yml?style=flat-square&logo=windows10&label=CI%20Ubuntu%20%20(clang,%20gcc))
 ![CI MacOS](https://img.shields.io/github/actions/workflow/status/TBlauwe/tcm/ci_ubuntu_macos.yml?style=flat-square&logo=windows10&label=CI%20Mac%20OS%20(clang,%20gcc))
 
 __TCM__ is a opinionated CMake module to reduce boilerplate with common functionalities:
