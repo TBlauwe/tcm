@@ -21,7 +21,6 @@ concurrency:
 
 env:
   CPM_SOURCE_CACHE: ./.cpm_cache
-  preset: x64-clang-release
 
 jobs:
   deploy:
@@ -40,9 +39,9 @@ jobs:
         id: build
         uses: './.github/actions/build'
         with:
-          configuration: ${{ matrix.configuration }}
-          architecture: ${{ matrix.architecture }}
-          toolchain: ${{ matrix.toolchain }}
+          architecture: x64
+          toolchain: clang-cl
+          configuration: release
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
