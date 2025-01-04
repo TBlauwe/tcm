@@ -35,6 +35,9 @@ jobs:
       - name: 'Checkout'
         uses: actions/checkout@v4
 
+      - name: 'Install Doxygen'
+        uses: ssciwr/doxygen-install@v1
+
       - name: Build
         id: build
         uses: './.github/actions/build'
