@@ -35,8 +35,18 @@ jobs:
       - name: 'Checkout'
         uses: actions/checkout@v4
 
+      - name: 'Update'
+        run: |
+          sudo apt-add-repository universe
+          sudo apt-get update
+
       - name: 'Install Doxygen'
         uses: ssciwr/doxygen-install@v1
+
+      - name: 'Install Doxygen dependencies'
+        run: |
+          sudo apt-get install graphviz
+          pip3 install jinja2 Pygments
 
       - name: Build
         id: build
