@@ -19,7 +19,7 @@ __TCM__ is a opinionated CMake module to reduce boilerplate with common function
 * Benchmarking with __[Google Benchmarks](https://github.com/google/benchmark)__.
 * Configure targets with warnings, optimization, [emscripten](https://emscripten.org/), [ispc](https://ispc.github.io/) support.
 * Examples with automated test and benchmarks.
-* Miscellaneous cmake functions (logging, version from git, copying assets, etc.)
+* Miscellaneous cmake functions (logging, version from git, copying assets & dlls, exporting, etc.)
 
 See [documentation](https://tblauwe.github.io/tcm/) for a closer look.
 
@@ -78,6 +78,18 @@ tcm_examples(FILES examples WITH_BENCHMARK INTERFACE ExampleInterface)
 tcm_target_enable_optimisation_flags(a_target)
 tcm_target_enable_warning_flags(a_target)
 tcm_target_copy_assets(a_target FILES assets/)
+
+# Static and shared library example
+add_library(my_lib SHARED <same_source> ...) 
+target_include_directories(my_lib PUBLIC <same_include> ...)
+tcm_target_export_header(my_lib)
+add_library(my_lib_static SHARED <same_sources> ...)
+target_include_directories(my_lib_static PUBLIC <same_include> ...)
+tcm_target_export_header(my_lib_static BASE_NAME my_lib) # Needed as they both use same source filse.
+
+add_executable(exe)
+target_link_libraries(exe my_lib)
+tcm_target_copy_dll(exe FROM my_lib)
 ````
 
 ## Main Features

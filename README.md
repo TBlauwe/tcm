@@ -19,7 +19,7 @@ __TCM__ is a opinionated CMake module to reduce boilerplate with common function
 * Benchmarking with __[Google Benchmarks](https://github.com/google/benchmark)__.
 * Configure targets with warnings, optimization, [emscripten](https://emscripten.org/), [ispc](https://ispc.github.io/) support.
 * Examples with automated test and benchmarks.
-* Miscellaneous cmake functions (logging, version from git, copying assets, etc.)
+* Miscellaneous cmake functions (logging, version from git, copying assets & dlls, exporting, etc.)
 
 See [documentation](https://tblauwe.github.io/tcm/) for a closer look.
 
@@ -65,7 +65,7 @@ _Overtime, I can work on new functionalities, fix bugs, etc. and easily share th
 ````cmake
 set(TCM_TOOLS "CPM;CCACHE") # Defaults
 # Option 1 - Update automatically
-set(TCM_DOWNLOAD_VERSION "1.0.0")
+set(TCM_DOWNLOAD_VERSION "1.1.0")
 include(cmake/get_tcm.cmake) # Download, cache and include tcm.cmake.
 # Option 2 - Update manually
 include(cmake/tcm.cmake) 
@@ -78,6 +78,18 @@ tcm_examples(FILES examples WITH_BENCHMARK INTERFACE ExampleInterface)
 tcm_target_enable_optimisation_flags(a_target)
 tcm_target_enable_warning_flags(a_target)
 tcm_target_copy_assets(a_target FILES assets/)
+
+# Static and shared library example
+add_library(my_lib SHARED <same_source> ...) 
+target_include_directories(my_lib PUBLIC <same_include> ...)
+tcm_target_export_header(my_lib)
+add_library(my_lib_static SHARED <same_sources> ...)
+target_include_directories(my_lib_static PUBLIC <same_include> ...)
+tcm_target_export_header(my_lib_static BASE_NAME my_lib) # Needed as they both use same source filse.
+
+add_executable(exe)
+target_link_libraries(exe my_lib)
+tcm_target_copy_dll(exe FROM my_lib)
 ````
 
 ## Main Features
@@ -122,7 +134,7 @@ You can either:
 * download or copy `get_tcm.cmake`, a script to easily download and update `tcm.cmake` through cmake.
  
 ```cmake
-set(TCM_DOWNLOAD_VERSION 1.0.0)
+set(TCM_DOWNLOAD_VERSION 1.1.0)
 include(cmake/get_tcm.cmake)
 ```
 
@@ -135,8 +147,8 @@ include(cmake/tcm.cmake)
 These two files are also available at these URLS (using wget):
 
 ```
-wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/1.0.0/tcm.cmake
-wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/1.0.0/get_tcm.cmake
+wget -O cmake/tcm.cmake https://github.com/TBlauwe/tcm/releases/download/1.1.0/tcm.cmake
+wget -O cmake/get_tcm.cmake https://github.com/TBlauwe/tcm/releases/download/1.1.0/get_tcm.cmake
 ```
 
 

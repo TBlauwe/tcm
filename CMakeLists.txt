@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.26)
 project(TCM
         DESCRIPTION "A CMake module to reduce boilerplate"
         HOMEPAGE_URL "https://github.com/TBlauwe/tcm"
-        VERSION 1.0.0
+        VERSION 1.1.0
 )
 
 # Guard against consumption.
@@ -33,8 +33,13 @@ include(cmake/tcm.cmake)
 enable_testing()
 if(NOT EMSCRIPTEN)
     # Create a dummy library for testing
-    add_library(MyLib tests/my_lib/my_lib.c)
-    target_include_directories(MyLib PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/tests/my_lib/include>)
+    add_library(my_lib SHARED tests/my_lib/my_lib.c)
+    target_include_directories(my_lib PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/tests/my_lib/include>)
+    tcm_target_export_header(my_lib)
+
+    add_library(my_lib_static STATIC tests/my_lib/my_lib.c)
+    target_include_directories(my_lib_static PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/tests/my_lib/include>)
+    tcm_target_export_header(my_lib_static BASE_NAME my_lib) # We must set BASE_NAME to the one used by source files.
 
     add_subdirectory(tests/arguments)
     add_subdirectory(tests/benchmark)

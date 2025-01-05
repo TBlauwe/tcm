@@ -15,7 +15,7 @@ cmake_minimum_required(VERSION 3.26)
 
 if(NOT EXISTS ${TCM_FILE}) # TCM cache this variable when included.
     if(NOT DEFINED TCM_DOWNLOAD_VERSION)
-        set(TCM_DOWNLOAD_VERSION 1.0.0)
+        set(TCM_DOWNLOAD_VERSION 1.1.0)
     endif()
 
     if(CPM_SOURCE_CACHE)

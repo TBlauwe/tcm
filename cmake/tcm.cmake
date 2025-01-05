@@ -359,6 +359,45 @@ endfunction()
 
 
 #-------------------------------------------------------------------------------
+#   Set target runtime output directory
+#
+function(tcm_target_runtime_output_directory arg_TARGET arg_DIRECTORY)
+    set_target_properties(${arg_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${arg_DIRECTORY}")
+endfunction()
+
+
+#-------------------------------------------------------------------------------
+#   Copy dll (and pdb) FROM <target> to TARGET folder.
+#
+function(tcm_target_copy_dll arg_TARGET)
+    set(one_value_args FROM)
+    set(required_args FROM)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "" "${required_args}")
+    add_custom_command(
+            TARGET ${arg_TARGET}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy -t "$<TARGET_FILE_DIR:${arg_TARGET}>" "$<TARGET_FILE:${arg_FROM}>"
+            COMMAND ${CMAKE_COMMAND} -E copy -t "$<TARGET_FILE_DIR:${arg_TARGET}>" "$<TARGET_PDB_FILE:${arg_FROM}>"
+            COMMAND_EXPAND_LISTS
+    )
+endfunction()
+
+
+#-------------------------------------------------------------------------------
+#   Copy all dlls required by target to its output directory.
+#
+function(tcm_target_copy_required_dlls arg_TARGET)
+    add_custom_command(
+            TARGET ${arg_TARGET}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${arg_TARGET}> $<TARGET_RUNTIME_DLLS:${arg_TARGET}>
+            COMMAND_EXPAND_LISTS
+    )
+endfunction()
+
+
+#-------------------------------------------------------------------------------
 #   Post-build, copy files and folders to an asset/ folder inside target's output directory.
 #
 function(tcm_target_copy_assets arg_TARGET)
@@ -642,26 +681,41 @@ endmacro()
 include(GenerateExportHeader)
 
 #-------------------------------------------------------------------------------
-#   Generate export header for a target.
-#   Export header directory will be included in a private scope.
+#   Generate export header for a target
+#   Include it like so `<target_name/export.h>`
+#   If used for two targets with sames sources, but one static and the other shared,
+#   then tcm_target_export_header must be called on both, to properly set defines, with the static one called with BASE_NAME name_of_shared_target.
+#   Export macro is : ${arg_BASE_NAME}_API
 #
 function(tcm_target_export_header arg_TARGET)
-    set(one_value_args
-            EXPORT_FILE_NAME
-    )
+    set(one_value_args BASE_NAME)
     cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "")
     tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "" "")
-    tcm_default_value(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${arg_TARGET}/export.h")
 
+    # Set Default values
+    if(NOT DEFINED arg_BASE_NAME)
+        set(arg_BASE_NAME ${arg_TARGET})
+    endif ()
+    set(arg_EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/export/${arg_BASE_NAME}/export.h")
+    string(TOUPPER ${arg_BASE_NAME} arg_BASE_NAME_UPPER)
+
+    # Generate export header, even for static library as they need the header to compile
+    target_include_directories(${arg_TARGET} SYSTEM PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/export>)
+
+    # Check type instead of BUILD_SHARED_LIBS as a library type could be forced.
+    get_target_property(target_type ${arg_TARGET} TYPE)
+    if (target_type STREQUAL "STATIC_LIBRARY")
+        target_compile_definitions(${arg_TARGET} PUBLIC ${arg_BASE_NAME_UPPER}_STATIC_DEFINE)
+        return() # The rest of the function is relevant only for a shared library
+    endif ()
+
+    # Generate export header, even for static library as they need the header to compile
     generate_export_header(
             ${arg_TARGET}
+            BASE_NAME ${arg_BASE_NAME}
             EXPORT_FILE_NAME ${arg_EXPORT_FILE_NAME}
+            EXPORT_MACRO_NAME ${arg_BASE_NAME_UPPER}_API
     )
-
-    string(TOUPPER ${arg_TARGET} UPPER_NAME)
-    if(NOT BUILD_SHARED_LIBS)
-        target_compile_definitions(${arg_TARGET} PUBLIC ${UPPER_NAME}_STATIC_DEFINE)
-    endif()
 
     set_target_properties(${arg_TARGET} PROPERTIES
             CXX_VISIBILITY_PRESET hidden
@@ -672,7 +726,6 @@ function(tcm_target_export_header arg_TARGET)
             OUTPUT_NAME ${arg_TARGET}
     )
 
-    target_include_directories(${arg_TARGET} SYSTEM PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/export>)
 endfunction()
 
 
@@ -951,7 +1004,7 @@ function(tcm_benchmarks)
         set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
         # Copy google benchmark tools : compare.py and its requirements for ease of use
         add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-                "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
+                "${benchmark_SOURCE_DIR}/tools" "$<TARGET_FILE_DIR:${arg_NAME}>/scripts/google_benchmark_tools"
         )
     else ()
         tcm_debug("Adding sources to ${arg_NAME}: ${arg_FILES}.")
@@ -1137,7 +1190,7 @@ function(tcm_examples)
             FILES
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "${options}" "${one_value_args}" "" "${required_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "${options}" "${one_value_args}" "${multi_value_args}" "${required_args}")
 
     tcm_setup_test()
     if(arg_WITH_BENCHMARK)
@@ -1979,7 +2032,7 @@ tcm__module_logging()
 set_property(GLOBAL PROPERTY TCM_INITIALIZED true)
 set(TCM_FILE "${CMAKE_CURRENT_LIST_FILE}" CACHE INTERNAL "")
 if(NOT DEFINED TCM_VERSION)
-    set(TCM_VERSION 1.0.0 CACHE INTERNAL "")
+    set(TCM_VERSION 1.1.0 CACHE INTERNAL "")
     tcm_info("TCM Version: ${TCM_VERSION}")
 endif ()
 

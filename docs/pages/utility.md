@@ -4,6 +4,26 @@
 
 __TCM__ module provides standalone utility functions.
 
+### tcm_target_copy_dll()
+
+Copy files and folders to destination folder.
+
+```cmake
+tcm_target_copy_dll(<target> FROM <target_dependency>) #my_lib is a shared library
+```
+
+#### Example
+
+Full example available here `tests/shared_static/CMakeLists.txt`.
+
+```cmake
+add_executable(test_shared main.cpp)
+target_link_libraries(test_shared PRIVATE my_lib)
+tcm_target_copy_dll(test_shared FROM my_lib) #my_lib is a shared library
+```
+
+--------------------------------------------------------------------------------
+
 ### tcm_target_options()
 
 Add homonym compile define if option is ON. 

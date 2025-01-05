@@ -36,6 +36,45 @@ endfunction()
 
 
 #-------------------------------------------------------------------------------
+#   Set target runtime output directory
+#
+function(tcm_target_runtime_output_directory arg_TARGET arg_DIRECTORY)
+    set_target_properties(${arg_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${arg_DIRECTORY}")
+endfunction()
+
+
+#-------------------------------------------------------------------------------
+#   Copy dll (and pdb) FROM <target> to TARGET folder.
+#
+function(tcm_target_copy_dll arg_TARGET)
+    set(one_value_args FROM)
+    set(required_args FROM)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "" "${one_value_args}" "" "${required_args}")
+    add_custom_command(
+            TARGET ${arg_TARGET}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy -t "$<TARGET_FILE_DIR:${arg_TARGET}>" "$<TARGET_FILE:${arg_FROM}>"
+            COMMAND ${CMAKE_COMMAND} -E copy -t "$<TARGET_FILE_DIR:${arg_TARGET}>" "$<TARGET_PDB_FILE:${arg_FROM}>"
+            COMMAND_EXPAND_LISTS
+    )
+endfunction()
+
+
+#-------------------------------------------------------------------------------
+#   Copy all dlls required by target to its output directory.
+#
+function(tcm_target_copy_required_dlls arg_TARGET)
+    add_custom_command(
+            TARGET ${arg_TARGET}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${arg_TARGET}> $<TARGET_RUNTIME_DLLS:${arg_TARGET}>
+            COMMAND_EXPAND_LISTS
+    )
+endfunction()
+
+
+#-------------------------------------------------------------------------------
 #   Post-build, copy files and folders to an asset/ folder inside target's output directory.
 #
 function(tcm_target_copy_assets arg_TARGET)

@@ -102,7 +102,7 @@ function(tcm_examples)
             FILES
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
-    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "${options}" "${one_value_args}" "" "${required_args}")
+    tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "${options}" "${one_value_args}" "${multi_value_args}" "${required_args}")
 
     tcm_setup_test()
     if(arg_WITH_BENCHMARK)

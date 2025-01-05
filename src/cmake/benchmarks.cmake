@@ -65,7 +65,7 @@ function(tcm_benchmarks)
         set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
         # Copy google benchmark tools : compare.py and its requirements for ease of use
         add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-                "${benchmark_SOURCE_DIR}/tools" "${TCM_EXE_DIR}/scripts/google_benchmark_tools"
+                "${benchmark_SOURCE_DIR}/tools" "$<TARGET_FILE_DIR:${arg_NAME}>/scripts/google_benchmark_tools"
         )
     else ()
         tcm_debug("Adding sources to ${arg_NAME}: ${arg_FILES}.")
