@@ -65,9 +65,10 @@ function(tcm_benchmarks)
         set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
         tcm_target_copy_assets(${arg_NAME} OUTPUT_DIR "scripts" FILES "${benchmark_SOURCE_DIR}/tools")
         # Copy google benchmark tools : compare.py and its requirements for ease of use
+        file(REAL_PATH "${benchmark_SOURCE_DIR}/tools" path)
         add_custom_command(
                 TARGET ${arg_NAME}
-                POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${benchmark_SOURCE_DIR}/tools" "$<TARGET_FILE_DIR:${arg_NAME}>/scripts/google_benchmark_tools"
+                POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${path}" "$<TARGET_FILE_DIR:${arg_NAME}>/scripts/google_benchmark_tools"
                 VERBATIM
         )
     else ()
