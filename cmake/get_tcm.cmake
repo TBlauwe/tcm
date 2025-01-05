@@ -37,7 +37,7 @@ if(NOT EXISTS ${TCM_FILE}) # TCM cache this variable when included.
                     STATUS DOWNLOAD_STATUS
             )
         else()
-            file(DOWNLOAD https://github.com/TBlauwe/tcm/releases/download/${TCM_DOWNLOAD_VERSION}/tcm.cmake
+            file(DOWNLOAD https://github.com/TBlauwe/tcm/releases/download/v${TCM_DOWNLOAD_VERSION}/tcm.cmake
                     ${TCM_DOWNLOAD_LOCATION}
                     STATUS DOWNLOAD_STATUS
             )
