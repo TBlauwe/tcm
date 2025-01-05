@@ -113,15 +113,15 @@ function(tcm_target_copy_assets arg_TARGET)
         add_custom_command( # copy_if_different requires destination folder to exists.
                 TARGET ${arg_TARGET}
                 POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
-                COMMENT "Making directory $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
+                COMMENT "Making directory $<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
                 VERBATIM
         )
         add_custom_command(
                 TARGET ${arg_TARGET}
                 POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${files} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
-                COMMENT "Copying files [${files}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${files} "$<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
+                COMMENT "Copying files [${files}] to $<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
                 VERBATIM
         )
     endif ()
@@ -130,8 +130,8 @@ function(tcm_target_copy_assets arg_TARGET)
         add_custom_command(
                 TARGET ${arg_TARGET}
                 POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${folders} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
-                COMMENT "Copying directories [${folders}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
+                COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${folders} "$<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
+                COMMENT "Copying directories [${folders}] to $<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
                 VERBATIM
         )
     endif ()

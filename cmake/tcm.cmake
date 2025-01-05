@@ -436,15 +436,15 @@ function(tcm_target_copy_assets arg_TARGET)
         add_custom_command( # copy_if_different requires destination folder to exists.
                 TARGET ${arg_TARGET}
                 POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
-                COMMENT "Making directory $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
+                COMMENT "Making directory $<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
                 VERBATIM
         )
         add_custom_command(
                 TARGET ${arg_TARGET}
                 POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${files} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
-                COMMENT "Copying files [${files}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${files} "$<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
+                COMMENT "Copying files [${files}] to $<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
                 VERBATIM
         )
     endif ()
@@ -453,8 +453,8 @@ function(tcm_target_copy_assets arg_TARGET)
         add_custom_command(
                 TARGET ${arg_TARGET}
                 POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${folders} "$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>"
-                COMMENT "Copying directories [${folders}] to $<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},$<TARGET_FILE_DIR:${arg_TARGET}>/assets>."
+                COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${folders} "$<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
+                COMMENT "Copying directories [${folders}] to $<TARGET_FILE_DIR:${arg_TARGET}>/$<IF:$<BOOL:${arg_OUTPUT_DIR}>,${arg_OUTPUT_DIR},assets>"
                 VERBATIM
         )
     endif ()
@@ -1012,6 +1012,7 @@ function(tcm_benchmarks)
         tcm_target_enable_optimisation_flags(${arg_NAME})
         set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/benchmarks")
         set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
+        tcm_target_copy_assets(${arg_NAME} OUTPUT_DIR "scripts" FILES "${benchmark_SOURCE_DIR}/tools")
         # Copy google benchmark tools : compare.py and its requirements for ease of use
         add_custom_command(
                 TARGET ${arg_NAME}
@@ -1401,11 +1402,11 @@ endfunction()
 
 function(tcm_documentation)
     set(one_value_args
-            ASSETS
             DOXYGEN_AWESOME_VERSION
     )
     set(multi_value_args
             FILES
+            ASSETS
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
     tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "$" "${one_value_args}" "${multi_value_args}" "")
@@ -2013,20 +2014,17 @@ html.light-mode #projectlogo img {
     )
     list(APPEND DOXYGEN_VERBATIM_VARS DOXYGEN_ALIASES)
 
+    foreach (item IN LISTS arg_ASSETS)
+        file(REAL_PATH ${item} path)
+        list(APPEND DOXYGEN_IMAGE_PATH ${path})
+        list(APPEND DOXYGEN_IMAGE_PATH ${path})
+    endforeach ()
+
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION
     # ------------------------------------------------------------------------------
     tcm_log("Configuring ${PROJECT_NAME}_Documentation.")
     doxygen_add_docs(${PROJECT_NAME}_Documentation ${arg_FILES})
-
-    #TODO Maybe use DOXYGEN_IMAGE_PATH to let doxygen handle copying ? But what about others assets (is there) ?
-    if(arg_ASSETS)
-        tcm_target_copy_assets(${PROJECT_NAME}_Documentation
-                FILES ${arg_ASSETS}
-                OUTPUT_DIR "${DOXYGEN_OUTPUT_DIRECTORY}/html/assets"
-        )
-
-    endif ()
 
     # Utility target to open docs
     add_custom_target(${PROJECT_NAME}_Documentation_Open COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")

@@ -53,15 +53,18 @@ tcm_target_options(test_utility OPTIONS OPTION_A OPTION_B OPTION_C)
 
 ### tcm_target_copy_assets()
 
-Copy files and folders to destination folder.
+Copy files and folders to destination a folder relative to target runtime output dir.
 
 ```cmake
 tcm_target_copy_assets (
         <target> 
-        [OUTPUT_DIR <dir>    # Default to $<TARGET_FILE_DIR:${arg_TARGET}>/assets
-        [FILES <file_or_dir>... ]        # Files to copy 
+        [OUTPUT_DIR <dir>           # Default to assets/
+        [FILES <file_or_dir>... ]   # Files to copy 
 )
 ```
+
+`OUTPUT_DIR` must be a relative path. 
+
 #### Example
 
 Full example available here `tests/utility/CMakeLists.txt`.

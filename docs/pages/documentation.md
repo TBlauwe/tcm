@@ -4,11 +4,15 @@ __TCM__ provides a single function to generate a documentation using __[Doxygen]
 
 ```cmake
 tcm_documentation (
-        [FILES file1 directory ...]
+        [FILES <file_or_dir> ...]
+        [ASSETS <file_or_dir> ...]
         [DOXYGEN_AWESOME_VERSION "vX.X.X"]
 )
 ```
 Parameter `FILES` specify input files and directories. `${PROJECT_SOURCE_DIR}/README.md` is always added to the input.
+
+Parameter `ASSETS` specify input files and directories that will be added to `DOXYGEN_IMAGE_PATH`.
+Referenced assets will be copied to the output folders by doxygen.
 
 It uses `doxygen_add_docs()` under the hood.
 So, any Doxygen config option can be overridden by setting relevant variables before calling `tcm_documentation()`.

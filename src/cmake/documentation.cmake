@@ -6,11 +6,11 @@
 
 function(tcm_documentation)
     set(one_value_args
-            ASSETS
             DOXYGEN_AWESOME_VERSION
     )
     set(multi_value_args
             FILES
+            ASSETS
     )
     cmake_parse_arguments(PARSE_ARGV 0 arg "" "${one_value_args}" "${multi_value_args}")
     tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "$" "${one_value_args}" "${multi_value_args}" "")
@@ -124,20 +124,17 @@ function(tcm_documentation)
     )
     list(APPEND DOXYGEN_VERBATIM_VARS DOXYGEN_ALIASES)
 
+    foreach (item IN LISTS arg_ASSETS)
+        file(REAL_PATH ${item} path)
+        list(APPEND DOXYGEN_IMAGE_PATH ${path})
+        list(APPEND DOXYGEN_IMAGE_PATH ${path})
+    endforeach ()
+
     # ------------------------------------------------------------------------------
     # --- CONFIGURATION
     # ------------------------------------------------------------------------------
     tcm_log("Configuring ${PROJECT_NAME}_Documentation.")
     doxygen_add_docs(${PROJECT_NAME}_Documentation ${arg_FILES})
-
-    #TODO Maybe use DOXYGEN_IMAGE_PATH to let doxygen handle copying ? But what about others assets (is there) ?
-    if(arg_ASSETS)
-        tcm_target_copy_assets(${PROJECT_NAME}_Documentation
-                FILES ${arg_ASSETS}
-                OUTPUT_DIR "${DOXYGEN_OUTPUT_DIRECTORY}/html/assets"
-        )
-
-    endif ()
 
     # Utility target to open docs
     add_custom_target(${PROJECT_NAME}_Documentation_Open COMMAND "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html")

@@ -63,6 +63,7 @@ function(tcm_benchmarks)
         tcm_target_enable_optimisation_flags(${arg_NAME})
         set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/benchmarks")
         set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
+        tcm_target_copy_assets(${arg_NAME} OUTPUT_DIR "scripts" FILES "${benchmark_SOURCE_DIR}/tools")
         # Copy google benchmark tools : compare.py and its requirements for ease of use
         add_custom_command(
                 TARGET ${arg_NAME}
