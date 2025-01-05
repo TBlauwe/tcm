@@ -66,7 +66,11 @@ BENCHMARK(BM_example_${target_name});
         tcm_info("Generating benchmark source file for ${target_name}: ${benchmark_file}")
         file(WRITE ${benchmark_file} "${file_content}")
     endif ()
-    tcm_benchmarks(FILES ${benchmark_file} LIBRARIES ${arg_LIBRARIES})
+    if(arg_LIBRARIES)
+        tcm_benchmarks(FILES ${benchmark_file} LIBRARIES ${arg_LIBRARIES})
+    else ()
+        tcm_benchmarks(FILES ${benchmark_file})
+    endif ()
 
     tcm_log("Configuring example \"${target_name}\" (w/ benchmark)")
 endfunction()
