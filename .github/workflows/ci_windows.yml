@@ -22,6 +22,9 @@ on:
       - '.github/actions/build/action.yml'
       - '.github/workflows/ci_windows.yml'
 
+env:
+  CPM_SOURCE_CACHE: '${{github.workspace}}/.cpm_cache'
+
 jobs:
   build:
     name: 'Build and Test ${{matrix.architecture}}-${{matrix.toolchain}}-${{matrix.configuration}}'
@@ -35,9 +38,6 @@ jobs:
         toolchain: [clang-cl, msvc]
 
     runs-on: ${{ matrix.os }}
-
-    env:
-      CPM_SOURCE_CACHE: './.cpm_cache'
 
     steps:
       - name: "Checkout"

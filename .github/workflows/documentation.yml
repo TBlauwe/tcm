@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CPM_SOURCE_CACHE: ./.cpm_cache
+  CPM_SOURCE_CACHE: '${{github.workspace}}/.cpm_cache'
 
 jobs:
   deploy:
