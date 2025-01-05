@@ -60,4 +60,4 @@ runs:
 
     - name: "Build target"
       shell: bash
-      run: cmake --build ${{ steps.variables.outputs.build_directory }} --target ${{ steps.variables.outputs.build_directory }}
+      run: cmake --build ${{ steps.variables.outputs.build_directory }} --target ${{ inputs.target }}
