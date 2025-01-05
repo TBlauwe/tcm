@@ -367,7 +367,7 @@ endfunction()
 
 
 #-------------------------------------------------------------------------------
-#   Copy dll (and pdb) FROM <target> to TARGET folder.
+#   Copy .dll (and .pdb on windows) FROM <target> to TARGET folder.
 #
 function(tcm_target_copy_dll arg_TARGET)
     set(one_value_args FROM)
@@ -378,9 +378,18 @@ function(tcm_target_copy_dll arg_TARGET)
             TARGET ${arg_TARGET}
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy -t "$<TARGET_FILE_DIR:${arg_TARGET}>" "$<TARGET_FILE:${arg_FROM}>"
-            COMMAND ${CMAKE_COMMAND} -E copy -t "$<TARGET_FILE_DIR:${arg_TARGET}>" "$<TARGET_PDB_FILE:${arg_FROM}>"
             COMMAND_EXPAND_LISTS
+            VERBATIM
     )
+    if(TCM_WINDOWS)
+        add_custom_command(
+                TARGET ${arg_TARGET}
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy -t "$<TARGET_FILE_DIR:${arg_TARGET}>" "$<TARGET_PDB_FILE:${arg_FROM}>"
+                COMMAND_EXPAND_LISTS
+                VERBATIM
+        )
+    endif ()
 endfunction()
 
 
@@ -393,6 +402,7 @@ function(tcm_target_copy_required_dlls arg_TARGET)
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${arg_TARGET}> $<TARGET_RUNTIME_DLLS:${arg_TARGET}>
             COMMAND_EXPAND_LISTS
+            VERBATIM
     )
 endfunction()
 
@@ -1003,8 +1013,10 @@ function(tcm_benchmarks)
         set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/benchmarks")
         set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
         # Copy google benchmark tools : compare.py and its requirements for ease of use
-        add_custom_command(TARGET ${arg_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-                "${benchmark_SOURCE_DIR}/tools" "$<TARGET_FILE_DIR:${arg_NAME}>/scripts/google_benchmark_tools"
+        add_custom_command(
+                TARGET ${arg_NAME}
+                POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${benchmark_SOURCE_DIR}/tools" "$<TARGET_FILE_DIR:${arg_NAME}>/scripts/google_benchmark_tools"
+                VERBATIM
         )
     else ()
         tcm_debug("Adding sources to ${arg_NAME}: ${arg_FILES}.")
