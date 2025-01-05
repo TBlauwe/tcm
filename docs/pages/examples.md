@@ -6,7 +6,7 @@ __TCM__ provides a single function for defining standalone examples.
 tcm_examples (
         FILES <file_or_folder> ... 
         [WITH_BENCHMARK]
-        [INTERFACE <a_target>]
+        [LIBRARIES <target> ...]
 )
 ```
 
@@ -21,7 +21,7 @@ For this to work, some source manipulation is done.
 A new source file is created, where the entry point, `main()`, (must take no arguments !) is replaced to a standalone function.
 The new source file call the newly function inside a benchmarkable boilerplate.
 
-If `INTERFACE` is set to a library target (interface or not), then each example will link to it.
+If `LIBRARIES` is set to a library target (interface or not), then each example will link to it.
 If this is not enough, each call to `tcm_examples` will produce a list of targets `TCM_EXAMPLES_TARGET`.
 You can iterate through it and manually set properties.
 

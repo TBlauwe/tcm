@@ -6,12 +6,16 @@ __TCM__ provides a single function for testing using __[Catch2](https://github.c
 tcm_tests (
         [NAME <name>] 
         FILES <file>...
+        [LIBRARIES <target> ...]
 )
 ```
 If no `NAME` is provided, then sources files are added to default target `${PROJECT_NAME}_Tests`.
 Otherwise, a target with provided name is created.
+
 Every target is linked with `Catch2::Catch2WithMain`, so no need to provide a `main` function.
 Multiple calls with the same target will just add sources files to the target.
+
+Benchmark target can also be linked with `LIBRARIES` targets
 
 #### Example
 

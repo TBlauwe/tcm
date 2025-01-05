@@ -13,8 +13,8 @@ function(tcm__add_example arg_FILE arg_NAME)
     string(REPLACE "/" "_" target_name ${target_name})
 
     add_executable(${target_name} ${arg_FILE})
-    if(arg_INTERFACE)
-        target_link_libraries(${target_name} PUBLIC ${arg_INTERFACE})
+    if(arg_LIBRARIES)
+        target_link_libraries(${target_name} PUBLIC ${arg_LIBRARIES})
     endif ()
     set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/examples")
     set_target_properties(${target_name} PROPERTIES FOLDER "Examples")
@@ -66,8 +66,7 @@ BENCHMARK(BM_example_${target_name});
         tcm_info("Generating benchmark source file for ${target_name}: ${benchmark_file}")
         file(WRITE ${benchmark_file} "${file_content}")
     endif ()
-    tcm_benchmarks(FILES ${benchmark_file})
-    target_link_libraries(${PROJECT_NAME}_Benchmarks PUBLIC ${arg_INTERFACE})
+    tcm_benchmarks(FILES ${benchmark_file} LIBRARIES ${arg_LIBRARIES})
 
     tcm_log("Configuring example \"${target_name}\" (w/ benchmark)")
 endfunction()
@@ -95,12 +94,14 @@ function(tcm_examples)
     )
     set(one_value_args
             FILES
-            INTERFACE
+    )
+    set(multi_value_args
+            LIBRARIES
     )
     set(required_args
             FILES
     )
-    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm_check_proper_usage(${CMAKE_CURRENT_FUNCTION} arg "${options}" "${one_value_args}" "" "${required_args}")
 
     tcm_setup_test()

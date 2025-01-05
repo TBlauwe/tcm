@@ -4,5 +4,5 @@ project(Benchmarking)
 
 include(../../cmake/tcm.cmake)
 
-tcm_benchmarks(FILES bench.cpp)
+tcm_benchmarks(FILES bench.cpp LIBRARIES MyLib)
 add_test(NAME Benchmarking COMMAND ${PROJECT_NAME}_Benchmarks)

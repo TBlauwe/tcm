@@ -40,11 +40,16 @@ endfunction()
 #   Add tests using Catch2 (with provided main).
 #
 # Usage :
-#   tcm_tests([NAME <name>] FILES your_source.cpp ...)
+#   tcm_tests([NAME <name>] [LIBRARIES <target> ...] FILES your_source.cpp ...)
 #
 function(tcm_tests)
-    set(one_value_args NAME)
-    set(multi_value_args FILES)
+    set(one_value_args
+            NAME
+    )
+    set(multi_value_args
+            FILES
+            LIBRARIES
+    )
     cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${one_value_args}" "${multi_value_args}")
     tcm_default_value(arg_NAME "${PROJECT_NAME}_Tests")
 
@@ -53,7 +58,7 @@ function(tcm_tests)
     if(NOT TARGET ${arg_NAME})
         tcm_log("Configuring ${arg_NAME}.")
         add_executable(${arg_NAME} ${arg_FILES})
-        target_link_libraries(${arg_NAME} PRIVATE Catch2::Catch2WithMain)
+        target_link_libraries(${arg_NAME} PRIVATE Catch2::Catch2WithMain ${arg_LIBRARIES})
         set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/tests")
         set_target_properties(${target_name} PROPERTIES FOLDER "Tests")
         catch_discover_tests(${arg_NAME})

@@ -45,6 +45,7 @@ function(tcm_benchmarks)
     )
     set(multi_value_args
             FILES
+            LIBRARIES
     )
     set(required_args
             FILES
@@ -58,7 +59,7 @@ function(tcm_benchmarks)
     if(NOT TARGET ${arg_NAME})
         tcm_log("Configuring ${arg_NAME}.")
         add_executable(${arg_NAME} ${arg_FILES})
-        target_link_libraries(${arg_NAME} PRIVATE benchmark::benchmark_main)
+        target_link_libraries(${arg_NAME} PRIVATE benchmark::benchmark_main ${arg_LIBRARIES})
         tcm_target_enable_optimisation_flags(${arg_NAME})
         set_target_properties(${arg_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TCM_EXE_DIR}/benchmarks")
         set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
