@@ -15,8 +15,14 @@ inputs:
     description: 'Compiler toolchain'
     required: true
     type: string
+  target:
+    description: 'CMake target'
+    required: false
+    type: string
+    default: all
 outputs:
   build_directory:
+    description: 'CMake build directory'
     value: ${{ steps.variables.outputs.build_directory }}
 
 runs:
@@ -48,8 +54,10 @@ runs:
     - name: "Install CMake and Ninja"
       uses: lukka/get-cmake@latest
 
-    - name: "Build"
+    - name: "Configure"
       shell: bash
-      run: |
-        cmake --preset ${{ steps.variables.outputs.preset_name }}
-        cmake --build ${{ steps.variables.outputs.build_directory }}
+      run: cmake --preset ${{ steps.variables.outputs.preset_name }}
+
+    - name: "Build target ${{inputs.target}}"
+      shell: bash
+      run: cmake --build ${{ steps.variables.outputs.build_directory }} --target ${{ inputs.target }}

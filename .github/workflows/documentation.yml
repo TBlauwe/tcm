@@ -24,7 +24,10 @@ env:
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'  }}
+    # Only run this when:
+    # - CI on macOS and Ubuntu worked OR if it was triggered manually
+    # - AND if we are on master branch.
+    if: ${{ (github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
 
     environment:
@@ -44,9 +47,7 @@ jobs:
         uses: ssciwr/doxygen-install@v1
 
       - name: 'Install Doxygen dependencies'
-        run: |
-          sudo apt-get install graphviz
-          pip3 install jinja2 Pygments
+        run: sudo apt-get install graphviz
 
       - name: Build
         id: build
@@ -55,9 +56,7 @@ jobs:
           architecture: x64
           toolchain: clang
           configuration: release
-
-      - name: Build
-        run: cmake --build ${{ steps.build.outputs.build_directory }} --target TCM_Documentation
+          target: TCM_Documentation
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
